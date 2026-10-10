@@ -9,9 +9,11 @@ the robot host/client protocol consistent while developing on both the robot hos
 
 ## Core Constraints
 
-1. **Source code is read-only**: the upstream source code inside the fork (`software/`,
-   `hardware/`, `docs/`, `community/`, `media/`, etc.) stays read-only; do not modify it.
-2. **Upstream updates are the only source of source-code changes**: when the upstream
+1. **Avoid modifying upstream source code**: keep the upstream source code inside the
+   fork (`software/`, `hardware/`, `docs/`, `community/`, `media/`, etc.) unchanged as
+   much as possible; when a change is truly needed, **ask the user for approval first**
+   before modifying any upstream code file.
+2. **Upstream updates are the normal source of source-code changes**: when the upstream
    author (`lipengdong/hei-rebot-lift`) updates the project, you pull the updates
    (`main` syncs upstream, then `dev` syncs from `main`).
 3. **Runtime-generated files and collected data may be written**: necessary files
@@ -116,6 +118,20 @@ git init                        # separate repository if version control is need
 > The repository (`hei-rebot-lift/`) only syncs upstream and does not host feature
 > code; feature code, configs and docs live in the separate workspace folder.
 
+### Development Principles: Subtract Before You Add
+
+Follow "subtract before you add" when developing features, and avoid cramming multiple
+features into one file (which leads to unmaintainable "spaghetti code"):
+
+1. **Subtract first**: before adding a feature, clean up unrelated, redundant, or
+   over-complicated existing code and simplify the design.
+2. **Then add**: build the new feature incrementally in small pieces on top of the
+   cleaned-up base.
+3. **Split big features into small ones**: decompose a large feature into several
+   single-responsibility small features; develop and test each one separately.
+4. **Single responsibility**: each file/module does only one thing, for easier reading,
+   testing, and review.
+
 See the repository picture with: `git lg`
 
 ## Cross-Machine Conventions
@@ -131,8 +147,8 @@ See the repository picture with: `git lg`
 
 ## Notes
 
-- Repository source code is read-only; do feature development (e.g. lidar navigation)
-  in a separate workspace folder, never edit the upstream source code directly.
+- Avoid modifying upstream source code; ask for approval before any such change. Do
+  feature development (e.g. lidar navigation) in a separate workspace folder.
 - Runtime-generated files and collected data may be written: udev rules, datasets, and
   training outputs; most are already gitignored or are necessary device-binding files.
 - When upstream has new commits, merge them into `main` first, then sync into `dev`;
