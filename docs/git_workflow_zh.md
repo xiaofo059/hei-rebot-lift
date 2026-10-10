@@ -6,19 +6,36 @@
 机器人端（Jetson AGX）与笔记本端（Ubuntu 22.04）同时开发时，代码与机器人 host/client
 协议保持一致，避免隐性版本错配。
 
-## 分支模型
+## 核心约束（务必遵守）
 
-| 分支 | 用途 | 对应机器 |
-| --- | --- | --- |
-| `main` | 稳定线，跟随母项目 `lipengdong/hei-rebot-lift` | 一般不在上面直接开发 |
-| `dev` | 开发主线，机器人端与笔记本端都 checkout 这个分支 | 两台机器 |
-| `feature/*` | 新功能分支，从 `dev` 拉出，合并回 `dev` | 按需 |
+1. **原项目代码只读**：fork 仓库中来自母项目的全部代码（`software/`、`hardware/`、
+   `docs/`、`community/`、`media/` 等）保持只读，不做任何功能修改。
+2. **仓库代码唯一的变化来源**：只有母项目作者（`lipengdong/hei-rebot-lift`）更新后，
+   你拉取更新（`main` 同步 upstream，再同步进 `dev`）。除此之外不在仓库内改代码。
+3. **新功能另建工作空间**：机器人新功能一律在**仓库之外的独立文件夹（工作空间）**中
+   开发，不直接修改原仓库代码。工作空间可引用仓库代码，但功能代码独立存放、独立管理，
+   需要版本管理时可为工作空间单独初始化 git 仓库。
 
 ```text
-main（稳定，跟随上游 lipengdong/hei-rebot-lift）
- └── dev（开发主线，两台机器都 checkout）
-      ├── feature/xxx
-      └── feature/yyy
+hei-rebot-lift/              # fork 仓库：只读，仅同步母项目更新
+    main（同步 upstream）
+    dev（同步 main）
+hei-rebot-workspace/         # 独立工作空间：新功能开发（可单独 git init）
+```
+
+## 分支模型
+
+| 分支 | 用途 | 说明 |
+| --- | --- | --- |
+| `main` | 只同步母项目 `lipengdong/hei-rebot-lift` 的更新 | 不在上面开发 |
+| `dev` | 同步 `main` 的母项目更新；承载工作流文档等少量维护文件 | 两台机器都 checkout |
+
+```text
+main（仅同步上游 lipengdong/hei-rebot-lift）
+ └── dev（同步 main；仓库代码保持只读）
+
+新功能不进入仓库分支，而是放到独立工作空间目录：
+hei-rebot-workspace/（另建文件夹，可单独 git init）
 ```
 
 ## 双机分工（同一仓库，不同目录）
@@ -30,7 +47,7 @@ main（稳定，跟随上游 lipengdong/hei-rebot-lift）
 | 机器人端 Jetson | `src/lerobot/robots/hei_rebot_lift/`、`src/lerobot/motors/damiao_u2can/` | 硬件驱动、机器人 host、串口绑定 |
 | 笔记本 Ubuntu 22.04 | `examples/hei_rebot_lift/VR_mujoco_ik/`、遥操作/训练脚本 | MuJoCo、IK、VR 遥操作、录制与训练 |
 
-两者通过 ZMQ 动作/观测字段强耦合，涉及协议改动时必须保持同一分支。
+两者通过 ZMQ 动作/观测字段强耦合，两台机器必须保持同一上游版本。
 
 ## 一次性初始化（两台机器各自执行）
 
@@ -75,39 +92,33 @@ git checkout dev
 git merge main                 # 同步进 dev
 ```
 
-### 开发新功能
+### 开发新功能（在独立工作空间，不改仓库代码）
+
+新功能不修改仓库内任何母项目代码，而是在仓库之外另建工作空间目录：
 
 ```bash
-git checkout dev
-git pull
-git checkout -b feature/功能名
-# 开发、测试……
-git add .
-git commit -m "描述"
-git push                       # 首次 push 自动建立跟踪
+# 在仓库同级（或任意位置）另建工作空间
+mkdir -p ~/hei-rebot-workspace
+cd ~/hei-rebot-workspace
+git init                        # 需要版本管理时单独初始化，独立于 fork 仓库
+# 在这里编写新功能代码；需要时可引用仓库代码，但不修改仓库本身
 ```
 
-### 合并回 dev
+> 仓库（`hei-rebot-lift/`）只做上游同步，不承担新功能代码；新功能代码、配置与说明
+> 都放在独立工作空间目录中，方便协作与回溯。
 
-```bash
-git checkout dev
-git pull
-git merge feature/功能名
-git push
-git branch -d feature/功能名
-```
+查看仓库全貌：`git lg`
 
-查看全貌：`git lg`
+## 跨端约定
 
-## 跨端联调约定
-
-- 涉及 ZMQ 协议、动作/观测字段、相机名称或关节维度改动时，开发期间机器人端与笔记本端
-  **同时 checkout 同一个 feature 分支**，联调通过后再合并回 `dev`。
+- 机器人端与笔记本端应保持 fork 仓库在**同一上游版本**（同一提交），避免 host/client 协议不一致。
+- 协议相关改动只来自母项目更新；更新后两台机器同步到同一版本再联调。
 - `dev` 是共享分支，禁止在上面直接 rebase 或改历史；已配置 `pull.rebase=false` + `pull.ff=only`。
 - 同一时间只保留一个机器人控制源，与代码版本无关，部署与调试时同样遵守。
 
 ## 注意事项
 
-- 纯仿真、不改协议的笔记本工作（调 IK、改 URDF、改 VR 显示）可在笔记本开独立分支自由折腾。
+- 原仓库代码只读，任何功能改动都放到独立工作空间目录，禁止直接改仓库内母项目代码。
 - 母项目有新提交时，先合并到 `main` 再同步进 `dev`，不要在 `dev` 上直接 pull 上游。
+- 仓库唯一允许的变化是同步母项目更新；工作流文档等少量项目维护文件除外。
 - 代码与 `environment.yml` 优先于文档参数。

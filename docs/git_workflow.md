@@ -7,19 +7,40 @@ used for reproducing and developing HEI ReBot Lift. The goal is to keep the code
 the robot host/client protocol consistent while developing on both the robot host
 (Jetson AGX) and the laptop (Ubuntu 22.04), avoiding hidden version mismatches.
 
-## Branch Model
+## Core Constraints (Must Follow)
 
-| Branch | Purpose | Machine |
-| --- | --- | --- |
-| `main` | Stable line that follows the upstream `lipengdong/hei-rebot-lift` | Usually no direct development |
-| `dev` | Development mainline, checked out on both machines | Both machines |
-| `feature/*` | Feature branch, branched from `dev` and merged back into `dev` | As needed |
+1. **Repository code is read-only**: all code from the upstream project inside the fork
+   (`software/`, `hardware/`, `docs/`, `community/`, `media/`, etc.) stays read-only;
+   do not modify it.
+2. **The only source of repository changes**: when the upstream author
+   (`lipengdong/hei-rebot-lift`) updates the project, you pull the updates (`main`
+   syncs upstream, then `dev` syncs from `main`). Do not edit repository code otherwise.
+3. **New features live in a separate workspace**: robot feature development always
+   happens in a **separate folder (workspace) outside the repository**, never by
+   editing the repository code directly. The workspace may reference repository code,
+   but feature code is stored and managed independently; initialize a separate git
+   repository for the workspace when version control is needed.
 
 ```text
-main (stable, follows upstream lipengdong/hei-rebot-lift)
- └── dev (development mainline, checked out on both machines)
-      ├── feature/xxx
-      └── feature/yyy
+hei-rebot-lift/              # fork repository: read-only, only syncs upstream
+    main (syncs upstream)
+    dev (syncs main)
+hei-rebot-workspace/         # separate workspace: feature development (optional git init)
+```
+
+## Branch Model
+
+| Branch | Purpose | Note |
+| --- | --- | --- |
+| `main` | Only syncs updates from upstream `lipengdong/hei-rebot-lift` | No development here |
+| `dev` | Syncs upstream updates from `main`; carries a few maintenance files like workflow docs | Checked out on both machines |
+
+```text
+main (only syncs upstream lipengdong/hei-rebot-lift)
+ └── dev (syncs main; repository code stays read-only)
+
+New features do not enter repository branches; they go into a separate workspace:
+hei-rebot-workspace/ (a separate folder, optional git init)
 ```
 
 ## Dual-Machine Split (One Repository, Different Directories)
@@ -31,8 +52,8 @@ The robot host and the laptop use the same codebase but different directories:
 | Robot host (Jetson) | `src/lerobot/robots/hei_rebot_lift/`, `src/lerobot/motors/damiao_u2can/` | Hardware drivers, robot host, serial binding |
 | Laptop (Ubuntu 22.04) | `examples/hei_rebot_lift/VR_mujoco_ik/`, teleoperation/training scripts | MuJoCo, IK, VR teleoperation, recording and training |
 
-The two sides are tightly coupled through the ZMQ action/observation schema, so any
-protocol change must keep both machines on the same branch.
+The two sides are tightly coupled through the ZMQ action/observation schema, so both
+machines must stay on the same upstream version.
 
 ## One-Time Setup (Run on Each Machine)
 
@@ -78,35 +99,30 @@ git checkout dev
 git merge main                 # sync into dev
 ```
 
-### Develop a Feature
+### Develop a Feature (in a Separate Workspace, Without Editing the Repository)
+
+New features never modify any upstream code in the repository; instead, create a
+separate workspace folder outside the repository:
 
 ```bash
-git checkout dev
-git pull
-git checkout -b feature/name
-# develop, test...
-git add .
-git commit -m "description"
-git push                       # first push auto-creates tracking
+# create a workspace next to (or anywhere outside) the repository
+mkdir -p ~/hei-rebot-workspace
+cd ~/hei-rebot-workspace
+git init                        # separate repository if version control is needed
+# write feature code here; reference repository code if needed, but do not edit it
 ```
 
-### Merge Back into dev
+> The repository (`hei-rebot-lift/`) only syncs upstream and does not host feature
+> code; feature code, configs and docs live in the separate workspace folder.
 
-```bash
-git checkout dev
-git pull
-git merge feature/name
-git push
-git branch -d feature/name
-```
-
-See the full picture with: `git lg`
+See the repository picture with: `git lg`
 
 ## Cross-Machine Conventions
 
-- When changing the ZMQ protocol, action/observation fields, camera names, or joint
-  dimensions, keep both the robot host and the laptop **on the same feature branch**
-  during development, then merge back into `dev` after integration testing.
+- Keep the robot host and the laptop on the **same upstream version** (same commit) of
+  the fork repository to avoid host/client protocol mismatches.
+- Protocol changes only come from upstream updates; after an update, sync both machines
+  to the same version before integration testing.
 - `dev` is a shared branch; never rebase or rewrite its history. It is already
   configured with `pull.rebase=false` + `pull.ff=only`.
 - Keep only one robot command source at a time; this is independent of code versions
@@ -114,8 +130,10 @@ See the full picture with: `git lg`
 
 ## Notes
 
-- Pure-simulation laptop work that does not change the protocol (IK tuning, URDF
-  changes, VR display tweaks) can use a separate branch freely.
+- Repository code is read-only; put all feature changes in a separate workspace folder,
+  never edit the upstream code inside the repository directly.
 - When upstream has new commits, merge them into `main` first, then sync into `dev`;
   do not pull upstream directly on `dev`.
+- The only allowed repository change is syncing upstream updates; a few maintenance
+  files such as workflow docs are the exception.
 - Source code and `environment.yml` take precedence over documented parameters.
