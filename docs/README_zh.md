@@ -18,6 +18,7 @@
 | 训练与推理 | [示例使用教程](../software/lerobot-hei-rebot-lift/examples/hei_rebot_lift/README_zh.md) | ACT/SmolVLA、模型路径、回放、评估与 rollout |
 | 交流与合作 | [社区](../community/README_zh.md) | 微信群、联系方式与二维码 |
 | Jetson 系统图标排障 | [红叉图标修复记录](jetson_system_icons_zh.md) | SVG 解码、被中断的 dpkg 配置、修复流程与预防 |
+| Git 工作流 | [Git 工作流](git_workflow_zh.md) | 分支模型、双机配置、同步上游与日常提交流程 |
 
 ## README 分布与维护
 

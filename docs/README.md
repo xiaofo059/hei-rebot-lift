@@ -20,6 +20,7 @@ and keep the emergency stop reachable.
 | Training and inference | [Examples guide](../software/lerobot-hei-rebot-lift/examples/hei_rebot_lift/README.md) | ACT/SmolVLA, checkpoint paths, replay, evaluate, rollout |
 | Reproduction and collaboration | [Community](../community/README.md) | WeChat group, contact details, QR code |
 | Jetson system icon troubleshooting | [Missing-icon repair record](jetson_system_icons.md) | SVG decoding, interrupted dpkg configuration, recovery and prevention |
+| Git workflow | [Git workflow](git_workflow.md) | Branch model, dual-machine setup, upstream sync, daily commits |
 
 ## README Map and Maintenance
 
