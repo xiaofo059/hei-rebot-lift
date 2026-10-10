@@ -7,25 +7,26 @@ used for reproducing and developing HEI ReBot Lift. The goal is to keep the code
 the robot host/client protocol consistent while developing on both the robot host
 (Jetson AGX) and the laptop (Ubuntu 22.04), avoiding hidden version mismatches.
 
-## Core Constraints (Must Follow)
+## Core Constraints
 
-1. **Repository code is read-only**: all code from the upstream project inside the fork
-   (`software/`, `hardware/`, `docs/`, `community/`, `media/`, etc.) stays read-only;
-   do not modify it.
-2. **The only source of repository changes**: when the upstream author
-   (`lipengdong/hei-rebot-lift`) updates the project, you pull the updates (`main`
-   syncs upstream, then `dev` syncs from `main`). Do not edit repository code otherwise.
-3. **New features live in a separate workspace**: robot feature development always
-   happens in a **separate folder (workspace) outside the repository**, never by
-   editing the repository code directly. The workspace may reference repository code,
-   but feature code is stored and managed independently; initialize a separate git
-   repository for the workspace when version control is needed.
+1. **Source code is read-only**: the upstream source code inside the fork (`software/`,
+   `hardware/`, `docs/`, `community/`, `media/`, etc.) stays read-only; do not modify it.
+2. **Upstream updates are the only source of source-code changes**: when the upstream
+   author (`lipengdong/hei-rebot-lift`) updates the project, you pull the updates
+   (`main` syncs upstream, then `dev` syncs from `main`).
+3. **Runtime-generated files and collected data may be written**: necessary files
+   produced by running the code (e.g. the udev device rules `99-nx-robot.rules`),
+   collected datasets, and training outputs can be written into the repository; these
+   are not treated as source-code changes.
+4. **New features live in a separate workspace**: when developing new features (e.g.
+   lidar navigation, new sensors), always work in a **separate folder (workspace)
+   outside the repository**, without modifying the upstream source code in the repo.
 
 ```text
-hei-rebot-lift/              # fork repository: read-only, only syncs upstream
+hei-rebot-lift/              # fork repository: source read-only, runtime files/data writable
     main (syncs upstream)
     dev (syncs main)
-hei-rebot-workspace/         # separate workspace: feature development (optional git init)
+hei-rebot-workspace/         # separate workspace: feature development (e.g. lidar nav)
 ```
 
 ## Branch Model
@@ -130,10 +131,10 @@ See the repository picture with: `git lg`
 
 ## Notes
 
-- Repository code is read-only; put all feature changes in a separate workspace folder,
-  never edit the upstream code inside the repository directly.
+- Repository source code is read-only; do feature development (e.g. lidar navigation)
+  in a separate workspace folder, never edit the upstream source code directly.
+- Runtime-generated files and collected data may be written: udev rules, datasets, and
+  training outputs; most are already gitignored or are necessary device-binding files.
 - When upstream has new commits, merge them into `main` first, then sync into `dev`;
   do not pull upstream directly on `dev`.
-- The only allowed repository change is syncing upstream updates; a few maintenance
-  files such as workflow docs are the exception.
 - Source code and `environment.yml` take precedence over documented parameters.
