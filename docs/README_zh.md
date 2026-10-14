@@ -19,6 +19,7 @@
 | 交流与合作 | [社区](../community/README_zh.md) | 微信群、联系方式与二维码 |
 | Jetson 系统图标排障 | [红叉图标修复记录](jetson_system_icons_zh.md) | SVG 解码、被中断的 dpkg 配置、修复流程与预防 |
 | Git 工作流 | [Git 工作流](git_workflow_zh.md) | 分支模型、双机配置、同步上游与日常提交流程 |
+| 多 Agent 协作 | [多 Agent 协作工作流](MULTI_AGENT_WORKFLOW.md) | 角色分工、任务流程 1–8、分派与监控、独立 Review、安全与降级 |
 
 ## README 分布与维护
 

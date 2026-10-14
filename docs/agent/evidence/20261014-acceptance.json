@@ -1,0 +1,39 @@
+{
+  "checker": "Codex independent verification",
+  "markdown_files": 6,
+  "relative_links": 28,
+  "issues": [],
+  "tracked_changes": [
+    "README_FOR_AGENTS.md",
+    "docs/README_zh.md"
+  ],
+  "tracked_navigation_only": true,
+  "index_unchanged": true,
+  "head": "3bef400fcf6cc9860d16f23f0140f3bb255b2716",
+  "agx_sha256": "097ccc48f3fe48ae33a25c8f501464b8bbed6bc2a22f3bae3ceb87bcea573d31",
+  "json_files_verified": 2,
+  "selected_local_events": [
+    30,
+    90,
+    98,
+    145,
+    152,
+    154,
+    164,
+    167
+  ],
+  "hardware_tests": "NOT_RUN",
+  "simulation_tests": "NOT_RUN",
+  "agx_deployment_tests": "NOT_RUN",
+  "checked_at": "2026-10-14T16:54:35+08:00",
+  "scope": "Initialization documentation and observed DSH browser workflow only; no robot functional validation",
+  "validation_commands": [
+    "Codex stdlib Markdown relative-link/fence/whitespace checks including untracked files",
+    "git diff --check",
+    "git diff --cached --quiet",
+    "git diff --name-only",
+    "git diff --numstat",
+    "git rev-parse HEAD",
+    "Codex json.loads and SHA256 check of reviewed evidence"
+  ]
+}

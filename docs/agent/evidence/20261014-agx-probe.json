@@ -1,0 +1,20 @@
+{
+  "task_id": "HEI-MA-20261014-003-AGX-EVIDENCE",
+  "hostname": "ubuntu",
+  "arch": "aarch64",
+  "cwd": "/home/user/hei-rebot-lift",
+  "branch": "dev",
+  "git_sha": "3bef400fcf6cc9860d16f23f0140f3bb255b2716",
+  "python_base": "3.14.7",
+  "python_lerobot5": "3.12.14",
+  "probe_sum": 45,
+  "probe_result": "PROBE_OK",
+  "cancel_turn_observed": "aborted",
+  "probe_process_present": false,
+  "limitations": [
+    "取消单次探针不保证所有后台进程或硬件停止",
+    "未运行硬件",
+    "未运行训练",
+    "未运行仿真"
+  ]
+}
