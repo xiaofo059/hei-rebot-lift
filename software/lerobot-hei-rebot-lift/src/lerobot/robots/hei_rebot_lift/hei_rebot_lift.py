@@ -458,6 +458,7 @@ class _LiftRuntime:
             self.config.lift_io_baud,
             self.config.lift_upper_bit,
             self.config.lift_lower_bit,
+            timeout_s=self.config.lift_io_timeout_s,
         )
         # 升降平台电机使用 DM4310，型号从配置读取，和底盘保持一致的配置方式。
         self.motor = dm_can.Motor(_dm_motor_type(dm_can, self.config.lift_motor_type), 0x01, 0x11)
@@ -544,6 +545,12 @@ class _LiftRuntime:
             np.clip(target_height_mm, self.config.lift_min_height_mm, self.config.lift_max_height_mm)
         )
         current = self._poll_height()
+        if self.reader is None or not self.reader.online:
+            self.stop()
+            raise RuntimeError("Lift limit-switch IO is stale or offline.")
+        if self.reader.both_active:
+            self.stop()
+            raise RuntimeError("Both lift limit switches are active.")
         error_mm = self.target_height_mm - current
         velocity_rad_s = 0.0
         if abs(error_mm) >= self.config.lift_position_tolerance_mm:
@@ -552,13 +559,11 @@ class _LiftRuntime:
                 -self.config.lift_max_speed_rad_s,
                 self.config.lift_max_speed_rad_s,
             )
-        if self.reader is not None:
-            if self.reader.both_active:
-                velocity_rad_s = 0.0
-            elif self.reader.upper_active and velocity_rad_s * self.config.lift_up_sign > 0:
-                velocity_rad_s = 0.0
-            elif self.reader.lower_active and velocity_rad_s * self.config.lift_up_sign < 0:
-                velocity_rad_s = 0.0
+        if (self.reader.upper_active and velocity_rad_s * self.config.lift_up_sign > 0) or (
+            self.reader.lower_active and velocity_rad_s * self.config.lift_up_sign < 0
+        ):
+            self.stop()
+            return {"height.pos": float(self.target_height_mm)}
         now = time.monotonic()
         if self.last_command_time_s is None:
             limited_velocity_rad_s = velocity_rad_s

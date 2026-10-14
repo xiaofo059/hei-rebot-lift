@@ -22,7 +22,7 @@ def print_motor_table(motors,status):
     """刷新终端表格，显示最近一次从驱动板读回的电机状态缓存。"""
     print("\033[H\033[J",end="")
     print(status)
-    print("%-8s %-12s %-12s %-12s %-8s" % ("Motor","POS","VEL","TORQUE","ERROR"))
+    print("%-8s %-12s %-12s %-12s %-8s" % ("Motor","POS","VEL","TORQUE","STATE"))
     print("-" * 58)
     for index,motor in enumerate(motors,1):
         print(
@@ -34,6 +34,7 @@ def print_motor_table(motors,status):
                 motor.getError(),
             )
         )
+    print("STATE: 0 disabled, 1 enabled; 8-E indicates a fault.")
 
 
 def create_arm_motors():

@@ -76,6 +76,7 @@ class HeiRebotLiftConfig(RobotConfig):
     lift_position_wrap_rad: float = 25.0
     lift_home_speed_rad_s: float = 10.0
     lift_io_wait_timeout_s: float = 3.0
+    lift_io_timeout_s: float = 0.5
     lift_home_timeout_s: float = 30.0
     lift_max_speed_rad_s: float = 18.0
     lift_max_accel_rad_s2: float = 30.0

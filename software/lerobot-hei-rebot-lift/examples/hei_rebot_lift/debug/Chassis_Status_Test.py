@@ -119,7 +119,7 @@ def render_dashboard(
     print("-" * 86)
     print(
         "%-8s %-8s %12s %12s %12s %12s %8s"
-        % ("Wheel", "CAN ID", "TARGET", "VELOCITY", "POSITION", "TORQUE", "ERROR")
+        % ("Wheel", "CAN ID", "TARGET", "VELOCITY", "POSITION", "TORQUE", "STATE")
     )
     for name, motor, target, measured in zip(
         WHEEL_NAMES,
@@ -143,8 +143,9 @@ def render_dashboard(
     print()
     print(
         "Keys: W/S forward/back | A/D left/right | Q/E rotate | "
-        "1/2/3 gear | Space emergency stop | X exit"
+        "1/2/3 gear | Space stop | X exit"
     )
+    print("Motor state: 0 disabled, 1 enabled; 8-E indicates a fault.")
     print("Hold/repeat a direction key to keep moving; key watchdog stops stale commands.")
     sys.stdout.flush()
 
@@ -196,7 +197,7 @@ def main() -> None:
                         active_key = None
                         active_until_s = 0.0
                         chassis.stop()
-                        status = "Emergency stop"
+                        status = "Stopped by Space"
                     elif key == "x":
                         running = False
 

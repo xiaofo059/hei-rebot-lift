@@ -180,6 +180,10 @@ linear_speed_mm_s = angular_speed_rad_s * lead_mm_per_rev / (2 * pi)
 | `lift_max_accel_rad_s2` | `30.0` | Motor angular acceleration limit |
 | `lift_position_kp_rad_s_per_mm` | `0.45` | Velocity requested per millimeter of height error |
 | `lift_position_tolerance_mm` | `1.0` | Position-error deadband |
+| `lift_io_timeout_s` | `0.5` | Valid limit-switch frame timeout; position control commands zero speed and raises on timeout |
+
+An active limit in the requested direction, or both limits active, commands zero speed immediately without an acceleration ramp.
+Because of the 1 mm deadband, a `height.pos = 0` target may stop before the upper switch; run homing to re-establish the mechanical zero.
 
 These are robot-side settings; restart the host after changing them. A motor's
 no-load maximum RPM is not a guaranteed continuous loaded operating speed.

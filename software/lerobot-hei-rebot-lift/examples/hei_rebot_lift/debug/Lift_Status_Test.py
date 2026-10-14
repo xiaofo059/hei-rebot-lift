@@ -128,7 +128,7 @@ def render_dashboard(lift: _LiftRuntime, status: str, height_step_mm: float) -> 
     print(f"Position        : {motor_position:10.4f} rad")
     print(f"Velocity        : {motor_velocity:10.4f} rad/s")
     print(f"Torque          : {motor_torque:10.4f}")
-    print(f"Error code      : {motor_error}")
+    print(f"Motor state     : {motor_error} (0 disabled, 1 enabled; 8-E fault)")
     print(f"Motor enabled   : {'YES' if motor is not None and motor.isEnable else 'NO'}")
     print()
     print(

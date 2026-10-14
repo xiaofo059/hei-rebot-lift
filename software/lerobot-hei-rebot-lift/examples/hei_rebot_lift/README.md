@@ -194,6 +194,7 @@ PYTHONPATH=src python -u examples/hei_rebot_lift/debug/Lift_Status_Test.py \
 Check height `-700..0 mm`, IO freshness, both limits, and motor state.
 Stop for offline IO or inconsistent limits; software stop keys are not an
 emergency stop.
+Motor state `0` means disabled, `1` means normally enabled, and `8–E` indicates a fault. A `0 mm` height target may stop before the upper switch because of the position deadband; use `H` to home again.
 
 ### Independent chassis test
 
@@ -208,6 +209,7 @@ PYTHONPATH=src python -u examples/hei_rebot_lift/debug/Chassis_Status_Test.py \
 
 `W/S/A/D` translates, `Q/E` rotates, `1/2/3` selects low/medium/high gear.
 Start with gear 1. `Space` commands zero wheel speed; `X` or `Ctrl+C` exits.
+Wheel state `1` means normally enabled and `0` means disabled. Feedback may briefly retain cached values after stopping; poll again to confirm.
 Hold/repeat direction keys; the watchdog clears stale requests after 0.65 s.
 
 **All four wheels use chassis kinematics; there is no individual-wheel jog mode.**
