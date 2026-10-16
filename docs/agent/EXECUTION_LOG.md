@@ -180,3 +180,35 @@ Codex 通过UI回收可见内容，转录到本机同名相对路径，独立SHA
 - 无需用户手工提交本轮任务。若日后需脱离浏览器独立远程读文件/运行命令，需配置可用SSH认证或另立任务验证受认证API；本轮未扩展访问权限。
 - 下次AGX正式开发前，按Fork开发分支/Git工作流同步审定文档并记录commit和目标HEAD；当前无自动提交或同步。
 - 现有初始化闭环无剩余阻断项；任意长时任务、断线恢复、排队取消和实机安全的可靠性仍需各自专项验证。
+
+## 2026-10-16 · MID-360S 第一批 01/02 启动（Codex）
+
+- 用户批准实施分阶段计划；最新现场回复：雷达尚未连接，接好后通知。当前不具备真实数据、固件或实际雷达 IP 证据；不启动机器人 host、不操作电机。
+- 基线：`fo` / x86_64 / Ubuntu 22.04.5；工作区起始干净，`dev` @ `f97fc4c14216d202d63269a8de1424ae646ca14d`。Codex 创建 `feat/mid360s-bringup`（exit 0）。
+- 本机 DSH：PID 140208，进程 cwd 经 `/proc/140208/cwd` 核对为本项目；3080 UI 新建独立会话“HEI-LIDAR 软件只读基线检查”，已输入/发送十四字段 01-SOFTWARE 提示词，实际观察到工具运行与最终报告，展开核对 Git 原始输出。不是 API 调度，也不是 Codex 内部子 Agent。
+- 01-SOFTWARE 接受范围：机器/目录/SHA 一致，首末 status 干净；ROS Humble/RViz、colcon、CMake 和编译器存在。Codex 独立以 `bash --noprofile --norc` + `source /opt/ros/humble/setup.bash` + `/usr/bin/python3` 导入 rclpy/rosbag2_py 成功（exit 0）。PATH-only 导入失败属于未 source，不能声称 ROS 缺失。vcstool 非必需，可用精确 SHA 的 Git 获取依赖。
+- 权限边界：DSH 工作区沙箱中的 sudo 报 no-new-privileges；Codex 本机 `sudo -n true` 提示需要密码。是两种不同限制，不代表用户机器 sudo 配置损坏；不读取口令、不调整全局权限。
+- 网络快照：enp7s0 `192.168.50.1/24`，邻居 `192.168.50.2`；Wi-Fi `192.168.1.144/23`，默认路由 via `192.168.1.1`；常见雷达默认网段与 Wi-Fi 重叠。未改配置，已有邻居不是已确认的雷达。
+- 02-PREP 范围：雷达缺席期间仅准备独立依赖、参数化 bringup、录包/质量工具及文档。01-HARDWARE 与 02-LIVE 不作通过结论；03 及以后保留前置验收门槛。
+
+### 02-PREP 阶段 Review（尚未验收）
+
+- DSH 实际下载并冻结官方 Livox-SDK2 v1.3.1 @ `f5d9375f84efe2b15bc0a052d3e18482ed13adf4`、livox_ros_driver2 1.2.6 @ `13eb05e4e6dd7a765b934d0c5fd6236676a57b49`；源代码包含 Mid360s handler/config。安装仅在被忽略的 `extensions/third_party/`。
+- SDK 和 driver 实际构建；初次遇 Conda CMake 4.x 与旧最低版本不兼容，改用系统 CMake 的干净 ROS shell。驱动组件初次缺 SDK 运行库路径，DSH 添加安装 RPATH 后，Codex 独立 source underlay 并检查 `liblivox_ros_driver2.so`：SDK 解析到本项目安装前缀，`not found=false`、exit 0。原始消息 `ros2 interface show livox_ros_driver2/msg/CustomMsg` 成功。
+- RF-LIDAR-001 P1：Codex 独立调用配置生成器的目录校验，首次 `extensions/config/local/` 尚不存在时实际抛 FileNotFoundError；要求向上寻找存在的祖先并回归测试。
+- RF-LIDAR-002 P2：构建脚本须拒绝 tracked 源码 dirty，保护已有 driver/launch，并将 ldd 自身失败判为失败；不能仅比对 HEAD 后宣称冻结源码可复现。
+- RF-LIDAR-003 P2：核对冻结 driver 的硬编码 IMU frame `livox_frame`、加速度原样传递。Codex 读取官方 MID360 系列协议：acc 单位 g、gyro 单位 rad/s；原始 bag 不改值，下游不能未经适配直接按 SI 融合，orientation 未提供。DSH 自身获取协议页被网络策略拒绝，记录限制并用冻结源码核对；不绕过策略。
+- RF-LIDAR-004 P1（阻断）：Codex 通过真实 rosbag2 API 生成 **SYNTHETIC** 临时包并调用 CLI；IMU 仅 0.1 秒、IMU/点云时间完全不重叠、所有点云非法 CDR、所有点云 width/data/fields 为空，四例实际均错误 exit 0。要求双流全时段/断流/源时间检查、损坏/空点云失败、默认完整 header 扫描、采样结果不得 PASS、阈值校验及对应回归。临时包在 data/mid360s 下独立临时目录，用后清理；从未发布为实时传感器。
+- 以上纠正已通过 DSH 排队发送后“插话发送”即时交付并看到任务回显；当前执行继续，不能宣称已经修复或最终通过。
+
+### 02-PREP 最终独立验收（Codex，2026-10-16）
+
+- RF-LIDAR-005 P2：文档原先重编号阶段、将未执行命令统称已实测、构建目录未回根目录，以及正式包未明确 CustomMsg 切换；要求对齐批准计划、逐块标执行状态、修正 source/路径、单 driver 切换与 31 分钟录包说明。已复核修正，历史 DSH 交付报告保持“等待 Review”的原始时态；当前结论以本节为准。
+- RF-LIDAR-004 首次修复仍漏掉中段冻结：Codex 用合法 24 字节点步长的 SYNTHETIC PC2，源时间第 6～10 帧冻结到第 5 帧后恢复，实际仍 exit 0。再次即时纠正，改为逐相邻源时间对检查重复/倒退及源时间最大间隔，增加话题名不能相同的参数检查。
+- Codex 独立测试命令：干净系统 shell source `/opt/ros/humble/setup.bash`、Livox underlay、项目 overlay 后，`/usr/bin/python3 -m pytest -q extensions/ros2_ws/src/hei_robot_bringup/test`；实际 `126 passed in 5.04s`，exit 0（无跳过）。DSH 另有 colcon build/test 记录，不能以其自述替代本独立结果。
+- Codex 在修复后的代码上重新用真实 rosbag2 API 构造 **SYNTHETIC_ONLY** 的 6 个独立对照：IMU 短流、源时间不重叠、非法 CDR、空点云、中段时间冻结，全部 exit 1；合法合成对照 exit 0。临时数据生成在忽略目录，用后清理，没有发布实时话题。此结果不代表真实雷达通过。
+- 首次配置目录问题已有缺失多级路径回归；构建脚本已有 tracked dirty 拒绝、预存 launch 保护和 ldd 失败检查；源代码/冻结 SHA/实际组件库运行路径再次核对。RF-LIDAR-001～005 关闭。DSH 沙箱不能获取协议页不影响 Codex 已通过官方网页与冻结源码双重核对单位事实。
+- 语法与范围：`bash -n extensions/tools/build_mid360s_underlay.sh`、`git diff --check` exit 0；第三方源码交付时干净。DSH 的 dirty 保护测试曾临时修改并还原其任务内下载的 CHANGELOG，不能将“交付时干净”扩张为“全过程未修改”。
+- 结论：01-SOFTWARE 与 02-PREP DONE；01-HARDWARE、02-LIVE BLOCKED 等接线。真实驱动启动、点云/IMU、RViz、正式 bag/回放、LIO/SLAM/导航、AGX、运动均 NOT_RUN。没有修改网络配置、机器人控制源码或设备状态。未部署持续后台监控。
+- 专项输出：`docs/MID360S_BRINGUP.md`；DSH 原始证据 `docs/agent/evidence/mid360s/`；独立验收 JSON `docs/agent/evidence/20261016-mid360s-codex-review.json`。本批审查通过的源码、文档与证据在功能分支提交；具体提交 SHA 以 Git 日志为准，不向远端或上游推送。
+- 最终文档 QA：Codex 发现包 README 的 4 处相对路径层级错误，作为 RF-LIDAR-005 的补项重新交给 DSH；DSH 仅修改该 README。Codex 复查 3 份新增说明的 11 个相对链接，0 损坏，空白检查通过。软件源代码未变化，不重复无关测试。独立验收 JSON 追加已审查源文件 SHA256，便于关联本次测试与交付版本；DSH 当前回合结束且无待发送队列，未见 driver/robot host 进程。

@@ -31,3 +31,8 @@ Thumbs.db
 /extensions/ros2_ws/build/
 /extensions/ros2_ws/install/
 /extensions/ros2_ws/log/
+
+# Third-party sources, SDK installs and underlay builds (imported via extensions/dependencies/*.repos)
+/extensions/third_party/
+# Machine-local field configuration (IPs, serials, site values)
+/extensions/config/local/

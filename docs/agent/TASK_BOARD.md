@@ -34,6 +34,37 @@
 
 本轮不进行算法开发、训练、仿真、部署、硬件读写或运动测试。新任务需重新检查主机、目录、Git dirty 和解释器；当前 PID/端口是日期快照。
 
+## MID-360S 项目任务（2026-10-16）
+
+用户已批准分阶段实施；当前批次为 01/02。路线：笔记本接入 → FAST-LIO2 → RTAB-Map 三维闭环/地图定位 → AGX 安装 → 桥接 → Nav2。首版室内平地，允许 RViz 指定大致初始位置。配套供电/网线已备齐，但用户本轮确认雷达**尚未连接**，接好后通知。后续底盘运动须另获授权。
+
+开发分支 `feat/mid360s-bringup`，base `f97fc4c14216d202d63269a8de1424ae646ca14d`；开工前工作区干净。Codex 单写任务板和执行日志，DSH 仅写任务白名单内实现和专项报告。
+
+| Task ID（前缀 HEI-LIDAR-20261016-） | 优先级 | Owner | 执行 Agent | 状态 | 依赖 | 证据/验收范围 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 01-SOFTWARE | P1 | Codex | DSH-LAPTOP | DONE | — | UI 实际派发/执行；Codex 复核原始机器/Git输出，独立 source Humble 后 rclpy、rosbag2_py 导入成功。仅软件基线通过。 |
+| 01-HARDWARE | P1 | Codex | DSH-LAPTOP + 用户接线 | BLOCKED | 用户接好雷达 | 型号/固件、供电接线、实际 IP；未连接不能判定通过。 |
+| 02-PREP | P1 | Codex | DSH-LAPTOP | DONE | 01-SOFTWARE | 2026-10-16 Codex 复审 001～005 关闭；独立 pytest 126 passed，5 个异常 bag 全部 exit 1、正常合成对照 exit 0；仅软件准备验收。详见执行日志及 20261016-mid360s-codex-review.json。 |
+| 02-LIVE | P1 | Codex | DSH-LAPTOP | BLOCKED | 01-HARDWARE、02-PREP DONE | 等用户接好雷达；点云/IMU/逐点时间、30 分钟稳定性、原始 bag 与回放均 NOT_RUN。 |
+| 03-LIO | P1 | Codex | DSH-LAPTOP | PLANNED | 02-LIVE DONE | FAST-LIO2；先回放后小推车采集，检查外参/时间/去畸变。 |
+| 04-SLAM | P1 | Codex | DSH-LAPTOP | PLANNED | 03-LIO DONE | RTAB-Map 闭环优化、数据库/优化点云/轨迹保存；3 个位置重启定位验收。 |
+| 05-AGX | P1 | Codex | DSH-AGX | PLANNED | 04-SLAM DONE | 同 SHA ARM64 部署、固定底盘安装、外参/遮挡、30 分钟性能。 |
+| 06L-BRIDGE | P1 | Codex | DSH-LAPTOP | PLANNED | 04-SLAM DONE | 假 host 验证 SI 单位、完整 18 维动作、控制权、超时停止。 |
+| 06A-BRIDGE | P1 | Codex | DSH-AGX | PLANNED | 05、06L Review、运动授权 | 轮组方向/速度标定、停止延迟和停车距离。 |
+| 07L-NAV | P1 | Codex | DSH-LAPTOP | PLANNED | 04、06L Review | 三维地图生成二维导航地图；RTAB-Map 定位、DWB 全向、点云障碍层。 |
+| 07A-NAV | P1 | Codex | DSH-AGX | PLANNED | 05、06A、07L Review、运动授权 | 初始 0.1 m/s、0.2 rad/s；至少 5 个目标、障碍、取消、定位/通信丢失测试。 |
+
+未执行项均记 NOT_RUN；任何阶段数据/定位异常均不推进后续阶段。专项启动说明及真实结果见新增 bringup 文档和执行日志。
+
+### 后续阶段的批准验收目标
+
+- 02-LIVE：点云 10 Hz 设置时平均 9–11 Hz，IMU 达到已核实标称频率；至少 1800 秒双流有效覆盖，无大于 0.5 秒断流、源时间倒退/冻结；保存 CustomMsg/IMU 原始值及已有 TF。建议录 31 分钟留启停余量；物理点云、轴向与时间同步另核验，软件 QC 不替代这些检查。
+- 03-LIO：先离线回放，再固定小推车实采直线/横移/转弯/静止/闭环；外参和 IMU 单位处理必须显式适配，不把已有 imu_link 冒充内置 IMU。
+- 04-SLAM：结构明显的室内约 30–50 米闭环，有回环约束及优化证据；墙面重复扫描错位目标 ≤10 cm，标记起点误差目标 ≤15 cm/5°。3 个已建图位置重启，允许约 0.5 m/20° 初始提示，目标 30 秒内恢复到 ≤20 cm/5°。交付数据库、优化点云和轨迹。
+- 05-AGX：目标机独立构建已审定 SHA，固定底盘安装、实测外参/遮挡；30 分钟资源/温度/延迟记录；不把查版本当部署通过。
+- 06L/06A：唯一网关，SI 单位转换，完整 18 维动作与新鲜状态保持，导航/原遥操作互斥；存活网关输入超过 250 ms 未更新撤销速度。验证退出、反馈过期、TF/定位丢失、通信中断，独立测 host 看门狗与实际停车距离；动作测试须新授权。
+- 07L/07A：RTAB-Map 唯一发布 map→odom，LIO 适配器唯一发布 odom→base_link；二维可通行地图、点云障碍层与 DWB 全向控制。初始平移 ≤0.1 m/s、角速 ≤0.2 rad/s，至少 5 个目标，目标误差 ≤20 cm/10°；取消、障碍和数据/定位丢失均可停止或安全重规划。初版固定收拢双臂与升降，轮廓按整机测量。
+
 ## 维护规则
 
 1. 每次状态变更必须同时写入证据来源（命令、退出码、原始输出位置）。

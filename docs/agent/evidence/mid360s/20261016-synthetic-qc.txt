@@ -1,0 +1,29 @@
+全部为 SYNTHETIC 合成数据；不代表真实雷达/IMU 观测，也不证明硬件时间同步。
+
+### RF-LIDAR-004 四个独立复现（修复前均错误 exit=0，现必须非零）
+case1   exit=1
+case2   exit=1
+case3   exit=1
+case4   exit=1
+
+### RF-LIDAR-004 残留：中段冻结后恢复（expected-duration=2, imu 95..105）
+[FAIL] lidar.header_monotonic       帧头时间严格递增（逐相邻对检查 21 条；倒退 0 次，重复/冻结 5 次）
+[FAIL] lidar.header_gap             源帧头最大间隔 0.600s（要求 <= 0.5s），起于 1500000000 ns；该检查针对传感器时间跳变，接收时间可能仍然连续
+[PASS] imu.header_monotonic         帧头时间严格递增（逐相邻对检查 201 条；倒退 0 次，重复/冻结 0 次）
+[PASS] imu.header_gap               源帧头最大间隔 0.010s（要求 <= 0.5s），起于 1359999999 ns；该检查针对传感器时间跳变，接收时间可能仍然连续
+结论: FAIL
+exit=1
+
+### 空结构 PointCloud2（width=0/data 空/fields 空）
+[FAIL] lidar.pc2_structure          PointCloud2 结构非法 301 条；字段 []；示例：['width=0 非法', 'height=0 非法', 'fields 为空', '缺少字段 x', '缺少字段 y']
+结论: FAIL
+exit=1
+
+### 三条结论路径（30s 合成好包）
+A) 默认 1800s 判据      -> exit=1 (期望 1 FAIL)
+B) 放宽时长、无 IMU 判据 -> exit=3 (期望 3 INCONCLUSIVE)
+C) 放宽时长 + IMU 判据   -> exit=0 (期望 0 PASS)
+
+### 绕过验收的参数必须被拒绝
+header-sample=0        -> exit=2 (期望 2)
+lidar-topic==imu-topic -> exit=2 (期望 2)
