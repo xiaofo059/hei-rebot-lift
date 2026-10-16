@@ -8,7 +8,7 @@ SUBSYSTEM=="tty", KERNELS=="1-2.1.2", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=
 
 # HEI ReBot Lift cameras selected interactively by debug/Port_Binding_Wizard.py
 # Camera binding uses ID_PATH and video-index0; keep each camera in the same USB socket.
-SUBSYSTEM=="video4linux", KERNEL=="video*", ENV{ID_PATH}=="platform-3610000.usb-usb-0:4.3.2.4:1.0", ATTR{index}=="0", SYMLINK+="hei_front_camera"
+SUBSYSTEM=="video4linux", KERNEL=="video*", ENV{ID_PATH}=="platform-3610000.usb-usb-0:4.3.2.2:1.0", ATTR{index}=="0", SYMLINK+="hei_front_camera"
 SUBSYSTEM=="video4linux", KERNEL=="video*", ENV{ID_PATH}=="platform-3610000.usb-usb-0:4.3.3:1.0", ATTR{index}=="0", SYMLINK+="hei_left_wrist_camera"
 SUBSYSTEM=="video4linux", KERNEL=="video*", ENV{ID_PATH}=="platform-3610000.usb-usb-0:4.4.4:1.0", ATTR{index}=="0", SYMLINK+="hei_right_wrist_camera"
 
