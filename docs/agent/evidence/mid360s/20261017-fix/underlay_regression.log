@@ -1,0 +1,46 @@
+== 1. bash -n ==
+PASS: bash -n build_mid360s_underlay.sh
+PASS: bash -n patch_state.sh
+PASS: bash -n test_patch_state_machine.sh
+PASS: bash -n run_underlay_regression.sh
+
+== 2. tracked-patch state machine ==
+PASS: 干净仓库 + 空 patch 集
+PASS: 干净 -> 按序应用 2 个 patch
+PASS: 已应用状态幂等
+PASS: 逆序撤销 2 个叠放 patch
+PASS: 干净态未知已跟踪改动（拒绝且工作区未变）
+PASS: 同文件未知改动（拒绝且工作区未变）
+PASS: 未知未跟踪源码文件（拒绝且工作区未变）
+PASS: 被忽略的未跟踪产物允许
+PASS: 已应用态未知脏改动时撤销（拒绝且工作区未变）
+PASS: 收尾撤销恢复冻结基线
+
+ALL PATCH STATE TESTS PASSED
+PASS: patch state machine regression
+
+== 3. host_time.h mapping test ==
+ok  : anchors are captured exactly once
+ok  : first HostNowNs() is not earlier than the epoch anchor
+ok  : epoch anchor looks like a real epoch
+ok  : HostNowNs() is non-decreasing
+ok  : mapping at anchor returns anchor epoch
+ok  : mapping is strictly monotonic for advancing steady time
+ok  : mapping unchanged by a hypothetical wall-clock step
+ok  : HostNowNs() stays within 2 s of CLOCK_REALTIME
+
+ALL CHECKS PASSED
+PASS: host time mapping (first call >= anchor, monotonic)
+
+== 4. SDK symbol isolation ==
+PASS: SDK 未导出 spdlog/fmt/livox:: 内部符号
+PASS: 公开 C API 导出完整
+
+== 5. exit-crash A/B probe (no hardware) ==
+PASS: patched SDK alone -> exit 0
+PASS: patched SDK + system libspdlog -> exit 0（符号隔离生效）
+PASS: original SDK alone -> exit 0
+extensions/tools/tests/run_underlay_regression.sh: 第 76 行： 38010 总线错误            （核心已转储） "${TMP}/probe_sdk_loader" "$@" > /dev/null 2>&1
+PASS: original SDK + system libspdlog -> SIGBUS(135)（复现缺陷）
+
+ALL UNDERLAY REGRESSION CHECKS PASSED

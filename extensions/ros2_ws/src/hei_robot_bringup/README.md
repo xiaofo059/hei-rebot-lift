@@ -6,9 +6,9 @@ HEI ReBot Lift 自研 ROS 2 Humble bringup 包。当前只覆盖 **MID-360S 原�
 
 ## 状态（2026-10-16）
 
-- 软件实现完成、本机测试通过；**尚未经 Codex 最终 Review，不代表已验收通过**。
-- 真实雷达未连接：真实启动、正式录包、回放一律 **NOT_RUN**（详见
-  [`docs/MID360S_BRINGUP.md`](../../../../docs/MID360S_BRINGUP.md)）。
+- 软件准备已完成并经 Codex Review；真实 MID-360S 已连接，PointCloud2/RViz 链路与约 15 秒点云频率观察已完成。
+- 02-LIVE 尚未验收：IMU 频率/字段、CustomMsg 逐点时间、真实 rosbag/QC/回放未完成；driver Ctrl+C 退出会触发 SIGABRT。详见
+  [`docs/MID360S_BRINGUP.md`](../../../../docs/MID360S_BRINGUP.md)。
 
 ## 内容
 

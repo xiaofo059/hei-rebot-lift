@@ -10,10 +10,20 @@
 `angular_velocity` 单位是 rad/s，`orientation` 未发布。详见 `mid360s_config.py`。
 因此**不能**把原始 Imu 消息当作已符合 SI 的融合输入。
 
+CustomMsg 逐点时间口径（driver 1.2.6 冻结源码核对，2026-10-16）：
+  ``CustomPoint.offset_time`` 是相对**本帧首点**（``timebase``）的 **ns** 偏移
+  （``src/lddc.cpp:395``：``uint32(points[i].offset_time - pkg.base_time)``，
+  ``base_time = points_clouds_.at(0).offset_time`` 即帧内首个**被追加**的点）；
+  帧内点的追加顺序 = UDP 包**到达**顺序（``src/comm/pub_handler.cpp:149/240/388-390``，
+  全链路无任何排序），包内才按 ``point_interval`` 递增。因此 ``points[]`` **不保证**
+  按 ``offset_time`` 有序，"逐点 offset 逆序/回退"不是数据非法判据，只做 INFO 统计。
+
 判定原则（RF-LIDAR-004 修复后）：
   * **两条流都要**满足持续时间、断流、帧头有效/单调/非冻结；
   * 两条流的**源帧头时间范围必须重叠**，且重叠窗口覆盖要求时长（同一采集窗口）；
   * 类型不可导入、反序列化失败、缺帧头、点云/CustomMsg 结构非法 → **FAIL**，不得跳过；
+  * CustomMsg **逐点 offset_time 的顺序/分布只做 INFO 统计**（driver 按包到达次序追加、不排序），
+    不作 FAIL 判据；**消息级**的 ``header.stamp`` 时间戳判据不受影响，仍全量执行；
   * 帧头时间检查**默认全量**；显式使用 `--header-sample` 主动采样会丢失信息，
     因此只能给 INCONCLUSIVE，永远不能给 PASS；
   * 阈值参数必须是有限正数且上下限次序正确；`--header-sample 0` 等绕过用法直接拒绝。
@@ -63,6 +73,9 @@ NS = 1e-9
 #: PointField.datatype -> 字节数（sensor_msgs/PointField）
 POINTFIELD_SIZE = {1: 1, 2: 1, 3: 2, 4: 2, 5: 4, 6: 4, 7: 4, 8: 8}
 
+#: CustomPoint.msg 声明 ``uint32 offset_time``；这是唯一有依据的上界（ns）
+UINT32_MAX = 0xFFFFFFFF
+
 #: 每个流最多记录多少条“结构问题”示例，避免报告爆炸
 MAX_PROBLEM_SAMPLES = 5
 
@@ -77,6 +90,28 @@ class Check:
     check_id: str
     status: str  # PASS / FAIL / INFO
     detail: str
+
+
+@dataclass
+class PointTimeStats:
+    """CustomMsg 逐点 offset_time 的**统计**信息（只用于 INFO，不参与 FAIL 判定）。
+
+    依据 driver 1.2.6 冻结源码：点按 UDP 包到达次序追加、全程不排序，
+    所以逆序/回退是正常现象；消息类型也没有给 offset_time 定义上界。
+    """
+
+    frames: int = 0
+    points: int = 0
+    #: 相邻点 offset 逆序（后者更小）的总处数
+    inversions: int = 0
+    #: 出现逆序的帧数
+    frames_with_inversions: int = 0
+    #: 单次最大回退量（ns）
+    worst_regression_ns: int = 0
+    #: 全帧 offset 相同的帧数（driver 在 point_interval==0 时合法产生）
+    frozen_frames: int = 0
+    min_offset_ns: int | None = None
+    max_offset_ns: int | None = None
 
 
 @dataclass
@@ -115,10 +150,12 @@ class StreamStats:
     pc2_fields: list[str] = field(default_factory=list)
     pc2_problems: list[str] = field(default_factory=list)
 
-    #: CustomMsg 结构检查
+    #: CustomMsg 结构检查（FAIL 级）
     custom_bad: int = 0
     custom_points_checked: int = 0
     custom_problems: list[str] = field(default_factory=list)
+    #: CustomMsg 逐点时间统计（INFO 级，不参与 FAIL）
+    custom_point_time: PointTimeStats = field(default_factory=PointTimeStats)
 
     #: 显式采样导致覆盖不完整
     sampled: bool = False
@@ -197,10 +234,28 @@ def validate_pointcloud2(msg: Any) -> list[str]:
     return problems
 
 
-def validate_custommsg(msg: Any, counters: dict[str, int]) -> list[str]:
-    """CustomMsg 必须 point_num 与数组一致、点非空、逐点 offset_time 有效。
+def _as_uint32_offset(raw: Any) -> int | None:
+    """把 CustomPoint.offset_time 读成 uint32；不可表示时返回 None。
 
-    counters 用于累计逐点检查量（总点数、逆序点数、冻结点数）。
+    依据只有消息类型本身：``CustomPoint.msg`` 声明 ``uint32 offset_time``。
+    这里**只**做类型可表示性检查，不对取值大小下业务判据
+    （消息与 driver 都没有给 offset_time 定义上界）。
+    """
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        return None
+    if not 0 <= raw <= UINT32_MAX:
+        return None
+    return raw
+
+
+def validate_custommsg(msg: Any) -> list[str]:
+    """CustomMsg 的结构合法性（FAIL 级）：point_num 与数组一致、点非空、逐点 offset_time 可表示。
+
+    **不**检查 ``points[]`` 是否按 ``offset_time`` 有序，也不检查单帧 offset 是否"冻结"：
+    driver 1.2.6 按 UDP 包到达次序逐点追加且全链路无排序
+    （``src/comm/pub_handler.cpp:149/240/388-390``），包到达次序与时间次序不一致是合法现象，
+    消息类型也允许全帧 offset 相同（``point_interval==0`` 时 driver 就会这样产出）。
+    逐点时间分布只做 INFO 统计，见 :func:`collect_custommsg_point_time`。
     """
     problems: list[str] = []
     points = list(getattr(msg, "points", []) or [])
@@ -212,23 +267,83 @@ def validate_custommsg(msg: Any, counters: dict[str, int]) -> list[str]:
         problems.append("points 为空")
         return problems
 
+    for idx, point in enumerate(points):
+        if not hasattr(point, "offset_time"):
+            problems.append(f"第 {idx} 个点缺少 offset_time 字段")
+            break
+        raw = point.offset_time
+        if _as_uint32_offset(raw) is None:
+            problems.append(
+                f"第 {idx} 个点 offset_time={raw!r} 不是 uint32 可表示值"
+                f"（CustomPoint.msg 声明 uint32，范围 0–{UINT32_MAX}）"
+            )
+            break
+    return problems
+
+
+def collect_custommsg_point_time(stats: PointTimeStats, msg: Any) -> bool:
+    """累计 CustomMsg 逐点 ``offset_time`` 的统计量（**只**用于 INFO，不参与 FAIL 判定）。
+
+    上游口径（driver 1.2.6 冻结源码，见模块 docstring）：
+      * 单位 ns：``offset_time = 包时间戳 + i * point_interval``（``pub_handler.cpp:388``）；
+      * 帧内首点 offset 恒为 0：``lddc.cpp:395`` 以帧内首个被追加的点为基准；
+      * ``points[]`` 顺序 = UDP 包到达顺序，**不排序**，故相邻逆序/回退属正常现象。
+
+    统计按**整帧原子**提交：只要存在"缺少 offset_time / 不可表示"的点
+    （该帧已由 :func:`validate_custommsg` 判 FAIL），本函数不写入任何局部计数，
+    避免"前半帧合法、后半帧非法"时产生不完整统计。返回是否已提交本帧。
+    """
+    points = list(getattr(msg, "points", []) or [])
     offsets: list[int] = []
     for point in points:
-        if not hasattr(point, "offset_time"):
-            problems.append("存在点缺少 offset_time")
-            break
-        offsets.append(int(point.offset_time))
+        value = _as_uint32_offset(getattr(point, "offset_time", None))
+        if value is None:
+            return False  # 结构问题由 validate_custommsg 记为 FAIL，整帧不计入 INFO 统计
+        offsets.append(value)
+    if not offsets:
+        return False
 
-    counters["points"] += len(offsets)
-    if offsets:
-        inversions = sum(1 for a, b in zip(offsets, offsets[1:]) if b < a)
-        if inversions:
-            counters["inversions"] += inversions
-            problems.append(f"逐点 offset_time 非单调（逆序 {inversions} 处）")
-        if len(offsets) > 1 and len(set(offsets)) == 1:
-            counters["frozen"] += 1
-            problems.append("逐点 offset_time 冻结（全帧相同）")
-    return problems
+    stats.frames += 1
+    stats.points += len(offsets)
+    if len(offsets) > 1:
+        regressions = [a - b for a, b in zip(offsets, offsets[1:]) if b < a]
+        if regressions:
+            stats.frames_with_inversions += 1
+            stats.inversions += len(regressions)
+            stats.worst_regression_ns = max(stats.worst_regression_ns, max(regressions))
+        if len(set(offsets)) == 1:
+            stats.frozen_frames += 1
+    low, high = min(offsets), max(offsets)
+    stats.min_offset_ns = low if stats.min_offset_ns is None else min(stats.min_offset_ns, low)
+    stats.max_offset_ns = high if stats.max_offset_ns is None else max(stats.max_offset_ns, high)
+    return True
+
+
+def custom_point_time_detail(stats: PointTimeStats) -> str:
+    """生成 CustomMsg 逐点 offset_time 的 INFO 报告文本（含上游口径与不确定性）。"""
+    return (
+        f"逐点 offset_time 分布（仅 INFO，不作 FAIL 判据）：{stats.frames} 帧 / {stats.points} 点；"
+        f"相邻逆序 {stats.inversions} 处，涉及 {stats.frames_with_inversions} 帧，"
+        f"单次最大回退 {_fmt_ns(stats.worst_regression_ns)}；"
+        f"全帧 offset 相同（冻结）{stats.frozen_frames} 帧；"
+        f"offset 范围 {_fmt_ns(stats.min_offset_ns)} – {_fmt_ns(stats.max_offset_ns)}（相对本帧基准点）。"
+        "上游口径：offset_time 为 ns、相对本帧首个被追加的点（lddc.cpp:395），"
+        "而点按 UDP 包到达次序追加、全链路无排序（pub_handler.cpp:149/240/388-390），"
+        "故逆序/回退是包到达次序与时间次序不一致的正常表现。"
+        "offset_time 的**合法上界未由消息类型或 driver 定义**（uint32 内即合法），"
+        "本工具不据样本特征设阈值；若需按帧周期判界，须由上游/配置先给出定义。"
+    )
+
+
+def _fmt_ns(ns: int | None) -> str:
+    """把 ns 值格式化成人可读文本（仅用于报告）。"""
+    if ns is None:
+        return "无"
+    if ns >= 1_000_000:
+        return f"{ns} ns（{ns / 1e6:.3f} ms）"
+    if ns >= 1_000:
+        return f"{ns} ns（{ns / 1e3:.3f} µs）"
+    return f"{ns} ns"
 
 
 # --------------------------------------------------------------------------
@@ -329,7 +444,6 @@ def collect_stats(
     prev_ns: dict[str, int] = {}
     header_prev: dict[str, int] = {}
     header_seen: dict[str, int] = {}
-    custom_counters: dict[str, int] = {}
 
     while reader.has_next():
         topic, data, t_ns = reader.read_next()
@@ -396,9 +510,11 @@ def collect_stats(
 
         if topic == lidar_topic:
             if st.found_type == CUSTOMMSG_TYPE:
-                counters = custom_counters.setdefault(topic, {"points": 0, "inversions": 0, "frozen": 0})
-                problems = validate_custommsg(msg, counters)
-                st.custom_points_checked = counters["points"]
+                problems = validate_custommsg(msg)
+                # 结构非法的帧不进入 INFO 统计：只统计结构合法帧，避免半帧计数
+                if not problems:
+                    collect_custommsg_point_time(st.custom_point_time, msg)
+                st.custom_points_checked = st.custom_point_time.points
                 if problems:
                     st.custom_bad += 1
                     if len(st.custom_problems) < MAX_PROBLEM_SAMPLES:
@@ -477,6 +593,14 @@ def evaluate(
                 f"缺少帧头 {lidar.missing_header}/{lidar.header_checked + lidar.missing_header} 条",
             )
             self_check_stream_common(add, lidar, "lidar", args)
+            # RF-LIDAR-006：CLI/JSON 一直记录 --lidar-hz-min/max，但此前只有 IMU
+            # 有频率判据；点云频率必须同样给出明确 PASS/FAIL（门限不改）。
+            add(
+                "lidar.rate",
+                args.lidar_hz_min <= lidar.avg_hz <= args.lidar_hz_max,
+                f"点云平均频率 {lidar.avg_hz:.3f} Hz"
+                f"（要求 {args.lidar_hz_min:g}–{args.lidar_hz_max:g} Hz）",
+            )
             if lidar.found_type == POINTCLOUD2_TYPE:
                 add(
                     "lidar.pc2_structure",
@@ -497,8 +621,16 @@ def evaluate(
                 add(
                     "lidar.custom_structure",
                     lidar.custom_bad == 0,
-                    f"CustomMsg 结构非法 {lidar.custom_bad} 条；检查 {lidar.custom_points_checked} 点"
+                    f"CustomMsg 结构非法 {lidar.custom_bad} 条；"
+                    f"结构合法帧内检查 {lidar.custom_points_checked} 点"
                     + (f"；示例：{lidar.custom_problems}" if lidar.custom_problems else ""),
+                )
+                checks.append(
+                    Check(
+                        "lidar.custom_point_time",
+                        "INFO",
+                        custom_point_time_detail(lidar.custom_point_time),
+                    )
                 )
 
     # ---------------- IMU 流

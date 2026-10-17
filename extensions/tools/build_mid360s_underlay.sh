@@ -20,6 +20,21 @@
 #     独立 livox_ws 里执行，不能放进自研工作空间；本脚本只清理自己的 livox_ws 构建目录。
 #   * 官方 build.sh 用 `-DROS_EDITION=ROS2 -DDISTRO_ROS=${ROS_DISTRO}`；本脚本保持相同
 #     CMake 参数，并额外显式指定本项目内的 SDK 路径，避免依赖 /usr/local 全局安装。
+#
+# 冻结 SHA + tracked patch（HEI-LIDAR-20261017-02-FIX）：
+#   两个第三方仓库仍按 extensions/dependencies/livox.repos 的 40 位 SHA 冻结；
+#   所有必要改动以 patch 形式放在 extensions/dependencies/patches/ 下并由本脚本
+#   自动应用/校验，不手改第三方源码：
+#     * livox_sdk2:        0001-export-only-public-c-api.patch
+#         shared 库只导出 livox_lidar_api.h 的公开 C API，隐藏 bundled
+#         spdlog 1.3.1/fmt 内部符号，避免被 ROS 2 载入的系统 libspdlog.so.1
+#         (1.9.2) 抢占后退出 SIGBUS/SIGABRT（见 patches/README.md）。
+#     * livox_ros_driver2: 0001-monotonic-host-clock.patch
+#         NoSync(time_type==0) 路径改用 steady_clock 派生的单调 epoch 时间戳，
+#         非同步发布调度改用 steady_clock；PTP/GPS 路径不变。
+#   工作区状态机：干净 SHA -> 自动 apply；已应用 patch -> 反向校验 + 逐字节
+#   比对「冻结 SHA + patch」；其它任何 dirty -> 拒绝构建。
+#   --revert-patches 只撤销 patch 并退出（不构建）。
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,13 +47,16 @@ SDK_INSTALL="${TP_DIR}/livox_sdk2_install"
 LIVOX_WS="${TP_DIR}/livox_ws"
 DRIVER_DIR="${LIVOX_WS}/src/livox_ros_driver2"
 REPOS_FILE="${REPO_ROOT}/extensions/dependencies/livox.repos"
+PATCH_ROOT="${REPO_ROOT}/extensions/dependencies/patches"
 
 PARALLEL="${PARALLEL:-4}"
 CLEAN=0
+REVERT=0
 for arg in "$@"; do
   case "${arg}" in
     --clean) CLEAN=1 ;;
-    -h|--help) sed -n '2,30p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    --revert-patches) REVERT=1 ;;
+    -h|--help) sed -n '2,40p' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) echo "未知参数: ${arg}" >&2; exit 2 ;;
   esac
 done
@@ -87,21 +105,39 @@ check_repo() {  # $1 = path, $2 = repos key
     fail "${path} SHA 不符：期望 ${want}，实际 ${got}（拒绝用未冻结的提交构建）"
   fi
 
-  # 只校验 HEAD 不够：本地对已跟踪文件的修改会改变实际构建内容，
-  # 那样构建出来的就不是冻结版本（RF-LIDAR-002）。
-  # --untracked-files=no 只报已跟踪文件的改动，因此 driver 仓库里被 .gitignore
-  # 忽略的生成物（package.xml、launch/、build/）不会误报。
-  dirty="$(git -C "${path}" status --porcelain --untracked-files=no)"
-  if [ -n "${dirty}" ]; then
-    printf '%s\n' "${dirty}" >&2
-    fail "${path} 存在已跟踪文件的本地修改，构建结果将不再对应冻结 SHA ${want}；
-       请先 git -C ${path} stash 或 git -C ${path} checkout -- . （本脚本不会替你改动工作区）"
-  fi
-  echo "  OK ${key} @ ${got}（工作区干净：无已跟踪改动）"
+  echo "  OK ${key} @ ${got}"
 }
 
+# ---------------------------------------------------------------- tracked patch
+# 冻结 SHA 必须可追踪：所有第三方改动只允许来自 extensions/dependencies/patches/。
+# 实现集中在 extensions/tools/lib/patch_state.sh（可用临时 git 仓库单测）：
+#   * 已跟踪改动：git status --porcelain --untracked-files=no；
+#     被测仓库若存在未经 tracked patch 覆盖的改动 -> 明确报
+#     "存在已跟踪文件的本地修改，拒绝构建"（构建前，工作区不变）。
+#   * 未跟踪源码：git ls-files --others --exclude-standard；只允许 patch 新增路径。
+#     被 .gitignore 忽略 的生成物（build/、driver package.xml/launch/）不误判。
+#   * 干净 SHA -> 自动 apply；已应用 -> 逐字节比对「冻结 SHA + patch」；
+#     其它 dirty -> 在**任何修改之前**拒绝。
+if [ ! -f "${SCRIPT_DIR}/lib/patch_state.sh" ]; then
+  echo "错误: 缺少 ${SCRIPT_DIR}/lib/patch_state.sh" >&2
+  exit 1
+fi
+# shellcheck source=lib/patch_state.sh
+. "${SCRIPT_DIR}/lib/patch_state.sh"
 check_repo "${SDK_SRC}" "livox_sdk2_src"
 check_repo "${DRIVER_DIR}" "livox_ws/src/livox_ros_driver2"
+
+if [ "${REVERT}" = "1" ]; then
+  step "撤销 tracked patch（恢复冻结 SHA 工作区）"
+  revert_repo_patches "${SDK_SRC}" "livox_sdk2" "Livox-SDK2"
+  revert_repo_patches "${DRIVER_DIR}" "livox_ros_driver2" "livox_ros_driver2"
+  echo "  OK：第三方工作区已恢复冻结 SHA（未构建）"
+  exit 0
+fi
+
+step "应用/校验 tracked patch（冻结 SHA + patch）"
+prepare_repo "${SDK_SRC}" "livox_sdk2" "Livox-SDK2"
+prepare_repo "${DRIVER_DIR}" "livox_ros_driver2" "livox_ros_driver2"
 
 # ---------------------------------------------------------------- SDK2 构建
 step "构建并安装 Livox-SDK2（无 sudo，前缀在仓库内）"
@@ -125,6 +161,29 @@ SDK_INC="${SDK_INSTALL}/include"
 [ -f "${SDK_INC}/livox_lidar_api.h" ] || fail "安装后仍找不到 ${SDK_INC}/livox_lidar_api.h"
 echo "  SDK 库    : ${SDK_LIB}"
 echo "  SDK 头文件: ${SDK_INC}"
+
+# 符号隔离验收：bundled spdlog/fmt 与内部 C++ 符号不得进入动态符号表，
+# 公开 C API 必须仍然导出（否则 driver 链接失败或运行期崩溃）。
+step "校验 SDK 动态符号导出（只允许公开 C API）"
+leaked="$(nm -D --defined-only "${SDK_LIB}" | grep -E 'spdlog|_ZN3fmt|_ZN5livox5lidar' || true)"
+if [ -n "${leaked}" ]; then
+  printf '%s\n' "${leaked}" | head -20 >&2
+  fail "SDK 仍导出 spdlog/fmt/livox:: 内部符号：符号隔离 patch 未生效"
+fi
+API_LIST="${PATCH_ROOT}/livox_sdk2/public_c_api.txt"
+[ -f "${API_LIST}" ] || fail "缺少公开 C API 清单 ${API_LIST}"
+missing=0
+exported="$(nm -D --defined-only "${SDK_LIB}" | awk '{print $3}')"
+while IFS= read -r sym; do
+  [ -n "${sym}" ] || continue
+  if ! grep -qx "${sym}" <<< "${exported}"; then
+    echo "  缺少导出 C API: ${sym}" >&2
+    missing=1
+  fi
+done < "${API_LIST}"
+[ "${missing}" = "0" ] || fail "SDK 公开 C API 导出不完整（符号隔离 patch 过度隐藏）"
+echo "  OK: 未导出 spdlog/fmt/livox:: 内部符号"
+echo "  OK: 公开 C API 导出完整（$(grep -c . "${API_LIST}") 个）"
 
 # ---------------------------------------------------------------- driver 准备
 step "按官方等价方式准备 driver 清单与 launch（不修改第三方源码、不覆盖预存文件）"
@@ -227,6 +286,13 @@ for f in "${DRIVER_NODE}" "${DRIVER_LIB}"; do
 done
 [ "${ldd_rc}" = "0" ] || fail "ldd 报告 not found；RPATH/依赖解析异常，见 ${LIVOX_WS}/ldd_*.txt"
 
+step "校验 driver 时间修复已生效（tracked patch）"
+grep -q "HostNowNs" "${DRIVER_DIR}/src/comm/pub_handler.cpp" \
+  || fail "driver 未应用单调时钟 patch：pub_handler.cpp 缺少 HostNowNs"
+grep -q "steady_clock::time_point" "${DRIVER_DIR}/src/comm/pub_handler.h" \
+  || fail "driver 未应用单调时钟 patch：pub_handler.h 的 TimePoint 不是 steady_clock"
+echo "  OK: NoSync 路径使用 HostNowNs；非同步发布调度使用 steady_clock"
+
 step "完成"
 cat <<EOF
   SDK 安装前缀 : ${SDK_INSTALL}
@@ -234,6 +300,10 @@ cat <<EOF
   driver 可执行: ${DRIVER_NODE}
   ldd 记录     : ${LIVOX_WS}/ldd_livox_ros_driver2_node.txt, ${LIVOX_WS}/ldd_liblivox_ros_driver2.so.txt
   colcon 日志  : ${LIVOX_WS}/colcon_build.log
+  tracked patch: ${PATCH_ROOT}
+    - livox_sdk2/0001-export-only-public-c-api.patch
+    - livox_ros_driver2/0001-monotonic-host-clock.patch
+  撤销 patch   : extensions/tools/build_mid360s_underlay.sh --revert-patches
 
   运行时（新终端，仓库根目录）：
     source /opt/ros/humble/setup.bash

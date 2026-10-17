@@ -1,0 +1,171 @@
+diff --git a/src/comm/host_time.h b/src/comm/host_time.h
+new file mode 100644
+index 0000000..58d6853
+--- /dev/null
++++ b/src/comm/host_time.h
+@@ -0,0 +1,79 @@
++//
++// HEI patch (HEI-LIDAR-20261017-02-FIX): monotonic epoch time source.
++//
++// The upstream driver substitutes the host wall clock
++// (`std::chrono::high_resolution_clock`, which is CLOCK_REALTIME on libstdc++)
++// for packets whose `time_type` is kTimestampTypeNoSync (see
++// pub_handler.cpp: GetEthPacketTimestamp), and also schedules the non-sync
++// publish loop with the same clock.  Any CLOCK_REALTIME step (NTP/VM) therefore
++// (a) moves LiDAR and IMU header stamps backwards and (b) freezes the publish
++// scheduler for the size of the step, dumping the accumulated buffer as one
++// oversized frame.
++//
++// Measured on the 02-LIVE 2026-10-16 incident bag: host CLOCK_REALTIME stepped
++// back ~598 ms; both streams regressed once in true recording order; the
++// non-sync scheduler stalled and then emitted a 140,736-point frame spanning
++// 702.866 ms.  See docs/agent/evidence/mid360s/20261017-fix/.
++//
++// This helper keeps the packet timeline monotonic without touching the
++// PTP/GPS path: one system_clock epoch anchor is captured at first use, then
++// epoch ns = anchor_epoch_ns + (steady_clock elapsed).  The result is anchored
++// to the host epoch at driver start; it is NOT hardware time synchronisation.
++//
++// Boundary: if a device switches `time_type` at runtime (NoSync <-> PTP/GPS),
++// the timestamp domain changes once and a step may be visible.  The synced path
++// still reports real device-time regressions unchanged, so QC cannot be
++// masked by this helper.
++//
++#ifndef LIVOX_ROS_DRIVER2_COMM_HOST_TIME_H_
++#define LIVOX_ROS_DRIVER2_COMM_HOST_TIME_H_
++
++#include <chrono>
++#include <cstdint>
++
++namespace livox_ros {
++
++struct HostClockAnchors {
++  std::uint64_t epoch_ns;
++  std::uint64_t steady_ns;
++};
++
++// Pure mapping helper (unit-tested without touching the real clocks).
++inline std::uint64_t MapSteadyToEpochNs(std::uint64_t anchor_epoch_ns,
++                                        std::uint64_t anchor_steady_ns,
++                                        std::uint64_t steady_now_ns) {
++  return anchor_epoch_ns + (steady_now_ns - anchor_steady_ns);
++}
++
++inline HostClockAnchors MakeHostClockAnchors() {
++  const auto epoch = std::chrono::duration_cast<std::chrono::nanoseconds>(
++      std::chrono::system_clock::now().time_since_epoch());
++  const auto steady = std::chrono::duration_cast<std::chrono::nanoseconds>(
++      std::chrono::steady_clock::now().time_since_epoch());
++  HostClockAnchors anchors;
++  anchors.epoch_ns = static_cast<std::uint64_t>(epoch.count());
++  anchors.steady_ns = static_cast<std::uint64_t>(steady.count());
++  return anchors;
++}
++
++// Function-local static => thread-safe one-time initialisation (C++11).
++inline const HostClockAnchors& HostClockAnchorsInstance() {
++  static const HostClockAnchors anchors = MakeHostClockAnchors();
++  return anchors;
++}
++
++// Monotonic epoch-anchored "now" in ns.  Reads CLOCK_REALTIME only once, at the
++// first anchor capture, so later clock steps cannot move timestamps backwards.
++inline std::uint64_t HostNowNs() {
++  // Anchor first, steady sample second: on the very first call this guarantees
++  // steady_now >= anchor_steady, so the uint64 arithmetic cannot underflow.
++  const HostClockAnchors& anchors = HostClockAnchorsInstance();
++  const auto steady = std::chrono::duration_cast<std::chrono::nanoseconds>(
++      std::chrono::steady_clock::now().time_since_epoch());
++  return MapSteadyToEpochNs(anchors.epoch_ns, anchors.steady_ns,
++                            static_cast<std::uint64_t>(steady.count()));
++}
++
++}  // namespace livox_ros
++
++#endif  // LIVOX_ROS_DRIVER2_COMM_HOST_TIME_H_
+diff --git a/src/comm/pub_handler.cpp b/src/comm/pub_handler.cpp
+index aa59d37..6f71b13 100644
+--- a/src/comm/pub_handler.cpp
++++ b/src/comm/pub_handler.cpp
+@@ -23,6 +23,7 @@
+ //
+ 
+ #include "pub_handler.h"
++#include "host_time.h"  // HEI patch: monotonic epoch time for the NoSync path
+ #include "livox_lidar_api.h"
+ #include <cstdlib>
+ #include <chrono>
+@@ -193,18 +194,26 @@ void PubHandler::CheckTimer(uint32_t id) {
+       frame_.lidar_num = 0;
+     }
+   } else { // Disable time synchronization
+-    auto now_time = std::chrono::high_resolution_clock::now();
+-    //First Set
++    // HEI patch: schedule on steady_clock, never on CLOCK_REALTIME.
++    // Upstream used high_resolution_clock (= CLOCK_REALTIME on libstdc++), so a
++    // host clock step backwards made "now - last_pub_time_" negative and the
++    // publish loop stalled for the whole step, dumping the accumulated points
++    // as one oversized frame (02-LIVE 2026-10-16: 0.70 s stall / 140,736 points).
++    // steady_clock is monotonic and unaffected by NTP/VM clock steps.
++    const std::chrono::steady_clock::time_point now_time =
++        std::chrono::steady_clock::now();
++    // First Set
+     static bool first = true;
+     if (first) {
+       last_pub_time_ = now_time;
+       first = false;
+       return;
+     }
+-    if (now_time - last_pub_time_ < std::chrono::nanoseconds(publish_interval_)) {
++    const std::chrono::nanoseconds publish_interval{publish_interval_};
++    if (now_time - last_pub_time_ < publish_interval) {
+       return;
+     }
+-    last_pub_time_ += std::chrono::nanoseconds(publish_interval_);
++    last_pub_time_ += publish_interval;
+     for (auto &process_handler : lidar_process_handlers_) {
+       frame_.base_time[frame_.lidar_num] = process_handler.second->GetLidarBaseTime();
+       uint32_t handle = process_handler.first;
+@@ -268,10 +277,17 @@ uint64_t PubHandler::GetEthPacketTimestamp(uint8_t timestamp_type, uint8_t* time
+ 
+   if (timestamp_type == kTimestampTypeGptpOrPtp ||
+       timestamp_type == kTimestampTypeGps) {
++    // PTP/GPS path: device timestamps are used as-is, so genuine sensor-time
++    // regressions stay visible to the bag QC (not masked by the HEI patch).
+     return time.stamp;
+   }
+ 
+-  return std::chrono::high_resolution_clock::now().time_since_epoch().count();
++  // NoSync path (confirmed for both MID-360S ports 56301/56401 on 2026-10-17:
++  // time_type == 0).  Upstream substituted CLOCK_REALTIME, so host clock steps
++  // moved LiDAR and IMU header stamps backwards.  Use the monotonic,
++  // epoch-anchored host clock instead (see host_time.h); LiDAR and IMU share the
++  // same mapping, so both streams stay on one timeline.
++  return HostNowNs();
+ }
+ 
+ /*******************************/
+diff --git a/src/comm/pub_handler.h b/src/comm/pub_handler.h
+index 9b70d6b..9de1035 100644
+--- a/src/comm/pub_handler.h
++++ b/src/comm/pub_handler.h
+@@ -26,6 +26,7 @@
+ #define LIVOX_DRIVER_PUB_HANDLER_H_
+ 
+ #include <atomic>
++#include <chrono>
+ #include <cstring>
+ #include <condition_variable> // std::condition_variable
+ #include <deque>
+@@ -75,7 +76,10 @@ class PubHandler {
+  public:
+   using PointCloudsCallback = std::function<void(PointFrame*, void *)>;
+   using ImuDataCallback = std::function<void(ImuData*, void*)>;
+-  using TimePoint = std::chrono::high_resolution_clock::time_point;
++  // HEI patch: frame scheduling must not follow CLOCK_REALTIME steps.
++  // steady_clock is monotonic; publish_interval_ stays in ns (explicit
++  // duration_cast below).  See src/comm/host_time.h for the incident record.
++  using TimePoint = std::chrono::steady_clock::time_point;
+ 
+   PubHandler() {}
+ 

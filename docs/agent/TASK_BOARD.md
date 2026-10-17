@@ -36,16 +36,16 @@
 
 ## MID-360S 项目任务（2026-10-16）
 
-用户已批准分阶段实施；当前批次为 01/02。路线：笔记本接入 → FAST-LIO2 → RTAB-Map 三维闭环/地图定位 → AGX 安装 → 桥接 → Nav2。首版室内平地，允许 RViz 指定大致初始位置。配套供电/网线已备齐，但用户本轮确认雷达**尚未连接**，接好后通知。后续底盘运动须另获授权。
+用户已批准分阶段实施；当前批次为 01/02。路线：笔记本接入 → FAST-LIO2 → RTAB-Map 三维闭环/地图定位 → AGX 安装 → 桥接 → Nav2。首版室内平地，允许 RViz 指定大致初始位置。MID-360S 已通过 USB 网卡接入笔记本并完成 31 分钟采集；2026-10-17 已修复源时间/退出问题，新正式包全量 QC 与完整回放 PASS，02-LIVE DONE。后续底盘运动须另获授权。
 
 开发分支 `feat/mid360s-bringup`，base `f97fc4c14216d202d63269a8de1424ae646ca14d`；开工前工作区干净。Codex 单写任务板和执行日志，DSH 仅写任务白名单内实现和专项报告。
 
 | Task ID（前缀 HEI-LIDAR-20261016-） | 优先级 | Owner | 执行 Agent | 状态 | 依赖 | 证据/验收范围 |
 | --- | --- | --- | --- | --- | --- | --- |
 | 01-SOFTWARE | P1 | Codex | DSH-LAPTOP | DONE | — | UI 实际派发/执行；Codex 复核原始机器/Git输出，独立 source Humble 后 rclpy、rosbag2_py 导入成功。仅软件基线通过。 |
-| 01-HARDWARE | P1 | Codex | DSH-LAPTOP + 用户接线 | BLOCKED | 用户接好雷达 | 型号/固件、供电接线、实际 IP；未连接不能判定通过。 |
+| 01-HARDWARE | P1 | Codex | DSH-LAPTOP + 用户接线 | PARTIAL | — | 已确认 MID-360S 在线：USB ASIX 主机 `192.168.1.5/32`、雷达 `192.168.1.135`，点云可收；固件版本、供电与线束记录仍待补齐。 |
 | 02-PREP | P1 | Codex | DSH-LAPTOP | DONE | 01-SOFTWARE | 2026-10-16 Codex 复审 001～005 关闭；独立 pytest 126 passed，5 个异常 bag 全部 exit 1、正常合成对照 exit 0；仅软件准备验收。详见执行日志及 20261016-mid360s-codex-review.json。 |
-| 02-LIVE | P1 | Codex | DSH-LAPTOP | BLOCKED | 01-HARDWARE、02-PREP DONE | 等用户接好雷达；点云/IMU/逐点时间、30 分钟稳定性、原始 bag 与回放均 NOT_RUN。 |
+| 02-LIVE | P1 | Codex | DSH-LAPTOP 实施 + Codex 独立验收 | DONE | 02-PREP DONE、硬件在线 | 2026-10-17 新包1864.757s：18,648 CustomMsg / 372,964 IMU；全量372,972,288点，QC 27 PASS/3 INFO/0 FAIL，10.000/200.006Hz、header倒退/重复0、所有gap≤0.5s；正式完整回放计数及全序列CDR SHA256一致，driver正常退出。旧20261016失败包与结论保留。详见 [验收索引](evidence/mid360s/20261017-acceptance/README.md)。 |
 | 03-LIO | P1 | Codex | DSH-LAPTOP | PLANNED | 02-LIVE DONE | FAST-LIO2；先回放后小推车采集，检查外参/时间/去畸变。 |
 | 04-SLAM | P1 | Codex | DSH-LAPTOP | PLANNED | 03-LIO DONE | RTAB-Map 闭环优化、数据库/优化点云/轨迹保存；3 个位置重启定位验收。 |
 | 05-AGX | P1 | Codex | DSH-AGX | PLANNED | 04-SLAM DONE | 同 SHA ARM64 部署、固定底盘安装、外参/遮挡、30 分钟性能。 |
@@ -56,7 +56,17 @@
 
 未执行项均记 NOT_RUN；任何阶段数据/定位异常均不推进后续阶段。专项启动说明及真实结果见新增 bringup 文档和执行日志。
 
-### 后续阶段的批准验收目标
+### 2026-10-17 复测计划（用户授权继续源时间诊断、退出修复与长时 QC/正式回放）
+
+| Task ID | 执行端 | 状态 | 范围与验收 |
+| --- | --- | --- | --- |
+| 02-FIX-20261017 | DSH-LAPTOP 实施，Codex 独立 Review | DONE | SDK 56 C API 导出隔离 + NoSync 单调 host clock/帧调度补丁；独立 12 组 loader A/B、完整 143 tests、underlay regression 通过。真实 3 次 CustomMsg/PointCloud2 启停正常 exit 0；长时数据验收另列，不由此宣称通过。RF-LIDAR-006 最小增补 bag_qc 点云频率判据，保留既有改动。 |
+| 02-RETEST-20261017 | Codex | DONE | 10s 预热后实采1864.757s正式bag：18,648 CustomMsg / 372,964 IMU，7.1GiB；实时监测无header倒退/重复或主机时钟跳变，record与driver退出0。bag `/home/robo/hei-data/mid360s_live_20261017_retest01`，原门限全量QC PASS（27 PASS/3 INFO/0 FAIL），全部372,972,288点检查，无解码/结构错误。 |
+| 02-REPLAY-20261017 | Codex | DONE | Domain87、localhost隔离，正式bag完整2倍回放，player exit0；18,648 CustomMsg/372,964 IMU 全部收到，两路完整序列的长度前缀CDR SHA256与原包完全一致。结果 `/home/robo/hei-data/mid360s_retest_20261017_evidence/formal_replay01/result.json`；逐点QC另行全量执行，已PASS。 |
+
+预检：`fo`，分支 `feat/mid360s-bringup` @ `687328412ab20953c10acabb7c2add098faa44de`；雷达 `192.168.1.135` 经 USB `enx9c69d3cd61a9`，源 `192.168.1.5/32`，ping 2/2。今日 WiFi `172.22.22.189/24`、机器人高速网口 DOWN；不沿用旧 WiFi 地址配置。原始 dirty 哈希和 diff 备份在 `/home/robo/hei-data/mid360s_retest_20261017_evidence/`。DSH 3080 cwd 已核对正确；已 UI 派发并确认运行，禁止修改网络和雷达参数。
+
+### 已批准的后续阶段验收目标
 
 - 02-LIVE：点云 10 Hz 设置时平均 9–11 Hz，IMU 达到已核实标称频率；至少 1800 秒双流有效覆盖，无大于 0.5 秒断流、源时间倒退/冻结；保存 CustomMsg/IMU 原始值及已有 TF。建议录 31 分钟留启停余量；物理点云、轴向与时间同步另核验，软件 QC 不替代这些检查。
 - 03-LIO：先离线回放，再固定小推车实采直线/横移/转弯/静止/闭环；外参和 IMU 单位处理必须显式适配，不把已有 imu_link 冒充内置 IMU。

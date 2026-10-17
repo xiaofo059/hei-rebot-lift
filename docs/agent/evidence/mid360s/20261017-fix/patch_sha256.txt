@@ -1,0 +1,6 @@
+9257d9365d1e2d04d756c1165f4391b5257921b30e5a44342f9b5a89605c4853  extensions/dependencies/patches/livox_ros_driver2/0001-monotonic-host-clock.patch
+81e59057c078eef34c38aca60ab18282495b05de73acd6a47f287e6d1583eaae  extensions/dependencies/patches/livox_sdk2/0001-export-only-public-c-api.patch
+
+# frozenHEAD 687328412ab20953c10acabb7c2add098faa44de
+# sdk2 f5d9375f84efe2b15bc0a052d3e18482ed13adf4
+# driver 13eb05e4e6dd7a765b934d0c5fd6236676a57b49

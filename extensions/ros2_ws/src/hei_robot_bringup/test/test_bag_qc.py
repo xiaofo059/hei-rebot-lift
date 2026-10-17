@@ -2,8 +2,14 @@
 
 重要：这里生成的 bag 全部是**合成数据**，不含任何真实雷达/IMU 观测。
 测试只验证判定逻辑与退出码，不表示硬件链路或时间同步已通过。
+下文任何"合法乱序""逆序 N 处"均为人工构造的 SYNTHETIC 场景，
+不是某个真实 rosbag 的观测结果，也不能当作硬件证据。
 
 包含 RF-LIDAR-004 的四个独立复现（此前四例均被错误判为 PASS/exit 0）。
+
+CustomMsg 逐点时间：driver 1.2.6 按 UDP 包到达次序追加点、全链路不排序
+（pub_handler.cpp:149/240/388-390），因此**逐点 offset_time 顺序/分布只做 INFO 统计**，
+不是 FAIL 判据；消息级 header.stamp 判据不受影响，仍有独立回归用例。
 """
 
 from __future__ import annotations
@@ -199,6 +205,65 @@ def test_rf004_case4b_width_zero_but_data_present_fails(tmp_path):
 # ==========================================================================
 # 两条流的时间门槛
 # ==========================================================================
+
+
+# ==========================================================================
+# RF-LIDAR-006：点云平均频率判据（SYNTHETIC；门限仍为 9–11 Hz）
+# ==========================================================================
+
+
+def _rate_bag(tmp_path, name: str, lidar_hz: float):
+    """合成 10 s 包：点云 lidar_hz、IMU 100 Hz（SYNTHETIC，非硬件证据）。"""
+    bag = write_bag(tmp_path / name, _times(0.0, 10.0, lidar_hz), _times(0.0, 10.0, 100.0))
+    return _qc(
+        "--bag", str(bag),
+        "--expected-duration", "5",
+        "--imu-hz-min", "95", "--imu-hz-max", "105",
+    )
+
+
+@pytest.mark.parametrize("lidar_hz", [5.0, 20.0])
+def test_lidar_rate_out_of_range_fails(tmp_path, capsys, lidar_hz):
+    """RF-LIDAR-006：点云平均频率 5 Hz / 20 Hz 超出 9–11 Hz → 必须 FAIL。
+
+    修复前 lidar_hz_min/max 只出现在打印与 JSON 阈值里，evaluate() 从不判定，
+    这类包会被漏检。
+    """
+    rc = _rate_bag(tmp_path, f"lidar_rate_{int(lidar_hz)}", lidar_hz)
+    out = capsys.readouterr().out
+    assert rc == bag_qc.EXIT_FAIL, out
+    assert "[FAIL] lidar.rate" in out, out
+    assert "点云平均频率" in out
+
+
+@pytest.mark.parametrize("lidar_hz", [9.0, 11.0])
+def test_lidar_rate_boundary_passes(tmp_path, capsys, lidar_hz):
+    """RF-LIDAR-006：恰好 9 Hz / 11 Hz（闭区间边界）→ lidar.rate PASS。"""
+    rc = _rate_bag(tmp_path, f"lidar_rate_edge_{int(lidar_hz)}", lidar_hz)
+    out = capsys.readouterr().out
+    assert rc == bag_qc.EXIT_PASS, out
+    assert "[PASS] lidar.rate" in out, out
+
+
+def test_lidar_rate_check_also_applies_to_custommsg(tmp_path, capsys):
+    """RF-LIDAR-006：CustomMsg 流同样受 lidar.rate 判据约束（5 Hz → FAIL）。"""
+    times = _times(0.0, 10.0, 5.0)
+    bag = write_bag(
+        tmp_path / "custom_rate_low",
+        times,
+        _times(0.0, 10.0, 100.0),
+        lidar_type=CUSTOMMSG_TYPE,
+        lidar_payloads=[_custom_payload(t, points=3, offsets=[0, 5000, 10000]) for t in times],
+    )
+    rc = _qc(
+        "--bag", str(bag),
+        "--expected-duration", "5",
+        "--pointcloud-format", "custom",
+        "--imu-hz-min", "95", "--imu-hz-max", "105",
+    )
+    out = capsys.readouterr().out
+    assert rc == bag_qc.EXIT_FAIL, out
+    assert "[FAIL] lidar.rate" in out, out
 
 
 def test_imu_midstream_gap_fails(tmp_path, capsys):
@@ -534,7 +599,7 @@ def test_bag_storage_reorders_out_of_order_timestamps(tmp_path):
 
 
 # ==========================================================================
-# CustomMsg 逐点时间
+# CustomMsg：结构判据（FAIL 级）与逐点时间统计（INFO 级）
 # ==========================================================================
 
 pytest.importorskip("livox_ros_driver2", reason="CustomMsg 用例需要 livox underlay")
@@ -571,6 +636,8 @@ def test_custommsg_offset_time_present(tmp_path, capsys):
     out = capsys.readouterr().out
     assert rc == bag_qc.EXIT_INCONCLUSIVE, out
     assert "lidar.custom_structure" in out
+    assert "[INFO] lidar.custom_point_time" in out
+    assert "1000 ns" in out
 
 
 def test_custommsg_empty_points_fails(tmp_path, capsys):
@@ -590,7 +657,7 @@ def test_custommsg_empty_points_fails(tmp_path, capsys):
 
 
 def test_custommsg_point_num_mismatch_fails(tmp_path, capsys):
-    """point_num 与数组长度不一致 → FAIL。"""
+    """point_num 与数组长度不一致 → FAIL；且该帧不得进入 INFO 统计（不允许半帧计数）。"""
     times = _times(0.0, 6.0, 10.0)
     bag = write_bag(
         tmp_path / "custom_mismatch",
@@ -603,26 +670,52 @@ def test_custommsg_point_num_mismatch_fails(tmp_path, capsys):
     out = capsys.readouterr().out
     assert rc == bag_qc.EXIT_FAIL, out
     assert "point_num" in out
+    # 61 帧全部结构非法 → INFO 统计必须为空帧，不得只计前半帧
+    assert "0 帧 / 0 点" in out
 
 
-def test_custommsg_non_monotonic_point_times_fail(tmp_path, capsys):
-    """逐点 offset_time 逆序 → FAIL。"""
-    times = _times(0.0, 6.0, 10.0)
+#: SYNTHETIC：模拟 MID-360S 的 UDP 包到达次序与包内递增。
+#: driver 1.2.6 逐包追加到 points[]（pub_handler.cpp:388-390），不排序；
+#: 这里刻意让第 2 个到达的包时间更早（包内间隔 5 us），复现"合法乱序到达"。
+ARRIVAL_ORDER_OFFSETS = [2000, 7000, 12000, 0, 5000, 10000, 4000, 9000, 14000]
+
+
+def test_custommsg_arrival_order_regressions_are_not_failures(tmp_path, capsys):
+    """合法乱序 packet arrival（点不按时间排序）不得判 FAIL，只报 INFO 统计。
+
+    依据 driver 1.2.6 冻结源码：points[] 顺序 = UDP 包到达顺序，全链路无排序
+    （pub_handler.cpp:149/240/388-390；lddc.cpp:395）。SYNTHETIC 数据，不是硬件证据。
+    """
+    times = _times(0.0, 6.0, 10.0)  # 61 帧
     bag = write_bag(
-        tmp_path / "custom_order",
+        tmp_path / "custom_arrival_order",
         times,
         _times(0.0, 6.0, 100.0),
         lidar_type=CUSTOMMSG_TYPE,
-        lidar_payloads=[_custom_payload(t, points=3, offsets=[5, 2, 9]) for t in times],
+        lidar_payloads=[
+            _custom_payload(t, points=len(ARRIVAL_ORDER_OFFSETS), offsets=ARRIVAL_ORDER_OFFSETS)
+            for t in times
+        ],
     )
-    rc = _qc("--bag", str(bag), "--expected-duration", "5", "--pointcloud-format", "custom")
+    rc = _qc(
+        "--bag", str(bag),
+        "--expected-duration", "5",
+        "--pointcloud-format", "custom",
+        "--imu-hz-min", "95", "--imu-hz-max", "105",
+    )
     out = capsys.readouterr().out
-    assert rc == bag_qc.EXIT_FAIL, out
-    assert "非单调" in out
+    assert rc == bag_qc.EXIT_PASS, out
+    assert "[PASS] lidar.custom_structure" in out
+    assert "[INFO] lidar.custom_point_time" in out
+    # 每帧 2 处逆序、单次最大回退 12000 ns，共 61 帧
+    assert "相邻逆序 122 处" in out
+    assert "涉及 61 帧" in out
+    assert "12000 ns" in out
+    assert "非单调" not in out
 
 
-def test_custommsg_frozen_point_times_fail(tmp_path, capsys):
-    """逐点 offset_time 全帧相同（冻结）→ FAIL。"""
+def test_custommsg_frozen_point_times_reported_as_info(tmp_path, capsys):
+    """全帧 offset 相同只报 INFO（消息类型允许、point_interval==0 时 driver 合法产出），不判 FAIL。"""
     times = _times(0.0, 6.0, 10.0)
     bag = write_bag(
         tmp_path / "custom_frozen",
@@ -631,10 +724,150 @@ def test_custommsg_frozen_point_times_fail(tmp_path, capsys):
         lidar_type=CUSTOMMSG_TYPE,
         lidar_payloads=[_custom_payload(t, points=3, offsets=[7, 7, 7]) for t in times],
     )
+    rc = _qc(
+        "--bag", str(bag),
+        "--expected-duration", "5",
+        "--pointcloud-format", "custom",
+        "--imu-hz-min", "95", "--imu-hz-max", "105",
+    )
+    out = capsys.readouterr().out
+    assert rc == bag_qc.EXIT_PASS, out
+    assert "[INFO] lidar.custom_point_time" in out
+    assert "冻结）61 帧" in out
+
+
+def test_custommsg_frozen_header_stamp_still_fails(tmp_path, capsys):
+    """逐点 offset 改为 INFO 后，CustomMsg 的**消息级**帧头判据必须仍然 FAIL。"""
+    times = _times(0.0, 6.0, 10.0)
+    bag = write_bag(
+        tmp_path / "custom_frozen_header",
+        times,
+        _times(0.0, 6.0, 100.0),
+        lidar_type=CUSTOMMSG_TYPE,
+        lidar_payloads=[
+            _custom_payload(times[0], points=3, offsets=[0, 5000, 10000]) for _ in times
+        ],
+    )
     rc = _qc("--bag", str(bag), "--expected-duration", "5", "--pointcloud-format", "custom")
     out = capsys.readouterr().out
     assert rc == bag_qc.EXIT_FAIL, out
-    assert "冻结" in out
+    assert "lidar.header_monotonic" in out
+
+
+def test_custommsg_point_time_stats_recorded_in_json(tmp_path, capsys):
+    """INFO 统计必须进入 --json-out 取证输出（真实袋复盘时要用）。"""
+    import json
+
+    times = _times(0.0, 6.0, 10.0)
+    bag = write_bag(
+        tmp_path / "custom_json",
+        times,
+        _times(0.0, 6.0, 100.0),
+        lidar_type=CUSTOMMSG_TYPE,
+        lidar_payloads=[
+            _custom_payload(t, points=len(ARRIVAL_ORDER_OFFSETS), offsets=ARRIVAL_ORDER_OFFSETS)
+            for t in times
+        ],
+    )
+    out_json = tmp_path / "qc.json"
+    _qc(
+        "--bag", str(bag),
+        "--expected-duration", "5",
+        "--pointcloud-format", "custom",
+        "--json-out", str(out_json),
+    )
+    capsys.readouterr()
+    stats = json.loads(out_json.read_text(encoding="utf-8"))["streams"][LIDAR]["custom_point_time"]
+    assert stats["frames"] == 61
+    assert stats["inversions"] == 122
+    assert stats["frames_with_inversions"] == 61
+    assert stats["worst_regression_ns"] == 12000
+    assert stats["min_offset_ns"] == 0
+    assert stats["max_offset_ns"] == 14000
+    assert stats["frozen_frames"] == 0
+
+
+# --------------------------------------------------------------------------
+# 结构桩：CustomPoint.offset_time 缺失/不可表示仍必须 FAIL
+# --------------------------------------------------------------------------
+
+
+class _StubPoint:
+    def __init__(self, **fields):
+        self.__dict__.update(fields)
+
+
+class _StubMsg:
+    def __init__(self, points, point_num=None):
+        self.points = points
+        self.point_num = len(points) if point_num is None else point_num
+
+
+def test_custommsg_missing_offset_time_field_fails():
+    """点缺少 offset_time 字段 → FAIL（结构桩，不依赖真机/真包）。"""
+    problems = bag_qc.validate_custommsg(_StubMsg([_StubPoint(x=1.0, y=2.0, z=3.0)]))
+    assert any("缺少 offset_time" in p for p in problems), problems
+
+
+@pytest.mark.parametrize("bad", [2 ** 32, -1, 1.5, "1000", None])
+def test_custommsg_offset_time_not_representable_fails(bad):
+    """offset_time 超出 uint32 可表示范围/非整数 → FAIL（CustomPoint.msg 声明 uint32）。"""
+    problems = bag_qc.validate_custommsg(_StubMsg([_StubPoint(offset_time=bad)]))
+    assert any("uint32" in p for p in problems), problems
+
+
+def test_custommsg_point_num_mismatch_still_fails_on_structure_stub():
+    """结构桩同样覆盖 point_num 不一致（与 bag 级用例互为补充）。"""
+    msg = _StubMsg([_StubPoint(offset_time=0), _StubPoint(offset_time=1)], point_num=99)
+    problems = bag_qc.validate_custommsg(msg)
+    assert any("point_num" in p for p in problems), problems
+
+
+# --------------------------------------------------------------------------
+# INFO 统计必须整帧原子提交（Codex review #1）
+# --------------------------------------------------------------------------
+
+
+def test_custommsg_partial_invalid_frame_not_committed_to_stats():
+    """先有合法点、后有非法点 → 整帧不进 INFO 统计（结构桩，SYNTHETIC）。
+
+    否则"前半帧合法、后半帧非法"会把前半帧计入 frames/points/min/max，
+    形成不完整统计，误导真实袋复盘。
+    """
+    stats = bag_qc.PointTimeStats()
+    msg = _StubMsg(
+        [
+            _StubPoint(offset_time=0),
+            _StubPoint(offset_time=5000),
+            _StubPoint(x=1.0),  # 缺少 offset_time
+        ]
+    )
+    assert any("缺少 offset_time" in p for p in bag_qc.validate_custommsg(msg))
+    assert bag_qc.collect_custommsg_point_time(stats, msg) is False
+    assert stats == bag_qc.PointTimeStats(), stats
+    assert (stats.frames, stats.points, stats.inversions) == (0, 0, 0)
+    assert stats.min_offset_ns is None and stats.max_offset_ns is None
+
+
+def test_custommsg_out_of_range_point_not_committed_to_stats():
+    """前半帧合法、后一个点 offset_time 超出 uint32 → 整帧不进统计。"""
+    stats = bag_qc.PointTimeStats()
+    msg = _StubMsg([_StubPoint(offset_time=0), _StubPoint(offset_time=2 ** 32)])
+    assert bag_qc.collect_custommsg_point_time(stats, msg) is False
+    assert stats == bag_qc.PointTimeStats(), stats
+
+
+def test_custommsg_all_valid_frame_is_committed():
+    """全部点合法时正常提交（与上面两个"不提交"用例互为对照）。"""
+    stats = bag_qc.PointTimeStats()
+    msg = _StubMsg([_StubPoint(offset_time=0), _StubPoint(offset_time=5000)])
+    assert bag_qc.collect_custommsg_point_time(stats, msg) is True
+    assert (stats.frames, stats.points, stats.min_offset_ns, stats.max_offset_ns) == (
+        1,
+        2,
+        0,
+        5000,
+    )
 
 
 # ==========================================================================
