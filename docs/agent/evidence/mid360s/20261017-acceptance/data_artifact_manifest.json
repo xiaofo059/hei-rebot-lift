@@ -1,0 +1,39 @@
+{
+  "bag": "/home/robo/hei-data/mid360s_live_20261017_retest01",
+  "files": {
+    "metadata.yaml": {
+      "bytes": 1523,
+      "sha256": "3c30d997953a0e19244f0ee06d90a1f57605472ad10d732e48e5d36c9036c4d9"
+    },
+    "mid360s_live_20261017_retest01_0.db3": {
+      "bytes": 7628042240,
+      "sha256": "4ea1bdeb48a0a77637bd4a4d64ad9c5b8d7a1cf401cd93b8b24208c45f6afdc5"
+    }
+  },
+  "duration_ns": 1864757414589,
+  "starting_time_ns": 1792224601298816203,
+  "message_count": 391612,
+  "topics": {
+    "/livox/imu": {
+      "type": "sensor_msgs/msg/Imu",
+      "count": 372964
+    },
+    "/livox/lidar": {
+      "type": "livox_ros_driver2/msg/CustomMsg",
+      "count": 18648
+    }
+  },
+  "git_head": "687328412ab20953c10acabb7c2add098faa44de",
+  "source_sha256": {
+    "extensions/ros2_ws/src/hei_robot_bringup/hei_robot_bringup/bag_qc.py": "5dde9933b1da9ccd8aab7cb3f0d3420480a3d1da8d2370475173704e1bfd4e92",
+    "extensions/ros2_ws/src/hei_robot_bringup/test/test_bag_qc.py": "77ccf373dbe0048d8994eaf26eb7a92e9cf9b210bb768a588ba0877c5b459c5a",
+    "extensions/tools/build_mid360s_underlay.sh": "ef9b1577e3680a4c0b284e49c7ea342cd1130bf428ec8739b6ef3b416a4895e6",
+    "extensions/tools/lib/patch_state.sh": "f4069326bab8c00bcaa42ed70f49b230d08e87b2e540e396d4af9bbb94fb6569"
+  },
+  "runtime_artifacts": {
+    "extensions/third_party/livox_sdk2_install/lib/liblivox_lidar_sdk_shared.so": "78ba89bd289a0e89f59b62ad2a464912263a7c701231646ac297269cd7cd521b",
+    "extensions/third_party/livox_ws/install/livox_ros_driver2/lib/liblivox_ros_driver2.so": "772e7300301820edee98d4afd0227ef0ddd12bce5d0483c05713a80503011928",
+    "extensions/dependencies/patches/livox_sdk2/0001-export-only-public-c-api.patch": "81e59057c078eef34c38aca60ab18282495b05de73acd6a47f287e6d1583eaae",
+    "extensions/dependencies/patches/livox_ros_driver2/0001-monotonic-host-clock.patch": "9257d9365d1e2d04d756c1165f4391b5257921b30e5a44342f9b5a89605c4853"
+  }
+}

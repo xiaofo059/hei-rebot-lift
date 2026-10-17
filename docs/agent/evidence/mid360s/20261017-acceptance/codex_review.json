@@ -1,0 +1,88 @@
+{
+  "task": "HEI-LIDAR-20261017-02-LIVE",
+  "reviewer": "Codex independent review",
+  "date": "2026-10-17 Asia/Shanghai",
+  "verdict": "PASS",
+  "scope": "Laptop x86_64 NoSync sensor data/lifecycle only; 10s warmup, full >=1800s formal window; IMU 200Hz working mode with 190-210Hz acceptance",
+  "bag": "/home/robo/hei-data/mid360s_live_20261017_retest01",
+  "bag_duration_s": 1864.757414589,
+  "counts": {
+    "/livox/imu": 372964,
+    "/livox/lidar": 18648
+  },
+  "point_count_checked": 372972288,
+  "qc_thresholds": {
+    "expected_duration_s": 1800.0,
+    "lidar_hz": [
+      9.0,
+      11.0
+    ],
+    "max_gap_s": 0.5,
+    "imu_hz": [
+      190.0,
+      210.0
+    ],
+    "header_sample": null
+  },
+  "package_tests": {
+    "passed": 143,
+    "skipped": 0,
+    "errors": 0,
+    "failures": 0
+  },
+  "full_qc_exit_code": 0,
+  "replay_exit_code": 0,
+  "replay_all_counts_and_full_cdr_sequence_hashes_match": true,
+  "capture_normal_stop": true,
+  "live_header_regressions_and_repeats": 0,
+  "clock_steps_over_5ms_at_200ms_sampling": 0,
+  "source_clock_fault_injection": "PASS, SYNTHETIC process-local CLOCK_REALTIME steps; OS clock/driver untouched",
+  "sdk_ab_probe": "Independent 12 runs: original 3/3 exit0 alone, 3/3 SIGBUS system-first; patched 6/6 exit0",
+  "production_launch_stop": {
+    "command": [
+      "ros2",
+      "launch",
+      "hei_robot_bringup",
+      "mid360s_bringup.launch.py",
+      "config_path:=/home/robo/robotopia/hei-rebot-lift/extensions/config/local/mid360s_config.json",
+      "pointcloud_format:=pointcloud2",
+      "publish_freq:=10.0",
+      "launch_rviz:=false"
+    ],
+    "alive_before_sigint": true,
+    "parent_exit_code": 0,
+    "child_clean_exit_log": true,
+    "child_died_log": false,
+    "published_pointcloud2": true,
+    "required_escalation": false,
+    "verdict": "PASS",
+    "verification_note": "Initial harness matched lower-case pointcloud2; raw driver log uses PointCloud2. Rechecked exact existing log; no driver change or repeated run."
+  },
+  "findings_closed": [
+    "NoSync wall-clock stamping and frame scheduling vulnerable to clock steps",
+    "SDK bundled spdlog ABI symbol interposition at normal teardown",
+    "RF-LIDAR-006 missing lidar.rate acceptance gate",
+    "Patch state mutation guards, host anchor first-use ordering, map LINK_DEPENDS, first-call regression test"
+  ],
+  "git_head": "687328412ab20953c10acabb7c2add098faa44de",
+  "committed_or_pushed": false,
+  "original_dirty_protection": "All six baseline snapshots reconstructed/hash-matched; package README unchanged; existing QC code/tests preserved with only additive rate gate/regressions; docs maintained by Codex",
+  "evidence_files": [
+    "formal_qc.json",
+    "formal_replay.json",
+    "formal_capture.json",
+    "data_artifact_manifest.json",
+    "codex_pytest.log",
+    "codex_underlay_regression.log",
+    "preservation_audit.txt"
+  ],
+  "limitations": [
+    "No hardware PTP/GPS precision or sensor time_type switch validated",
+    "NoSync uses host epoch anchor plus steady elapsed; raw device timestamp mapping is unchanged",
+    "IMU raw acceleration in g, orientation invalid; SI/extrinsic adaptation required before LIO fusion",
+    "Actual IMU device configuration key and firmware/power/wiring records not independently completed",
+    "ARM64/AGX, LIO/SLAM/navigation and robot motion NOT_RUN",
+    "Startup transients logged separately and excluded by explicit 10s warmup; original failed bag preserved"
+  ],
+  "external_evidence_dir": "/home/robo/hei-data/mid360s_retest_20261017_evidence"
+}

@@ -1,0 +1,66 @@
+
+===> 环境自检
+  cmake      : /usr/bin/cmake (cmake version 3.22.1)
+  ROS_DISTRO : humble
+  repo root  : /home/robo/robotopia/hei-rebot-lift
+
+===> 校验依赖源码 SHA（对照 extensions/dependencies/livox.repos）
+  OK livox_sdk2_src @ f5d9375f84efe2b15bc0a052d3e18482ed13adf4
+  OK livox_ws/src/livox_ros_driver2 @ 13eb05e4e6dd7a765b934d0c5fd6236676a57b49
+
+===> 应用/校验 tracked patch（冻结 SHA + patch）
+  Livox-SDK2: 检测到 patch 已完整应用，逐字节校验「冻结 SHA + patch」
+    sha256 81e59057c078eef34c38aca60ab18282495b05de73acd6a47f287e6d1583eaae  0001-export-only-public-c-api.patch
+  Livox-SDK2: patch 校验通过（1 个）
+  livox_ros_driver2: 检测到 patch 已完整应用，逐字节校验「冻结 SHA + patch」
+    sha256 9257d9365d1e2d04d756c1165f4391b5257921b30e5a44342f9b5a89605c4853  0001-monotonic-host-clock.patch
+  livox_ros_driver2: patch 校验通过（1 个）
+
+===> 构建并安装 Livox-SDK2（无 sudo，前缀在仓库内）
+  SDK 库    : /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_sdk2_install/lib/liblivox_lidar_sdk_shared.so
+  SDK 头文件: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_sdk2_install/include
+
+===> 校验 SDK 动态符号导出（只允许公开 C API）
+  OK: 未导出 spdlog/fmt/livox:: 内部符号
+  OK: 公开 C API 导出完整（56 个）
+
+===> 按官方等价方式准备 driver 清单与 launch（不修改第三方源码、不覆盖预存文件）
+  package.xml 已存在且与 package_ROS2.xml 一致，复用
+  launch/ <- launch_ROS2/（等价于官方 build.sh 的 ROS2 分支）
+
+===> colcon 构建 livox_ros_driver2（显式绑定本项目 SDK，不依赖 /usr/local）
+Starting >>> livox_ros_driver2
+Finished <<< livox_ros_driver2 [0.47s]
+
+Summary: 1 package finished [0.76s]
+
+===> ldd 依赖检查（source underlay 后，node 与组件库都不得有 not found）
+  --- livox_ros_driver2_node ---
+  (未直接链接 liblivox_lidar_sdk_shared.so)
+  no not found  (记录: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_ws/ldd_livox_ros_driver2_node.txt)
+  --- liblivox_ros_driver2.so ---
+	liblivox_lidar_sdk_shared.so => /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_sdk2_install/lib/liblivox_lidar_sdk_shared.so (0x0000759d18fd6000)
+  no not found  (记录: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_ws/ldd_liblivox_ros_driver2.so.txt)
+
+===> 校验 driver 时间修复已生效（tracked patch）
+  OK: NoSync 路径使用 HostNowNs；非同步发布调度使用 steady_clock
+
+===> 完成
+  SDK 安装前缀 : /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_sdk2_install
+  driver 安装  : /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_ws/install
+  driver 可执行: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_ws/install/livox_ros_driver2/lib/livox_ros_driver2/livox_ros_driver2_node
+  ldd 记录     : /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_ws/ldd_livox_ros_driver2_node.txt, /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_ws/ldd_liblivox_ros_driver2.so.txt
+  colcon 日志  : /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_ws/colcon_build.log
+  tracked patch: /home/robo/robotopia/hei-rebot-lift/extensions/dependencies/patches
+    - livox_sdk2/0001-export-only-public-c-api.patch
+    - livox_ros_driver2/0001-monotonic-host-clock.patch
+  撤销 patch   : extensions/tools/build_mid360s_underlay.sh --revert-patches
+
+  运行时（新终端，仓库根目录）：
+    source /opt/ros/humble/setup.bash
+    source extensions/third_party/livox_ws/install/local_setup.bash
+    ros2 launch hei_robot_bringup mid360s_bringup.launch.py config_path:=<现场配置.json>
+
+  说明：驱动组件库已写入 RPATH=/home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_sdk2_install/lib，正常无需再设 LD_LIBRARY_PATH；
+        若把构建产物搬到别的机器/路径，RPATH 失效，此时才需要
+        export LD_LIBRARY_PATH=/home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_sdk2_install/lib:${LD_LIBRARY_PATH}

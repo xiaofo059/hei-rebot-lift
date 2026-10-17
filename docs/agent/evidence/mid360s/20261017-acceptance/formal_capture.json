@@ -1,0 +1,96 @@
+{
+  "tag": "formal_capture01",
+  "format": "custom",
+  "requested_seconds": 1865.0,
+  "bag": "/home/robo/hei-data/mid360s_live_20261017_retest01",
+  "clock_steps": [],
+  "driver_command": [
+    "/home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_ws/install/livox_ros_driver2/lib/livox_ros_driver2/livox_ros_driver2_node",
+    "--ros-args",
+    "-r",
+    "__node:=livox_lidar_publisher",
+    "-p",
+    "xfer_format:=1",
+    "-p",
+    "multi_topic:=0",
+    "-p",
+    "data_src:=0",
+    "-p",
+    "publish_freq:=10.0",
+    "-p",
+    "output_data_type:=0",
+    "-p",
+    "frame_id:=lidar_link",
+    "-p",
+    "user_config_path:=/home/robo/robotopia/hei-rebot-lift/extensions/config/local/mid360s_config.json"
+  ],
+  "driver_pid": 40538,
+  "both_streams_ready": true,
+  "warmup_seconds": 10.002427370000078,
+  "warmup_streams": {
+    "/livox/imu": {
+      "count": 2219,
+      "malformed_headers": 0,
+      "header_regressions": 0,
+      "header_repeats": 0,
+      "max_header_gap_s": 0.315748582,
+      "max_live_arrival_gap_s": 0.016423485,
+      "first_header_ns": 1792224588082027765,
+      "first_mono_ns": 16223179996731,
+      "last_header_ns": 1792224601048837635,
+      "last_mono_ns": 16233179173586
+    },
+    "/livox/lidar": {
+      "count": 116,
+      "malformed_headers": 0,
+      "header_regressions": 0,
+      "header_repeats": 0,
+      "max_header_gap_s": 1.400141773,
+      "max_live_arrival_gap_s": 0.110029869,
+      "first_header_ns": 1792224588149988236,
+      "first_mono_ns": 16223180909435,
+      "last_header_ns": 1792224600950348662,
+      "last_mono_ns": 16233182255787
+    }
+  },
+  "recorder_pid": 40672,
+  "start_wall_ns": 1792224601052872532,
+  "elapsed_s": 1865.0034330540002,
+  "live_streams": {
+    "/livox/imu": {
+      "count": 373013,
+      "malformed_headers": 0,
+      "header_regressions": 0,
+      "header_repeats": 0,
+      "max_header_gap_s": 0.016172456,
+      "max_live_arrival_gap_s": 0.070489537,
+      "first_header_ns": 1792224601052580098,
+      "first_mono_ns": 16233183438400,
+      "last_header_ns": 1792226466056071922,
+      "last_mono_ns": 18098186407676,
+      "source_rate_hz": 200.00605984667027
+    },
+    "/livox/lidar": {
+      "count": 18650,
+      "malformed_headers": 0,
+      "header_regressions": 0,
+      "header_repeats": 0,
+      "max_header_gap_s": 0.111438554,
+      "max_live_arrival_gap_s": 0.144504365,
+      "first_header_ns": 1792224601050431533,
+      "first_mono_ns": 16233281342987,
+      "last_header_ns": 1792226465951627421,
+      "last_mono_ns": 18098181679221,
+      "source_rate_hz": 9.999993587392176
+    }
+  },
+  "end_wall_ns": 1792226466056295352,
+  "recorder_stop": {
+    "exit_code": 0,
+    "required_escalation": false
+  },
+  "driver_stop": {
+    "exit_code": 0,
+    "required_escalation": false
+  }
+}

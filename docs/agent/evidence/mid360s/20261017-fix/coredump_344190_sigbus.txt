@@ -1,0 +1,38 @@
+# 正式录包后 driver 退出 SIGBUS core 栈（PID 344190）
+
+来源：`coredumpctl`（systemd-coredump，2026-10-16 18:58:37 CST，core 9.1M）
+
+```
+           PID: 344190 (livox_ros_drive)
+        Signal: 7 (BUS)
+     Timestamp: Fri 2026-10-16 18:58:37 CST
+  Command Line: .../livox_ros_driver2_node --ros-args -r __node:=livox_lidar_publisher ...
+     Executable: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_ws/install/
+                 livox_ros_driver2/lib/livox_ros_driver2/livox_ros_driver2_node
+     Storage: /var/lib/systemd/coredump/core.livox_ros_drive.1000.<boot>.<pid>.1792148317000000.zst
+```
+
+`coredumpctl dump 344190 --output=...` + `gdb -batch -ex "thread apply all bt" <exe> <core>`：
+
+```
+Program terminated with signal SIGBUS, Bus error.
+#0  std::_Sp_counted_ptr_inplace<spdlog::logger, std::allocator<spdlog::logger>,
+    (__gnu_cxx::_Lock_policy)2>::_M_dispose()
+      () from /lib/x86_64-linux-gnu/libspdlog.so.1          <-- 系统 spdlog 1.9.2
+#1  std::shared_ptr<spdlog::logger>::~shared_ptr()
+      () from .../extensions/third_party/livox_sdk2_install/lib/liblivox_lidar_sdk_shared.so
+#2  __run_exit_handlers (status=0, ...) at ./stdlib/exit.c:113
+#3  __GI_exit (status=<optimized out>) at ./stdlib/exit.c:143
+#4  __libc_start_call_main (...)
+#5  __libc_start_main_impl (...)
+#6  _start ()
+```
+
+解读：SDK 的**全局** `std::shared_ptr<spdlog::logger>`（`sdk_core/base/logging.cpp:27`）
+在进程 exit handler 里析构；虚调用 `_M_dispose` 却解析到**系统** `libspdlog.so.1` 的实现，
+而该 logger 对象由 SDK 内置 spdlog **1.3.1** 头文件代码构造 —— 布局/ABI 不一致 → SIGBUS。
+同一缺陷在 PointCloud2 冒烟阶段表现为 SIGABRT `free(): invalid size`（coredump 309862/323545）。
+
+复现（无硬件，Codex）：`dlopen` 系统 libspdlog(RTLD_GLOBAL) 后再 `dlopen` 原 SDK 并调用
+`LivoxLidarSdkInit(nullptr,nullptr,nullptr)`（冻结源码先 InitLogger 后返回 false，不碰设备/套接字），
+自然退出即 SIGBUS(-7)；单独加载原 SDK 则 exit 0。

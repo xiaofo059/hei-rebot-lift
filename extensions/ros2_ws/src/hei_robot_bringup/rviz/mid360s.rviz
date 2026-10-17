@@ -1,0 +1,88 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /Livox PointCloud21
+      Splitter Ratio: 0.5
+    Tree Height: 700
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Enabled: true
+      Name: Grid
+      Alpha: 0.3
+      Cell Size: 1
+      Color: 160; 160; 164
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Lines
+      Plane: XY
+      Plane Cell Count: 20
+      Reference Frame: <Fixed Frame>
+    - Class: rviz_default_plugins/PointCloud2
+      Enabled: true
+      Name: Livox PointCloud2
+      Style: Points
+      Size (Pixels): 2
+      Size (m): 0.009999999776482582
+      Alpha: 1
+      Position Transformer: XYZ
+      Color Transformer: Intensity
+      Use rainbow: true
+      Invert Rainbow: false
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+        Value: /livox/lidar
+    - Class: rviz_default_plugins/Imu
+      Enabled: true
+      Name: Livox IMU
+      Acc. Vector Color: 204; 51; 51
+      Acc. Vector Scale: 1
+      Ang. Velocity Color: 51; 51; 204
+      Ang. Velocity Scale: 0.10000000149011612
+      Axis Length: 1
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+        Value: /livox/imu
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: lidar_link
+    Frame Rate: 30
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 10
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Name: Current View
+      Pitch: 0.5
+      Target Frame: <Fixed Frame>
+      Yaw: 0.7853981852531433
+    Saved: ~
+Window Geometry:
+  Height: 846
+  Width: 1200
+  Displays:
+    collapsed: false
+  Hide Left Dock: false
+  Hide Right Dock: true

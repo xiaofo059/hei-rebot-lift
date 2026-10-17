@@ -1,0 +1,28 @@
+# Third-party dependency lock for MID-360S bring-up (task HEI-LIDAR-20261016-02-PREP).
+#
+# Import with vcstool (NOT required for a manual clone; paths below match the
+# layout used by extensions/tools/build_mid360s_underlay.sh):
+#
+#   mkdir -p extensions/third_party
+#   vcs import extensions/third_party < extensions/dependencies/livox.repos
+#
+# Both entries are pinned to released upstream tags, recorded here by commit SHA
+# because tags can be moved. Do not replace a SHA with a branch name: the driver
+# and the SDK must be upgraded together and re-verified.
+#
+# Compatibility evidence for the S variant (MID-360S), verified by inspecting the
+# frozen sources on 2026-10-16:
+#   * Livox-SDK2 v1.3.1: include/livox_lidar_def.h declares
+#     `kLivoxLidarTypeMid360s = 35`; CHANGELOG v1.3.1 "Support Mid-360s Lidar".
+#   * livox_ros_driver2 1.2.6: config/MID360s_config.json, launch_ROS2/msg_MID360s_launch.py,
+#     launch_ROS2/rviz_MID360s_launch.py, and src/comm/pub_handler.cpp:135 dispatch
+#     `kLivoxLidarTypeMid360 || kLivoxLidarTypeMid360s`. CHANGELOG 1.2.5 "Support Mid-360s Lidar".
+repositories:
+  livox_sdk2_src:
+    type: git
+    url: https://github.com/Livox-SDK/Livox-SDK2.git
+    version: f5d9375f84efe2b15bc0a052d3e18482ed13adf4  # tag v1.3.1
+  livox_ws/src/livox_ros_driver2:
+    type: git
+    url: https://github.com/Livox-SDK/livox_ros_driver2.git
+    version: 13eb05e4e6dd7a765b934d0c5fd6236676a57b49  # tag 1.2.6

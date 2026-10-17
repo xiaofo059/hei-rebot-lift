@@ -1,0 +1,115 @@
+diff --git a/sdk_core/CMakeLists.txt b/sdk_core/CMakeLists.txt
+index 15e960d..256a183 100644
+--- a/sdk_core/CMakeLists.txt
++++ b/sdk_core/CMakeLists.txt
+@@ -138,6 +138,25 @@ target_sources(${SDK_LIBRARY_SHARED}
+         ${LIVOX_SOURCES}
+         )
+ 
++# HEI patch (HEI-LIDAR-20261017-02-FIX): export only the public Livox C API.
++# Bundled spdlog 1.3.1/fmt weak symbols otherwise leak into the dynamic symbol
++# table and are interposed by the system libspdlog.so.1 (1.9.2) that the ROS 2
++# logging backend loads into the same process -> SDK logger teardown crashes
++# (SIGBUS / "free(): invalid size").  Evidence and reproducer:
++# docs/agent/evidence/mid360s/20261017-fix/.
++if(UNIX AND NOT APPLE)
++  set(LIVOX_SHARED_VERSION_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/livox_lidar_sdk_shared.map")
++  if(NOT EXISTS "${LIVOX_SHARED_VERSION_SCRIPT}")
++    message(FATAL_ERROR "缺少符号导出脚本 ${LIVOX_SHARED_VERSION_SCRIPT}")
++  endif()
++  set_property(TARGET ${SDK_LIBRARY_SHARED} APPEND_STRING PROPERTY LINK_FLAGS
++    " -Wl,--version-script=${LIVOX_SHARED_VERSION_SCRIPT}")
++  # LINK_DEPENDS：只修改导出 map 时增量构建也必须重新链接
++  set_property(TARGET ${SDK_LIBRARY_SHARED} APPEND PROPERTY LINK_DEPENDS
++    "${LIVOX_SHARED_VERSION_SCRIPT}")
++  message(STATUS "Livox-SDK2 shared lib symbol export script: ${LIVOX_SHARED_VERSION_SCRIPT}")
++endif(UNIX AND NOT APPLE)
++
+ install(TARGETS ${SDK_LIBRARY_STATIC} ${SDK_LIBRARY_SHARED}
+         PUBLIC_HEADER DESTINATION include
+         ARCHIVE DESTINATION lib
+diff --git a/sdk_core/livox_lidar_sdk_shared.map b/sdk_core/livox_lidar_sdk_shared.map
+new file mode 100644
+index 0000000..4c6042a
+--- /dev/null
++++ b/sdk_core/livox_lidar_sdk_shared.map
+@@ -0,0 +1,79 @@
++/* HEI patch (HEI-LIDAR-20261017-02-FIX): export only the public Livox C API.
++ *
++ * Why: this shared library bundles spdlog 1.3.1 / fmt header-only code. With the
++ * default visibility those weak C++ template symbols are exported (421 spdlog +
++ * 124 fmt symbols in the frozen v1.3.1 build) and get interposed at runtime by the
++ * system libspdlog.so.1 (1.9.2) that ROS 2's rcl_logging_spdlog backend loads into
++ * the same process. The SDK's static std::shared_ptr<spdlog::logger> then destroys
++ * a 1.3.1-layout object through 1.9.2's
++ * std::_Sp_counted_ptr_inplace<spdlog::logger>::_M_dispose(), which aborts at exit
++ * (SIGBUS -7 / SIGABRT "free(): invalid size"). Reproduced without a lidar by
++ * dlopen(system libspdlog) + dlopen(SDK) + LivoxLidarSdkInit(nullptr, nullptr,
++ * nullptr); see docs/agent/evidence/mid360s/20261017-fix/.
++ *
++ * Keeping everything except the C API local also protects the host process from
++ * the reverse direction (upstream issue #122: shared spdlog registry).
++ *
++ * This list must stay in sync with include/livox_lidar_api.h.
++ */
++{
++  global:
++    GetLivoxLidarSdkVer;
++    LivoxLidarSdkInit;
++    LivoxLidarSdkStart;
++    LivoxLidarSdkUninit;
++    SetLivoxLidarPointCloudCallBack;
++    LivoxLidarAddCmdObserver;
++    LivoxLidarRemoveCmdObserver;
++    LivoxLidarAddPointCloudObserver;
++    LivoxLidarRemovePointCloudObserver;
++    SetLivoxLidarImuDataCallback;
++    SetLivoxLidarInfoCallback;
++    DisableLivoxSdkConsoleLogger;
++    SaveLivoxLidarSdkLoggerFile;
++    SetLivoxLidarInfoChangeCallback;
++    QueryLivoxLidarInternalInfo;
++    QueryLivoxLidarFwType;
++    QueryLivoxLidarFirmwareVer;
++    SetLivoxLidarPclDataType;
++    SetLivoxLidarScanPattern;
++    SetLivoxLidarDualEmit;
++    EnableLivoxLidarPointSend;
++    DisableLivoxLidarPointSend;
++    SetLivoxLidarIp;
++    SetLivoxLidarStateInfoHostIPCfg;
++    SetLivoxLidarPointDataHostIPCfg;
++    SetLivoxLidarImuDataHostIPCfg;
++    SetLivoxLidarInstallAttitude;
++    SetLivoxLidarFovCfg0;
++    SetLivoxLidarFovCfg1;
++    EnableLivoxLidarFov;
++    DisableLivoxLidarFov;
++    SetLivoxLidarDetectMode;
++    SetLivoxLidarFuncIOCfg;
++    SetLivoxLidarBlindSpot;
++    SetLivoxLidarWorkMode;
++    EnableLivoxLidarGlassHeat;
++    DisableLivoxLidarGlassHeat;
++    StartForcedHeating;
++    StopForcedHeating;
++    SetLivoxLidarPpsSyncMode;
++    SetLivoxLidarEscMode;
++    SetLivoxLidarGlassHeat;
++    EnableLivoxLidarImuData;
++    DisableLivoxLidarImuData;
++    EnableLivoxLidarFusaFunciont;
++    DisableLivoxLidarFusaFunciont;
++    LivoxLidarRequestReset;
++    LivoxLidarStartLogger;
++    LivoxLidarStopLogger;
++    SetLivoxLidarDebugPointCloud;
++    SetLivoxLidarRmcSyncTime;
++    SetLivoxLidarWorkModeAfterBoot;
++    LivoxLidarRequestReboot;
++    SetLivoxLidarUpgradeFirmwarePath;
++    SetLivoxLidarUpgradeProgressCallback;
++    UpgradeLivoxLidars;
++  local:
++    *;
++};

@@ -1,0 +1,88 @@
+All 6 captured dirty-file baselines reconstructed exactly from HEAD + saved baseline.diff.
+Pre-existing package README unchanged byte-for-byte.
+--- baseline/extensions/ros2_ws/src/hei_robot_bringup/hei_robot_bringup/bag_qc.py
++++ current/extensions/ros2_ws/src/hei_robot_bringup/hei_robot_bringup/bag_qc.py
+@@ -593,6 +593,14 @@
+                 f"缺少帧头 {lidar.missing_header}/{lidar.header_checked + lidar.missing_header} 条",
+             )
+             self_check_stream_common(add, lidar, "lidar", args)
++            # RF-LIDAR-006：CLI/JSON 一直记录 --lidar-hz-min/max，但此前只有 IMU
++            # 有频率判据；点云频率必须同样给出明确 PASS/FAIL（门限不改）。
++            add(
++                "lidar.rate",
++                args.lidar_hz_min <= lidar.avg_hz <= args.lidar_hz_max,
++                f"点云平均频率 {lidar.avg_hz:.3f} Hz"
++                f"（要求 {args.lidar_hz_min:g}–{args.lidar_hz_max:g} Hz）",
++            )
+             if lidar.found_type == POINTCLOUD2_TYPE:
+                 add(
+                     "lidar.pc2_structure",
+
+--- baseline/extensions/ros2_ws/src/hei_robot_bringup/test/test_bag_qc.py
++++ current/extensions/ros2_ws/src/hei_robot_bringup/test/test_bag_qc.py
+@@ -205,6 +205,65 @@
+ # ==========================================================================
+ # 两条流的时间门槛
+ # ==========================================================================
++
++
++# ==========================================================================
++# RF-LIDAR-006：点云平均频率判据（SYNTHETIC；门限仍为 9–11 Hz）
++# ==========================================================================
++
++
++def _rate_bag(tmp_path, name: str, lidar_hz: float):
++    """合成 10 s 包：点云 lidar_hz、IMU 100 Hz（SYNTHETIC，非硬件证据）。"""
++    bag = write_bag(tmp_path / name, _times(0.0, 10.0, lidar_hz), _times(0.0, 10.0, 100.0))
++    return _qc(
++        "--bag", str(bag),
++        "--expected-duration", "5",
++        "--imu-hz-min", "95", "--imu-hz-max", "105",
++    )
++
++
++@pytest.mark.parametrize("lidar_hz", [5.0, 20.0])
++def test_lidar_rate_out_of_range_fails(tmp_path, capsys, lidar_hz):
++    """RF-LIDAR-006：点云平均频率 5 Hz / 20 Hz 超出 9–11 Hz → 必须 FAIL。
++
++    修复前 lidar_hz_min/max 只出现在打印与 JSON 阈值里，evaluate() 从不判定，
++    这类包会被漏检。
++    """
++    rc = _rate_bag(tmp_path, f"lidar_rate_{int(lidar_hz)}", lidar_hz)
++    out = capsys.readouterr().out
++    assert rc == bag_qc.EXIT_FAIL, out
++    assert "[FAIL] lidar.rate" in out, out
++    assert "点云平均频率" in out
++
++
++@pytest.mark.parametrize("lidar_hz", [9.0, 11.0])
++def test_lidar_rate_boundary_passes(tmp_path, capsys, lidar_hz):
++    """RF-LIDAR-006：恰好 9 Hz / 11 Hz（闭区间边界）→ lidar.rate PASS。"""
++    rc = _rate_bag(tmp_path, f"lidar_rate_edge_{int(lidar_hz)}", lidar_hz)
++    out = capsys.readouterr().out
++    assert rc == bag_qc.EXIT_PASS, out
++    assert "[PASS] lidar.rate" in out, out
++
++
++def test_lidar_rate_check_also_applies_to_custommsg(tmp_path, capsys):
++    """RF-LIDAR-006：CustomMsg 流同样受 lidar.rate 判据约束（5 Hz → FAIL）。"""
++    times = _times(0.0, 10.0, 5.0)
++    bag = write_bag(
++        tmp_path / "custom_rate_low",
++        times,
++        _times(0.0, 10.0, 100.0),
++        lidar_type=CUSTOMMSG_TYPE,
++        lidar_payloads=[_custom_payload(t, points=3, offsets=[0, 5000, 10000]) for t in times],
++    )
++    rc = _qc(
++        "--bag", str(bag),
++        "--expected-duration", "5",
++        "--pointcloud-format", "custom",
++        "--imu-hz-min", "95", "--imu-hz-max", "105",
++    )
++    out = capsys.readouterr().out
++    assert rc == bag_qc.EXIT_FAIL, out
++    assert "[FAIL] lidar.rate" in out, out
+
+
+ def test_imu_midstream_gap_fails(tmp_path, capsys):

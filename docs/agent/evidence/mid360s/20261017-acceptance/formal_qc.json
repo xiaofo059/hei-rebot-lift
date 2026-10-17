@@ -1,0 +1,252 @@
+{
+  "bag": "/home/robo/hei-data/mid360s_live_20261017_retest01",
+  "storage_id": "sqlite3",
+  "verdict": "PASS",
+  "thresholds": {
+    "expected_duration_s": 1800.0,
+    "lidar_hz": [
+      9.0,
+      11.0
+    ],
+    "max_gap_s": 0.5,
+    "imu_hz": [
+      190.0,
+      210.0
+    ],
+    "header_sample": null
+  },
+  "checks": [
+    {
+      "check_id": "bag.topics",
+      "status": "INFO",
+      "detail": "共 2 个话题：/livox/imu, /livox/lidar"
+    },
+    {
+      "check_id": "lidar.present",
+      "status": "PASS",
+      "detail": "话题 /livox/lidar 存在"
+    },
+    {
+      "check_id": "lidar.type",
+      "status": "PASS",
+      "detail": "/livox/lidar 类型 livox_ros_driver2/msg/CustomMsg（期望 livox_ros_driver2/msg/CustomMsg）"
+    },
+    {
+      "check_id": "lidar.type_loadable",
+      "status": "PASS",
+      "detail": "消息类型可导入（livox_ros_driver2/msg/CustomMsg）"
+    },
+    {
+      "check_id": "lidar.count",
+      "status": "PASS",
+      "detail": "/livox/lidar 消息数 18648"
+    },
+    {
+      "check_id": "lidar.decode",
+      "status": "PASS",
+      "detail": "反序列化失败 0/18648 条"
+    },
+    {
+      "check_id": "lidar.header_present",
+      "status": "PASS",
+      "detail": "缺少帧头 0/18648 条"
+    },
+    {
+      "check_id": "lidar.duration",
+      "status": "PASS",
+      "detail": "覆盖时长 1864.7s（要求 >= 1800.0s）"
+    },
+    {
+      "check_id": "lidar.gap",
+      "status": "PASS",
+      "detail": "最大断流 0.112s（要求 <= 0.5s），位于 t≈1792225260.651s"
+    },
+    {
+      "check_id": "lidar.time_regression",
+      "status": "PASS",
+      "detail": "接收时间倒退 0 次；注：rosbag2 sqlite3 读取时按时间戳排序，该检查对这类包基本不可触发"
+    },
+    {
+      "check_id": "lidar.header_monotonic",
+      "status": "PASS",
+      "detail": "帧头时间严格递增（逐相邻对检查 18648 条；倒退 0 次，重复/冻结 0 次）"
+    },
+    {
+      "check_id": "lidar.header_gap",
+      "status": "PASS",
+      "detail": "源帧头最大间隔 0.111s（要求 <= 0.5s），起于 1792226136349557083 ns；该检查针对传感器时间跳变，接收时间可能仍然连续"
+    },
+    {
+      "check_id": "lidar.rate",
+      "status": "PASS",
+      "detail": "点云平均频率 10.000 Hz（要求 9–11 Hz）"
+    },
+    {
+      "check_id": "lidar.custom_structure",
+      "status": "PASS",
+      "detail": "CustomMsg 结构非法 0 条；结构合法帧内检查 372972288 点"
+    },
+    {
+      "check_id": "lidar.custom_point_time",
+      "status": "INFO",
+      "detail": "逐点 offset_time 分布（仅 INFO，不作 FAIL 判据）：18648 帧 / 372972288 点；相邻逆序 2882384 处，涉及 18648 帧，单次最大回退 467980 ns（467.980 µs）；全帧 offset 相同（冻结）0 帧；offset 范围 0 ns – 111893375 ns（111.893 ms）（相对本帧基准点）。上游口径：offset_time 为 ns、相对本帧首个被追加的点（lddc.cpp:395），而点按 UDP 包到达次序追加、全链路无排序（pub_handler.cpp:149/240/388-390），故逆序/回退是包到达次序与时间次序不一致的正常表现。offset_time 的**合法上界未由消息类型或 driver 定义**（uint32 内即合法），本工具不据样本特征设阈值；若需按帧周期判界，须由上游/配置先给出定义。"
+    },
+    {
+      "check_id": "imu.present",
+      "status": "PASS",
+      "detail": "话题 /livox/imu 存在"
+    },
+    {
+      "check_id": "imu.type",
+      "status": "PASS",
+      "detail": "/livox/imu 类型 sensor_msgs/msg/Imu（期望 sensor_msgs/msg/Imu）"
+    },
+    {
+      "check_id": "imu.type_loadable",
+      "status": "PASS",
+      "detail": "消息类型可导入"
+    },
+    {
+      "check_id": "imu.count",
+      "status": "PASS",
+      "detail": "/livox/imu 消息数 372964"
+    },
+    {
+      "check_id": "imu.decode",
+      "status": "PASS",
+      "detail": "反序列化失败 0/372964 条"
+    },
+    {
+      "check_id": "imu.header_present",
+      "status": "PASS",
+      "detail": "缺少帧头 0/372964 条"
+    },
+    {
+      "check_id": "imu.duration",
+      "status": "PASS",
+      "detail": "覆盖时长 1864.8s（要求 >= 1800.0s）"
+    },
+    {
+      "check_id": "imu.gap",
+      "status": "PASS",
+      "detail": "最大断流 0.018s（要求 <= 0.5s），位于 t≈1792224879.046s"
+    },
+    {
+      "check_id": "imu.time_regression",
+      "status": "PASS",
+      "detail": "接收时间倒退 0 次；注：rosbag2 sqlite3 读取时按时间戳排序，该检查对这类包基本不可触发"
+    },
+    {
+      "check_id": "imu.header_monotonic",
+      "status": "PASS",
+      "detail": "帧头时间严格递增（逐相邻对检查 372964 条；倒退 0 次，重复/冻结 0 次）"
+    },
+    {
+      "check_id": "imu.header_gap",
+      "status": "PASS",
+      "detail": "源帧头最大间隔 0.016s（要求 <= 0.5s），起于 1792226094848405643 ns；该检查针对传感器时间跳变，接收时间可能仍然连续"
+    },
+    {
+      "check_id": "imu.units",
+      "status": "INFO",
+      "detail": "原始值原样保留（driver 未做换算）：angular_velocity 单位 rad/s，linear_acceleration 单位 g（**不是** m/s²）；orientation 未发布（默认值，不得当作有效姿态）。frame=livox_frame（上游硬编码，与配置的点云 frame 不同）。本工具不做 SI 转换，也不证明该 IMU 可用于融合。"
+    },
+    {
+      "check_id": "imu.rate",
+      "status": "PASS",
+      "detail": "IMU 平均频率 200.006 Hz（要求 190–210 Hz）"
+    },
+    {
+      "check_id": "streams.header_overlap",
+      "status": "PASS",
+      "detail": "源帧头时间范围重叠 1864.653s（点云 1792224601250394712–1792226465951627421 ns，IMU 1792224601298642816–1792226466056071922 ns）"
+    },
+    {
+      "check_id": "streams.window_coverage",
+      "status": "PASS",
+      "detail": "同一采集窗口重叠 1864.653s（要求 >= 1800.0s）"
+    }
+  ],
+  "streams": {
+    "/livox/lidar": {
+      "topic": "/livox/lidar",
+      "expected_type": "livox_ros_driver2/msg/CustomMsg",
+      "found_type": "livox_ros_driver2/msg/CustomMsg",
+      "type_error": null,
+      "count": 18648,
+      "first_ns": 1792224601352244743,
+      "last_ns": 1792226466050993054,
+      "max_gap_s": 0.111917994,
+      "max_gap_at_s": 1792225260.6513731,
+      "regressions": 0,
+      "worst_regression_s": 0.0,
+      "decode_failures": 0,
+      "missing_header": 0,
+      "header_checked": 18648,
+      "header_regressions": 0,
+      "header_repeats": 0,
+      "header_max_gap_s": 0.11143855400000001,
+      "header_max_gap_at_ns": 1792226136349557083,
+      "header_first_ns": 1792224601250394712,
+      "header_last_ns": 1792226465951627421,
+      "pc2_struct_bad": 0,
+      "pc2_fields": [],
+      "pc2_problems": [],
+      "custom_bad": 0,
+      "custom_points_checked": 372972288,
+      "custom_problems": [],
+      "custom_point_time": {
+        "frames": 18648,
+        "points": 372972288,
+        "inversions": 2882384,
+        "frames_with_inversions": 18648,
+        "worst_regression_ns": 467980,
+        "frozen_frames": 0,
+        "min_offset_ns": 0,
+        "max_offset_ns": 111893375
+      },
+      "sampled": false
+    },
+    "/livox/imu": {
+      "topic": "/livox/imu",
+      "expected_type": "sensor_msgs/msg/Imu",
+      "found_type": "sensor_msgs/msg/Imu",
+      "type_error": null,
+      "count": 372964,
+      "first_ns": 1792224601298816203,
+      "last_ns": 1792226466056230792,
+      "max_gap_s": 0.018015592,
+      "max_gap_at_s": 1792224879.0460408,
+      "regressions": 0,
+      "worst_regression_s": 0.0,
+      "decode_failures": 0,
+      "missing_header": 0,
+      "header_checked": 372964,
+      "header_regressions": 0,
+      "header_repeats": 0,
+      "header_max_gap_s": 0.016172456,
+      "header_max_gap_at_ns": 1792226094848405643,
+      "header_first_ns": 1792224601298642816,
+      "header_last_ns": 1792226466056071922,
+      "pc2_struct_bad": 0,
+      "pc2_fields": [],
+      "pc2_problems": [],
+      "custom_bad": 0,
+      "custom_points_checked": 0,
+      "custom_problems": [],
+      "custom_point_time": {
+        "frames": 0,
+        "points": 0,
+        "inversions": 0,
+        "frames_with_inversions": 0,
+        "worst_regression_ns": 0,
+        "frozen_frames": 0,
+        "min_offset_ns": null,
+        "max_offset_ns": null
+      },
+      "sampled": false
+    }
+  },
+  "warnings": [],
+  "note": "仅数据时间基准与消息结构的数值一致性检查；不证明硬件时间同步精度，也不表示点云/IMU 物理正确。原始 IMU 为未换算值：linear_acceleration 单位 g（非 m/s²），angular_velocity 单位 rad/s，orientation 未发布；不得据此视为已符合 SI 的融合输入。"
+}

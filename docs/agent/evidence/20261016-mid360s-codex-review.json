@@ -1,0 +1,101 @@
+{
+  "task_id": "HEI-LIDAR-20261016-02-PREP",
+  "reviewer": "Codex",
+  "executor": "DSH-LAPTOP via 127.0.0.1:3080 UI",
+  "branch": "feat/mid360s-bringup",
+  "base_sha": "f97fc4c14216d202d63269a8de1424ae646ca14d",
+  "software_preparation": "PASS",
+  "real_lidar": "NOT_RUN",
+  "physical_blocker": "User explicitly confirmed lidar is not connected; waiting for connection",
+  "static_shell_syntax": "PASS",
+  "git_diff_check": "PASS",
+  "pytest": {
+    "exit_code": 0,
+    "output": "........................................................................ [ 57%]\n......................................................                   [100%]\n126 passed in 5.04s\n"
+  },
+  "independent_bag_regressions": {
+    "data_kind": "SYNTHETIC_ONLY",
+    "independent_codex_regressions": [
+      {
+        "case": "imu_only_0.1s",
+        "actual_exit": 1,
+        "expected_exit": 1,
+        "pass": true
+      },
+      {
+        "case": "imu_disjoint_clock",
+        "actual_exit": 1,
+        "expected_exit": 1,
+        "pass": true
+      },
+      {
+        "case": "corrupt_cloud_cdr",
+        "actual_exit": 1,
+        "expected_exit": 1,
+        "pass": true
+      },
+      {
+        "case": "empty_clouds",
+        "actual_exit": 1,
+        "expected_exit": 1,
+        "pass": true
+      },
+      {
+        "case": "midstream_header_freeze",
+        "actual_exit": 1,
+        "expected_exit": 1,
+        "pass": true
+      },
+      {
+        "case": "valid_synthetic_control",
+        "actual_exit": 0,
+        "expected_exit": 0,
+        "pass": true
+      }
+    ]
+  },
+  "dependencies": {
+    "Livox_SDK2": "f5d9375f84efe2b15bc0a052d3e18482ed13adf4",
+    "livox_ros_driver2": "13eb05e4e6dd7a765b934d0c5fd6236676a57b49"
+  },
+  "findings_closed": [
+    "RF-LIDAR-001",
+    "RF-LIDAR-002",
+    "RF-LIDAR-003",
+    "RF-LIDAR-004",
+    "RF-LIDAR-005"
+  ],
+  "not_run": [
+    "Live driver connection",
+    "Real point cloud and IMU",
+    "Real RViz display",
+    "Real 30 minute bag",
+    "Real bag replay",
+    "FAST-LIO2",
+    "RTAB-Map",
+    "AGX deployment",
+    "Base bridge",
+    "Nav2",
+    "Robot motion"
+  ],
+  "note": "All bag regressions are synthetic software tests. Numerical consistency cannot prove physical geometry or hardware synchronization accuracy.",
+  "markdown_links": {
+    "checked": 11,
+    "broken": []
+  },
+  "reviewed_source_sha256": {
+    "extensions/dependencies/livox.repos": "c877faa02b5d6586770f741062a9c245071fde23769114b76e685af2e99155b8",
+    "extensions/ros2_ws/src/hei_robot_bringup/hei_robot_bringup/__init__.py": "50e6e17080b2a202b91ee403d9e91f4ea402969c955662de5e6cdc9886293c13",
+    "extensions/ros2_ws/src/hei_robot_bringup/hei_robot_bringup/bag_qc.py": "820b7d0fe8866a6e8bc71d91fa7982204b0da16a870586f9cb8c496422522071",
+    "extensions/ros2_ws/src/hei_robot_bringup/hei_robot_bringup/make_config.py": "3682f0952405f82572866de10d5f928300e66be87ad3b825a6f75426f54db18a",
+    "extensions/ros2_ws/src/hei_robot_bringup/hei_robot_bringup/mid360s_config.py": "103e0c20febccd3c4da8b0a684407adb3b3ee42ed98cb0155e1e00066a97425f",
+    "extensions/ros2_ws/src/hei_robot_bringup/launch/mid360s_bringup.launch.py": "77c5e4a5dca22e8ab08c893795e2adb737352923a05d95496d0fdb0541e12639",
+    "extensions/ros2_ws/src/hei_robot_bringup/setup.py": "d4f56c34c28fc087267de42b43df885a0bed2ea175b9ac8876b7055ede012936",
+    "extensions/ros2_ws/src/hei_robot_bringup/test/test_bag_qc.py": "ccd2207c14acb27350aa27037ce143adc88bf5e18ae5363f3177bd72f8758609",
+    "extensions/ros2_ws/src/hei_robot_bringup/test/test_build_script.py": "e5041b02b930a6c28eb3bb9456d7eacbab9436e0ecc1cfb80b2d36f8c228a408",
+    "extensions/ros2_ws/src/hei_robot_bringup/test/test_launch_static.py": "64cde6842825177accf3588a84a1a4d28cf0aa4ce3c731f3c550277b6c39d872",
+    "extensions/ros2_ws/src/hei_robot_bringup/test/test_make_config.py": "ccc279755b3cd3a7717445353d908f1b9228818633df8139da53d92a666dff33",
+    "extensions/ros2_ws/src/hei_robot_bringup/test/test_mid360s_config.py": "f380814f0100ea8e554f98f375cc33f5597f15da3037e2c6f601adc39fed1772",
+    "extensions/tools/build_mid360s_underlay.sh": "0a64aa120719f4a551e3371a4c469a165b5fec26473931d24f0aef0c0b02a073"
+  }
+}

@@ -1,0 +1,36 @@
+### 冻结 SHA（对照 extensions/dependencies/livox.repos）
+Livox-SDK2        f5d9375f84efe2b15bc0a052d3e18482ed13adf4  (tag v1.3.1)
+livox_ros_driver2 13eb05e4e6dd7a765b934d0c5fd6236676a57b49  (tag 1.2.6)
+porcelain(sdk)=0  porcelain(driver)=0
+
+### SDK 安装产物
+-rw-r--r-- 1 robo robo 1214224 10月 16 15:19 extensions/third_party/livox_sdk2_install/lib/liblivox_lidar_sdk_shared.so
+
+### ldd 组件库（RPATH 生效，无 not found）
+	liblivox_lidar_sdk_shared.so => /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_sdk2_install/lib/liblivox_lidar_sdk_shared.so (0x000077bc57fc7000)
+not_found(component)=0
+not_found(node)=0
+ 0x000000000000001d (RUNPATH)            Library runpath: [/home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_sdk2_install/lib:/opt/ros/humble/lib]
+
+### colcon build 摘要
+Finished <<< livox_ros_driver2 [0.54s]
+Summary: 1 package finished [0.87s]
+
+### S 型支持证据（冻结源码）
+69:  kLivoxLidarTypeMid360s = 35,
+135:  } else if (dev_type == LivoxLidarDeviceType::kLivoxLidarTypeMid360||dev_type==LivoxLidarDeviceType::kLivoxLidarTypeMid360s) {
+extensions/third_party/livox_ws/src/livox_ros_driver2/config/MID360s_config.json
+
+### RF-LIDAR-003 证据：IMU 帧硬编码 + 单位（driver 自述）
+481:  imu_msg.header.frame_id = "livox_frame";
+typedef struct {
+  float gyro_x;        /**< Gyroscope X axis, Unit:rad/s */
+  float gyro_y;        /**< Gyroscope Y axis, Unit:rad/s */
+  float gyro_z;        /**< Gyroscope Z axis, Unit:rad/s */
+  float acc_x;         /**< Accelerometer X axis, Unit:g */
+  float acc_y;         /**< Accelerometer Y axis, Unit:g */
+  float acc_z;         /**< Accelerometer Z axis, Unit:g */
+orientation/covariance 赋值命中数: 0
+
+### RF-LIDAR-002 证据：脚本拒绝已跟踪 dirty（实测 exit=1，还原后 porcelain=0）
+driver porcelain after revert = 0

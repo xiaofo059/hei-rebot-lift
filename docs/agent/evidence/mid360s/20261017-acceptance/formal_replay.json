@@ -1,0 +1,73 @@
+{
+  "bag": "/home/robo/hei-data/mid360s_live_20261017_retest01",
+  "domain": "87",
+  "command": [
+    "ros2",
+    "bag",
+    "play",
+    "/home/robo/hei-data/mid360s_live_20261017_retest01",
+    "--rate",
+    "2.0",
+    "--delay",
+    "3",
+    "--clock",
+    "20",
+    "--disable-keyboard-controls",
+    "--wait-for-all-acked",
+    "10000",
+    "--read-ahead-queue-size",
+    "1000"
+  ],
+  "expected": {
+    "/livox/lidar": {
+      "count": 18648,
+      "bytes": 7460322216,
+      "header_regressions": 0,
+      "header_repeats": 0,
+      "max_header_gap_s": 0.111438554,
+      "first_header_ns": 1792224601250394712,
+      "last_header_ns": 1792226465951627421,
+      "sha256_serialized_sequence": "928fecb6052555b2542f4abc5f5513e5ad20dcf881deaa34ffa0e84ae147c839"
+    },
+    "/livox/imu": {
+      "count": 372964,
+      "bytes": 120840336,
+      "header_regressions": 0,
+      "header_repeats": 0,
+      "max_header_gap_s": 0.016172456,
+      "first_header_ns": 1792224601298642816,
+      "last_header_ns": 1792226466056071922,
+      "sha256_serialized_sequence": "1cea3e5afb554b4636a4c9ad999f6dfda1abec93a16277aeb92dd3748a76db52"
+    }
+  },
+  "player_pid": 53809,
+  "elapsed_s": 941.6056247589986,
+  "observed": {
+    "/livox/lidar": {
+      "count": 18648,
+      "bytes": 7460322216,
+      "header_regressions": 0,
+      "header_repeats": 0,
+      "max_header_gap_s": 0.111438554,
+      "first_header_ns": 1792224601250394712,
+      "last_header_ns": 1792226465951627421,
+      "sha256_serialized_sequence": "928fecb6052555b2542f4abc5f5513e5ad20dcf881deaa34ffa0e84ae147c839"
+    },
+    "/livox/imu": {
+      "count": 372964,
+      "bytes": 120840336,
+      "header_regressions": 0,
+      "header_repeats": 0,
+      "max_header_gap_s": 0.016172456,
+      "first_header_ns": 1792224601298642816,
+      "last_header_ns": 1792226466056071922,
+      "sha256_serialized_sequence": "1cea3e5afb554b4636a4c9ad999f6dfda1abec93a16277aeb92dd3748a76db52"
+    }
+  },
+  "player_exit_code": 0,
+  "content_matches": {
+    "/livox/lidar": true,
+    "/livox/imu": true
+  },
+  "verdict": "PASS"
+}

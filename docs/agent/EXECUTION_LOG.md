@@ -180,3 +180,75 @@ Codex 通过UI回收可见内容，转录到本机同名相对路径，独立SHA
 - 无需用户手工提交本轮任务。若日后需脱离浏览器独立远程读文件/运行命令，需配置可用SSH认证或另立任务验证受认证API；本轮未扩展访问权限。
 - 下次AGX正式开发前，按Fork开发分支/Git工作流同步审定文档并记录commit和目标HEAD；当前无自动提交或同步。
 - 现有初始化闭环无剩余阻断项；任意长时任务、断线恢复、排队取消和实机安全的可靠性仍需各自专项验证。
+
+## 2026-10-16 · MID-360S 第一批 01/02 启动（Codex）
+
+- 用户批准实施分阶段计划；最新现场回复：雷达尚未连接，接好后通知。当前不具备真实数据、固件或实际雷达 IP 证据；不启动机器人 host、不操作电机。
+- 基线：`fo` / x86_64 / Ubuntu 22.04.5；工作区起始干净，`dev` @ `f97fc4c14216d202d63269a8de1424ae646ca14d`。Codex 创建 `feat/mid360s-bringup`（exit 0）。
+- 本机 DSH：PID 140208，进程 cwd 经 `/proc/140208/cwd` 核对为本项目；3080 UI 新建独立会话“HEI-LIDAR 软件只读基线检查”，已输入/发送十四字段 01-SOFTWARE 提示词，实际观察到工具运行与最终报告，展开核对 Git 原始输出。不是 API 调度，也不是 Codex 内部子 Agent。
+- 01-SOFTWARE 接受范围：机器/目录/SHA 一致，首末 status 干净；ROS Humble/RViz、colcon、CMake 和编译器存在。Codex 独立以 `bash --noprofile --norc` + `source /opt/ros/humble/setup.bash` + `/usr/bin/python3` 导入 rclpy/rosbag2_py 成功（exit 0）。PATH-only 导入失败属于未 source，不能声称 ROS 缺失。vcstool 非必需，可用精确 SHA 的 Git 获取依赖。
+- 权限边界：DSH 工作区沙箱中的 sudo 报 no-new-privileges；Codex 本机 `sudo -n true` 提示需要密码。是两种不同限制，不代表用户机器 sudo 配置损坏；不读取口令、不调整全局权限。
+- 网络快照：enp7s0 `192.168.50.1/24`，邻居 `192.168.50.2`；Wi-Fi `192.168.1.144/23`，默认路由 via `192.168.1.1`；常见雷达默认网段与 Wi-Fi 重叠。未改配置，已有邻居不是已确认的雷达。
+- 02-PREP 范围：雷达缺席期间仅准备独立依赖、参数化 bringup、录包/质量工具及文档。01-HARDWARE 与 02-LIVE 不作通过结论；03 及以后保留前置验收门槛。
+
+### 02-PREP 阶段 Review（尚未验收）
+
+- DSH 实际下载并冻结官方 Livox-SDK2 v1.3.1 @ `f5d9375f84efe2b15bc0a052d3e18482ed13adf4`、livox_ros_driver2 1.2.6 @ `13eb05e4e6dd7a765b934d0c5fd6236676a57b49`；源代码包含 Mid360s handler/config。安装仅在被忽略的 `extensions/third_party/`。
+- SDK 和 driver 实际构建；初次遇 Conda CMake 4.x 与旧最低版本不兼容，改用系统 CMake 的干净 ROS shell。驱动组件初次缺 SDK 运行库路径，DSH 添加安装 RPATH 后，Codex 独立 source underlay 并检查 `liblivox_ros_driver2.so`：SDK 解析到本项目安装前缀，`not found=false`、exit 0。原始消息 `ros2 interface show livox_ros_driver2/msg/CustomMsg` 成功。
+- RF-LIDAR-001 P1：Codex 独立调用配置生成器的目录校验，首次 `extensions/config/local/` 尚不存在时实际抛 FileNotFoundError；要求向上寻找存在的祖先并回归测试。
+- RF-LIDAR-002 P2：构建脚本须拒绝 tracked 源码 dirty，保护已有 driver/launch，并将 ldd 自身失败判为失败；不能仅比对 HEAD 后宣称冻结源码可复现。
+- RF-LIDAR-003 P2：核对冻结 driver 的硬编码 IMU frame `livox_frame`、加速度原样传递。Codex 读取官方 MID360 系列协议：acc 单位 g、gyro 单位 rad/s；原始 bag 不改值，下游不能未经适配直接按 SI 融合，orientation 未提供。DSH 自身获取协议页被网络策略拒绝，记录限制并用冻结源码核对；不绕过策略。
+- RF-LIDAR-004 P1（阻断）：Codex 通过真实 rosbag2 API 生成 **SYNTHETIC** 临时包并调用 CLI；IMU 仅 0.1 秒、IMU/点云时间完全不重叠、所有点云非法 CDR、所有点云 width/data/fields 为空，四例实际均错误 exit 0。要求双流全时段/断流/源时间检查、损坏/空点云失败、默认完整 header 扫描、采样结果不得 PASS、阈值校验及对应回归。临时包在 data/mid360s 下独立临时目录，用后清理；从未发布为实时传感器。
+- 以上纠正已通过 DSH 排队发送后“插话发送”即时交付并看到任务回显；当前执行继续，不能宣称已经修复或最终通过。
+
+### 02-PREP 最终独立验收（Codex，2026-10-16）
+
+- RF-LIDAR-005 P2：文档原先重编号阶段、将未执行命令统称已实测、构建目录未回根目录，以及正式包未明确 CustomMsg 切换；要求对齐批准计划、逐块标执行状态、修正 source/路径、单 driver 切换与 31 分钟录包说明。已复核修正，历史 DSH 交付报告保持“等待 Review”的原始时态；当前结论以本节为准。
+- RF-LIDAR-004 首次修复仍漏掉中段冻结：Codex 用合法 24 字节点步长的 SYNTHETIC PC2，源时间第 6～10 帧冻结到第 5 帧后恢复，实际仍 exit 0。再次即时纠正，改为逐相邻源时间对检查重复/倒退及源时间最大间隔，增加话题名不能相同的参数检查。
+- Codex 独立测试命令：干净系统 shell source `/opt/ros/humble/setup.bash`、Livox underlay、项目 overlay 后，`/usr/bin/python3 -m pytest -q extensions/ros2_ws/src/hei_robot_bringup/test`；实际 `126 passed in 5.04s`，exit 0（无跳过）。DSH 另有 colcon build/test 记录，不能以其自述替代本独立结果。
+- Codex 在修复后的代码上重新用真实 rosbag2 API 构造 **SYNTHETIC_ONLY** 的 6 个独立对照：IMU 短流、源时间不重叠、非法 CDR、空点云、中段时间冻结，全部 exit 1；合法合成对照 exit 0。临时数据生成在忽略目录，用后清理，没有发布实时话题。此结果不代表真实雷达通过。
+- 首次配置目录问题已有缺失多级路径回归；构建脚本已有 tracked dirty 拒绝、预存 launch 保护和 ldd 失败检查；源代码/冻结 SHA/实际组件库运行路径再次核对。RF-LIDAR-001～005 关闭。DSH 沙箱不能获取协议页不影响 Codex 已通过官方网页与冻结源码双重核对单位事实。
+- 语法与范围：`bash -n extensions/tools/build_mid360s_underlay.sh`、`git diff --check` exit 0；第三方源码交付时干净。DSH 的 dirty 保护测试曾临时修改并还原其任务内下载的 CHANGELOG，不能将“交付时干净”扩张为“全过程未修改”。
+- 结论：01-SOFTWARE 与 02-PREP DONE；01-HARDWARE、02-LIVE BLOCKED 等接线。真实驱动启动、点云/IMU、RViz、正式 bag/回放、LIO/SLAM/导航、AGX、运动均 NOT_RUN。没有修改网络配置、机器人控制源码或设备状态。未部署持续后台监控。
+- 专项输出：`docs/MID360S_BRINGUP.md`；DSH 原始证据 `docs/agent/evidence/mid360s/`；独立验收 JSON `docs/agent/evidence/20261016-mid360s-codex-review.json`。本批审查通过的源码、文档与证据在功能分支提交；具体提交 SHA 以 Git 日志为准，不向远端或上游推送。
+- 最终文档 QA：Codex 发现包 README 的 4 处相对路径层级错误，作为 RF-LIDAR-005 的补项重新交给 DSH；DSH 仅修改该 README。Codex 复查 3 份新增说明的 11 个相对链接，0 损坏，空白检查通过。软件源代码未变化，不重复无关测试。独立验收 JSON 追加已审查源文件 SHA256，便于关联本次测试与交付版本；DSH 当前回合结束且无待发送队列，未见 driver/robot host 进程。
+
+## 2026-10-16 · MID-360S 真实点云冒烟测试（Codex）
+
+- 用户确认雷达已通过 USB 转网口接入笔记本，并授权启动 Livox driver、RViz；本次只测试传感器，不启动机器人 host、不控制底盘或升降，不修改源码/现场配置。
+- 启动前确认无旧 driver/RViz 残留。实时网络快照：USB ASIX `enx9c69d3cd61a9=192.168.1.5/32`，雷达 `192.168.1.135` 有直连 `/32` 路由且邻居 REACHABLE；WiFi `192.168.1.144/23` 与机器人高速口 `enp7s0=192.168.50.1/24` 保持分离。
+- 实际启动 `livox_ros_driver2 1.2.6` + MID-360S SDK2 `v1.3.1` + 自研 `mid360s_bringup.launch.py`，仅一个 driver，格式 PointCloud2，设定 10 Hz。RViz 点云 Status OK；用户截图约 31 FPS。独立运行约 15 秒 `ros2 topic hz /livox/lidar`，统计均值约 9.6 Hz（窗口中最大到达间隔约 0.2 秒）。只证明本次点云链路与可视化；未测 `/livox/imu` 频率、CustomMsg 逐点时间或录包。
+- RViz 同时报告 `rviz_default_plugins/Imu` 类型不存在；这是 IMU 可视化插件错误，不影响 PointCloud2，但 IMU topic 尚未独立验收。
+- 按 Ctrl+C 复现退出 SIGABRT（PID 306909，core 存 systemd-coredump；`coredumpctl debug 306909` 可检查）。GDB：`free(): invalid size` 出现在 exit handler，`spdlog::logger` shared_ptr dispose 位于系统 `libspdlog.so.1`，调用源为 Livox SDK 全局 logger 静态析构；SDK vendored spdlog 为 1.3.1，ROS 系统 spdlog 为 1.9.2。版本/符号冲突是高置信度根因方向；尚未改动或修复第三方源码。
+- 独立复核当前没有残留 driver/RViz 进程；本次测试前 Git 工作区干净。`/tmp/mid360s-shutdown-repro/run.log` 保留本次启动输出。02-LIVE 仅点云冒烟测试通过；下一步验证 IMU 与 CustomMsg/短包，处理退出清理缺陷，之后执行正式 31 分钟数据包、离线 QC 和回放。03-LIO 仍不得启动。
+
+## 2026-10-16 · MID-360S 02-LIVE 短包复核及正式实采验收（Codex）
+
+- 用户要求 Codex 执行 02-LIVE 真实数据验收并判断是否通过；按已批准边界仅操作笔记本侧 MID-360S 和 ROS 录包/QC，不启动机器人 host，不使能或移动任何机构，不修改雷达网卡配置。全程只运行一个 Livox driver。
+- 修复验收工具的 CustomMsg 顺序判据后，DSH 报告包测试 138 项通过、`git diff --check` 通过。Codex 独立复跑干净 Humble 环境下 `colcon test --packages-select hei_robot_bringup --event-handlers console_direct+`：138 passed，0 errors/failures/skips；独立 `git diff --check` 通过。`offset_time` 逆序依上游发布源码按信息统计，不作失败条件，因点按 UDP 到达次序添加且没有排序保证。
+- 58.852 秒稳定真实短包 `/home/robo/hei-data/mid360s_diag_20261016_180730` 在阈值 `duration=30s, max-gap=0.5s, IMU=190–210Hz` 下独立 QC PASS：588 CustomMsg、11,765 IMU，点云约 10Hz，IMU 均值 199.891Hz；结构/解码、时间连续性通过。逐点 offset 统计 90,169 次逆序（INFO）。隔离 ROS_DOMAIN_ID=77 下 2 倍速回放该短包，播放器 exit 0；subscriber 收到 CustomMsg 和 IMU。此回放不代表正式包全量回放。
+- 95.6 秒启动期真实短包 `/home/robo/hei-data/mid360s_short_20261016_1803` 独立 QC FAIL：LiDAR/IMU bag 到达间隔分别最多 1.532s/1.447s，header 间隔最多 0.600s/1.400s；CustomMsg 结构合法、offset 逆序仅 INFO，IMU 均值 197.193Hz。说明新判据没有抹掉真实数据缺口。
+- 正式 CustomMsg + IMU bag：`/home/robo/hei-data/mid360s_live_20261016_1827`，开始 `18:27:14.753856121`、结束 `18:58:21.665166011`，时长 1866.911s（31:06.9），约 7.1 GiB；18,669 CustomMsg、373,386 IMU。录包器收到 Ctrl+C 后写完缓存并正常关闭。正式 bag QC 完整运行约 35.6 分钟，退出码 1（FAIL），JSON `/home/robo/hei-data/mid360s_live_20261016_1827_qc.json`。
+- 正式包通过项：全消息解码成功、0 条 CustomMsg 结构错误，373,383,456 个点可读；IMU 平均 200.001Hz，bag 到达最大 gap 0.021782s、header 最大 gap 0.017810s，双流覆盖约 1866.793s；LiDAR bag 到达最大 gap 0.227s。LiDAR 源 `header.stamp` 倒退 2 次、最大间隔 0.713431755s，超过 0.5s 门限。全包逐点 offset 逆序 2,899,209 次（INFO），最大 offset 702.866013ms；未发现冻结帧。
+- 针对异常时刻，对只读 SQLite 时间索引范围查询并解码 60 条相邻 LiDAR 消息：看到 header 间隔 +700.107ms、随后 −600.660ms 回退；随后出现 140,736 点帧（offset 最大 702.866ms），下一帧 header 间隔 +713.432ms。此时间相关性提示帧聚合/队列时序异常，但根因未证实；不可归咎网络或驱动实现。
+- driver 在正式录包器关闭后停止；SDK 完成 deinit 后 Livox 子进程以 SIGBUS（exit -7）终止，launch 父进程 exit 0 但日志有 child died。残留进程核查未发现 livox driver、rosbag recorder 或机器人控制进程。异常与此前 Ctrl+C SIGABRT 是不同实际退出信号，本轮根因未修复。
+- 最终验收：02-LIVE **NEEDS_FIX / FAIL**，不能进入 03-LIO。已达成真实长时采集、IMU 频率/数据结构、短包回放抽查和完整离线 QC；阻塞项为 LiDAR 源时间倒退/0.5s 间隔门限失败、driver 退出 SIGBUS、正式长包尚未回放。不得通过放宽 QC 阈值隐藏异常。后续需针对采集时钟/驱动队列/帧聚合做诊断，修复或隔离 SDK 清理问题后重跑长时验收。
+
+## 2026-10-17 · MID-360S 时钟/退出修复与正式复测（完成：PASS）
+
+- 用户明确授权继续源时间诊断、退出修复、长时 QC 和正式包完整回放；本轮仅笔记本传感器链路。网络实测雷达 `192.168.1.135` 经 USB `enx9c69d3cd61a9=192.168.1.5/32` 直连，ping 2/2；WiFi 当前 `172.22.22.189/24`，机器人高速口 DOWN，未修改网络/固件/OS 时间同步设置。DSH PID 21932 cwd 已核对正确，3080 UI 实际下发 02-FIX-20261017 并回收执行报告。
+- 旧正式 bag 新取证：按 SQLite `messages.id` 插入顺序，IMU id73137→73138 的 source header 与 receive 同时回拨约 598ms；按 timestamp 排序会制造额外 LiDAR 回退、掩盖 IMU 回拨。driver NoSync 原实现同时用 `high_resolution_clock`（本机为 CLOCK_REALTIME）打戳和划帧；系统时钟回拨导致时间回退与发布调度等待追平。140,736 点/702.866ms 大帧与该等待吻合；大帧后的 713.432ms source gap 在插入序也存在，不能全部归为排序伪影。谁调整了系统时钟尚无旧 journal 证据，不能直接归因 NTP。当前被动 UDP 读到两路 `time_type=0`，读完已释放端口。
+- Codex 无硬件因果实验：仅 dlopen SDK + `LivoxLidarSdkInit(nullptr,nullptr,nullptr)`，源码在初始化 logger 后返回 false，未创建设备/套接字。原库单独 3/3 exit0，预加载 system spdlog 后 3/3 SIGBUS(-7)；符号隔离后的 SDK 两组合均 3/3 exit0（共12次）。56 个 C API 导出集合完全一致，内部 spdlog/fmt/livox C++ 导出消除；实际 driver 组件 ldd 绑定本项目修复 SDK，ROS 后端仍使用系统 spdlog。
+- DSH 实施 tracked SDK 导出隔离 patch、NoSync epoch 锚点 + steady elapsed / steady 帧调度 patch，PTP/GPS 原路径保留；构建脚本支持冻结 SHA + 精确 patch，未知 tracked/untracked 变更在 apply/revert 前拒绝，提供临时 Git 状态机测试。Codex Review 要求修正首次 anchor 读取顺序、map 的 LINK_DEPENDS、拒绝前不修改工作区、证据中真实 gap 与排序伪影的区分，已复审关闭。NoSync 锚点是主机近似 epoch，不证明设备硬件同步或多传感器对时。
+- RF-LIDAR-006：Codex 发现 bag_qc 原先接收/打印 lidar_hz_min/max 但缺少 `lidar.rate` 判定，明确扩大白名单由 DSH 最小增补，并加5Hz/20Hz失败、9/11Hz边界和CustomMsg低频合成测试。原门限不变；旧正式 FAIL 结论保留。Codex 独立系统 Python/三层 ROS 环境 pytest：143 passed in5.64s，无skip；独立 underlay regression、git diff --check 通过。DSH 另报告干净→apply→build 与重复构建成功，产物已冻结。
+- Codex 实际 driver 短测：CustomMsg→PointCloud2→CustomMsg 各15s，3次均收两路数据且 SIGINT 正常 exit0，无升级停止。初始几秒存在历史启动缓存/源时间大间隔，记录未隐藏；这3次只验收生命周期，不据此宣称数据合格。正式采集增加10s稳定预热并单独保留 warmup_streams，再启动完整1865s监测/录包窗口。
+- 正式复测 RUNNING：bag `/home/robo/hei-data/mid360s_live_20261017_retest01`；ROS_DOMAIN_ID=86、ROS_LOCALHOST_ONLY=1，单 driver。独立 live monitor 采用 raw subscription 统计两流 header 顺序/间隔及 monotonic 到达间隔，并测 CLOCK_REALTIME 与 monotonic 差分，避免只依赖 rosbag timestamp 排序。全部运行/原始源码diff备份/哈希/预检/短测证据在 `/home/robo/hei-data/mid360s_retest_20261017_evidence/`；DSH交付在 `docs/agent/evidence/mid360s/20261017-fix/`。全量 QC 与正式包回放尚未执行，此时不可判定 02-LIVE DONE。
+- 采集收尾：正式bag开始16:10:01.298816203、结束16:41:06.056230792，1864.757414589s；18,648 CustomMsg、372,964 IMU，391,612条消息，7.1GiB，DB文件7,628,042,240字节。独立live monitor整个窗口18,650帧/373,013 IMU（包含录包边界之外的少量回调，包内计数以metadata为准），header倒退/重复0，max source gap0.111438554s/0.016172456s；主机clock差分200ms采样未见>5ms步进。recorder和driver均exit0、无需升级停止。原始DB3 SHA256 `4ea1bdeb48a0a77637bd4a4d64ad9c5b8d7a1cf401cd93b8b24208c45f6afdc5`，完整清单 `data_artifact_manifest.json`。
+- 追加生命周期验证：实际日常 `ros2 launch hei_robot_bringup mid360s_bringup.launch.py ... pointcloud_format:=pointcloud2 launch_rviz:=false` 运行12s后SIGINT；launch parent exit0，child `process has finished cleanly`，SDK deinit/析构完整、无child died。初版验证器误匹配小写pointcloud2导致结果FAIL；Codex依据未改动原始日志中的`PointCloud2 format`纠正大小写匹配并保留初版结果，修正后PASS；未重跑硬件或修改driver。证据在 `production_launch_smoke/`。
+- 独立进程级时钟故障注入：拦截当前测试进程的clock_gettime，仅偏移CLOCK_REALTIME返回值；真实production `host_time.h` 在回拨约590ms/前跳约1310ms时仍只递增约10ms。未修改OS时间或采集进程。DSH将此证据纳入 `test_process_clock_steps.cpp` 并接入underlay回归，probe改用SONAME以移除x86路径硬编码；Codex独立Review+重跑扩展suite PASS，构建产物/patch哈希未变；ARM64未实测。
+- 完整QA启动：生产bag_qc原代码、原阈值（1800s/9–11Hz/190–210Hz/gap0.5s/全量）全包执行，外部wrapper只调用原收集函数后打印已有计数，不改变结果或门限；输出 `/home/robo/hei-data/mid360s_live_20261017_retest01_qc.log` 和同名 `_qc.json`（完成后生成）。正式2倍回放在Domain87/localhost隔离进行，先扫描全量原始CDR形成每话题计数及串接SHA256，再由raw订阅器核对实际传输的每条消息序列；短包对照已PASS（588/11765条、哈希全一致），正式回放仍待结果。
+- 正式回放结果PASS：player exit0，完整播放1864.757s原始包、2倍速，接收验证阶段wall约941.6s（含3s发现等待和5s末尾排空）。18,648条CustomMsg/372,964条IMU全部收到；bytes数、计数、完整长度前缀CDR序列SHA256均与原包一致：点云 `928fecb6052555b2542f4abc5f5513e5ad20dcf881deaa34ffa0e84ae147c839`，IMU `1cea3e5afb554b4636a4c9ad999f6dfda1abec93a16277aeb92dd3748a76db52`。两路回放header倒退/重复0。证据 `formal_replay01/result.json`；无订阅丢失/重排造成的内容差异。02-REPLAY DONE，逐点QC仍在执行，02-LIVE总体尚不能DONE。
+
+- 全量QC完成：exit0 / PASS，30项中27 PASS、3 INFO、0 FAIL；18,648帧/372,964 IMU全部解码，372,972,288点全部检查。点云10.000Hz、IMU200.006Hz；两路header倒退/重复0；最大接收gap0.111917994s/0.018015592s，最大源gap0.111438554s/0.016172456s，双流源覆盖1864.653s。未采样、未放宽原门限；逐点offset到达顺序INFO不等于时间戳倒退。
+- 最终独立交叉核对：metadata、QC、capture、完整回放计数一致；两流全量CDR字节数/序列SHA256一致；冻结构建产物及patch哈希未变；原六份dirty基线均可重建且哈希一致。143项测试、扩展underlay suite与5次实际driver正常退出证据归档。补丁目录局部.gitattributes仅豁免统一diff格式必需的空白上下文，应用后源码仍执行diff --check。
+- 验收结论：02-FIX、02-RETEST、02-REPLAY与02-LIVE数值数据/生命周期验收DONE / PASS。详见 [验收索引](evidence/mid360s/20261017-acceptance/README.md) 与 codex_review.json。旧失败包保留；不声称完成硬件精确对时、物理标定、AGX或LIO/SLAM。未commit/push，未改网络/OS时间/机器人控制。

@@ -1,0 +1,38 @@
+### ros2 pkg prefix
+hei_robot_bringup    /home/robo/robotopia/hei-rebot-lift/extensions/ros2_ws/install/hei_robot_bringup
+  exit=0
+livox_ros_driver2    /home/robo/robotopia/hei-rebot-lift/extensions/third_party/livox_ws/install/livox_ros_driver2
+  exit=0
+
+### ros2 pkg executables hei_robot_bringup
+hei_robot_bringup mid360s_bag_qc
+hei_robot_bringup mid360s_make_config
+exit=0
+
+### ros2 interface list | grep -i livox
+    livox_ros_driver2/msg/CustomMsg
+    livox_ros_driver2/msg/CustomPoint
+exit=0
+
+### ros2 interface show livox_ros_driver2/msg/CustomPoint
+interface_exit=0
+# Livox costom pointcloud format.
+
+uint32 offset_time      # offset time relative to the base time
+float32 x               # X axis, unit:m
+float32 y               # Y axis, unit:m
+float32 z               # Z axis, unit:m
+uint8 reflectivity      # reflectivity, 0~255
+uint8 tag               # livox tag
+uint8 line              # laser number in lidar
+
+
+### ros2 launch --show-args（config_path 无默认值）
+show_args_exit=0
+    'config_path':
+        必填：现场配置 JSON 路径（含 host_ip/lidar_ip）。无默认值，用 mid360s_make_config 生成。
+
+
+### CLI --help
+make_config_help_exit=0
+bag_qc_help_exit=0
