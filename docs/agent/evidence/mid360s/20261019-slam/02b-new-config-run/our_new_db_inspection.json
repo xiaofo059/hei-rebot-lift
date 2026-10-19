@@ -1,0 +1,254 @@
+{
+ "kind": "rtabmap_database_inspection",
+ "database": "/home/robo/hei-data/mid360s_slam_20261019/mapping_proxguess_20261019_121802/rtabmap_mapping.db",
+ "size_bytes": 2949120,
+ "sha256": "b30fbaecb9d31c273808e4bff2e1a77bba396c2a1bf138207ee0b356a06356b3",
+ "tool_version": null,
+ "integrity_check": "ok",
+ "tables": [
+  "Admin",
+  "Data",
+  "Feature",
+  "GlobalDescriptor",
+  "Info",
+  "Link",
+  "Node",
+  "Statistics",
+  "Word"
+ ],
+ "node_columns": [
+  "id",
+  "map_id",
+  "weight",
+  "stamp",
+  "pose",
+  "ground_truth_pose",
+  "velocity",
+  "label",
+  "gps",
+  "env_sensors",
+  "time_enter"
+ ],
+ "nodes": 55,
+ "data_table_columns": [
+  "id",
+  "image",
+  "depth",
+  "depth_confidence",
+  "calibration",
+  "scan",
+  "scan_info",
+  "ground_cells",
+  "obstacle_cells",
+  "empty_cells",
+  "cell_size",
+  "view_point_x",
+  "view_point_y",
+  "view_point_z",
+  "user_data",
+  "time_enter"
+ ],
+ "data_rows": 55,
+ "nodes_with_scan_data": 55,
+ "nodes_with_data_column": null,
+ "map_ids": [
+  0
+ ],
+ "node_stamp_range": [
+  1792380297.3567388,
+  1792380504.3563302
+ ],
+ "has_link_table": true,
+ "link_columns": [
+  "from_id",
+  "to_id",
+  "type",
+  "information_matrix",
+  "transform",
+  "user_data"
+ ],
+ "link_type_counts": {
+  "0": 108,
+  "2": 50
+ },
+ "link_type_names": {
+  "0": "neighbor",
+  "2": "local_space_closure"
+ },
+ "link_type_name_counts": {
+  "neighbor": 108,
+  "local_space_closure": 50
+ },
+ "links_total": 158,
+ "auto_loop_closure_links": {
+  "global_loop_closure": 0,
+  "local_space_closure": 50,
+  "local_time_closure": 0
+ },
+ "primary_auto_loop_closure_type": "local_space_closure",
+ "primary_auto_loop_closure_links": 50,
+ "user_manual_closure_links": 0,
+ "neighbor_links": 108,
+ "neighbor_chain_ratio": 2.0,
+ "loop_closure_samples": [
+  {
+   "from_id": 1,
+   "to_id": 170,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 169
+  },
+  {
+   "from_id": 170,
+   "to_id": 1,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 169
+  },
+  {
+   "from_id": 1,
+   "to_id": 169,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 168
+  },
+  {
+   "from_id": 169,
+   "to_id": 1,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 168
+  },
+  {
+   "from_id": 1,
+   "to_id": 168,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 167
+  },
+  {
+   "from_id": 168,
+   "to_id": 1,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 167
+  },
+  {
+   "from_id": 1,
+   "to_id": 167,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 166
+  },
+  {
+   "from_id": 167,
+   "to_id": 1,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 166
+  },
+  {
+   "from_id": 1,
+   "to_id": 166,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 165
+  },
+  {
+   "from_id": 166,
+   "to_id": 1,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 165
+  },
+  {
+   "from_id": 1,
+   "to_id": 156,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 155
+  },
+  {
+   "from_id": 156,
+   "to_id": 1,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 155
+  },
+  {
+   "from_id": 1,
+   "to_id": 150,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 149
+  },
+  {
+   "from_id": 150,
+   "to_id": 1,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 149
+  },
+  {
+   "from_id": 1,
+   "to_id": 121,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 120
+  },
+  {
+   "from_id": 121,
+   "to_id": 1,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 120
+  },
+  {
+   "from_id": 29,
+   "to_id": 148,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 119
+  },
+  {
+   "from_id": 148,
+   "to_id": 29,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 119
+  },
+  {
+   "from_id": 29,
+   "to_id": 147,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 118
+  },
+  {
+   "from_id": 147,
+   "to_id": 29,
+   "type": 2,
+   "type_name": "local_space_closure",
+   "id_gap": 118
+  }
+ ],
+ "rtabmap_info": {
+  "returncode": 0,
+  "stdout_tail": "mSuperPointRpautrat/WeightsPath=    \"\"\n\u001b[0m\u001b[0mVhEp/Enabled=                      false\n\u001b[0m\u001b[0mVhEp/MatchCountMin=                8\n\u001b[0m\u001b[0mVhEp/RansacParam1=                 3\n\u001b[0m\u001b[0mVhEp/RansacParam2=                 0.99\n\u001b[0m\u001b[0mVis/BundleAdjustment=              1\n\u001b[0m\u001b[0mVis/CorFlowEps=                    0.01\n\u001b[0m\u001b[0mVis/CorFlowErrorThreshold=         20\n\u001b[0m\u001b[0mVis/CorFlowGpu=                    false\n\u001b[0m\u001b[0mVis/CorFlowIterations=             30\n\u001b[0m\u001b[0mVis/CorFlowMaxLevel=               3\n\u001b[0m\u001b[0mVis/CorFlowMinEigThreshold=        1e-4\n\u001b[0m\u001b[0mVis/CorFlowUseMinEigenVals=        true\n\u001b[0m\u001b[0mVis/CorFlowWinSize=                16\n\u001b[0m\u001b[0mVis/CorGuessMatchToProjection=     false\n\u001b[0m\u001b[0mVis/CorGuessWinSize=               40\n\u001b[0m\u001b[0mVis/CorNNDR=                       0.8\n\u001b[0m\u001b[0mVis/CorNNType=                     1\n\u001b[0m\u001b[0mVis/CorType=                       0\n\u001b[0m\u001b[0mVis/DepthAsMask=                   true\n\u001b[0m\u001b[0mVis/DepthMaskFloorThr=             0.0\n\u001b[0m\u001b[0mVis/EpipolarGeometryVar=           0.1\n\u001b[0m\u001b[0mVis/EstimationType=                1\n\u001b[0m\u001b[0mVis/FeatureType=                   8\n\u001b[0m\u001b[0mVis/GridCols=                      1\n\u001b[0m\u001b[0mVis/GridRows=                      1\n\u001b[0m\u001b[0mVis/InlierDistance=                0.1\n\u001b[0m\u001b[0mVis/Iterations=                    300\n\u001b[0m\u001b[0mVis/MaxDepth=                      0\n\u001b[0m\u001b[0mVis/MaxFeatures=                   1000\n\u001b[0m\u001b[0mVis/MeanInliersDistance=           0.0\n\u001b[0m\u001b[0mVis/MinDepth=                      0\n\u001b[0m\u001b[0mVis/MinInliers=                    20\n\u001b[0m\u001b[0mVis/MinInliersDistribution=        0.0\n\u001b[0m\u001b[0mVis/PnPFlags=                      0\n\u001b[0m\u001b[0mVis/PnPMaxVariance=                0.0\n\u001b[0m\u001b[0mVis/PnPRefineIterations=           0\n\u001b[0m\u001b[0mVis/PnPReprojError=                2\n\u001b[0m\u001b[0mVis/PnPSamplingPolicy=             1\n\u001b[0m\u001b[0mVis/PnPSplitLinearCovComponents=   false\n\u001b[0m\u001b[0mVis/PnPVarianceMedianRatio=        4\n\u001b[0m\u001b[0mVis/RefineIterations=              5\n\u001b[0m\u001b[0mVis/RoiRatios=                     \"0.0 0.0 0.0 0.0\"\n\u001b[0m\u001b[0mVis/SSC=                           false\n\u001b[0m\u001b[0mVis/SubPixEps=                     0.02\n\u001b[0m\u001b[0mVis/SubPixIterations=              0\n\u001b[0m\u001b[0mVis/SubPixWinSize=                 3\n\u001b[0m\u001b[0mg2o/Optimizer=                     0\n\u001b[0m\u001b[0mg2o/Solver=                        0\n\u001b[0m\u001b[31mRtabmap/WorkingDirectory=          NA  (default=\"\")\n\u001b[0m\nInfo:\n\nPath:               /home/robo/hei-data/mid360s_slam_20261019/mapping_proxguess_20261019_121802/rtabmap_mapping.db\nVersion:            0.23.13\nSessions:           1\nTotal odometry length:2.556053 m\nTotal time:         206.999591s\nLTM:                55 nodes and 0 words (dim=0 type=8U)\nWM:                 55 nodes and 0 words\nGlobal graph:       55 poses and 158 links\nOptimized graph:    55 poses, 158 links (x=0->0, y=0->0, z=0->0)\nMaps in graph:      1/1 [0(55)]\nGround truth:       0 poses\nGPS:                0 poses\nLinks:\n  Neighbor:         54\t(length avg: 0.05m, std: 0.03m, max: 0.11m)\n  GlobalClosure:    0\t(length avg: 0.00m, std: 0.00m, max: 0.00m)\n  LocalSpaceClosure:25\t(length avg: 0.27m, std: 0.21m, max: 0.54m)\n  LocalTimeClosure: 0\t(length avg: 0.00m, std: 0.00m, max: 0.00m)\n  UserClosure:      0\t(length avg: 0.00m, std: 0.00m, max: 0.00m)\n  VirtualClosure:   0\t(length avg: 0.00m, std: 0.00m, max: 0.00m)\n  NeighborMerged:   0\t(length avg: 0.00m, std: 0.00m, max: 0.00m)\n  PosePrior:        0\t(length avg: 0.00m, std: 0.00m, max: 0.00m)\n  Landmark:         0\t(length avg: 0.00m, std: 0.00m, max: 0.00m)\n  Gravity:          0\t(length avg: 0.00m, std: 0.00m, max: 0.00m)\n\nDatabase size:      2 MB\nNodes size:         7 KB\t(0.25%)\nLinks size:         54 KB\t(1.83%)\nRGB Images size:    0 Bytes\t(0.00%)\nDepth Images size:  0 Bytes\t(0.00%)\nCalibrations size:  0 Bytes\t(0.00%)\nGrids size:         660 Bytes\t(0.02%)\nScans size:         2 MB\t(81.97%)\nUser data size:     0 Bytes\t(0.00%)\nDictionary size:    0 Bytes\t(0.00%)\nFeatures size:      0 Bytes\t(0.00%)\nStatistics size:    257 KB\t(8.72%)\nOther (indexing, unused):212 KB\t(7.20%)\n\n",
+  "stderr_tail": ""
+ },
+ "verdict_inputs": {
+  "database_non_empty": true,
+  "has_stored_cloud": true,
+  "stored_cloud_source": "Data.scan",
+  "has_graph_links": true,
+  "primary_auto_loop_closure_links": 50,
+  "auto_loop_closure_links": {
+   "global_loop_closure": 0,
+   "local_space_closure": 50,
+   "local_time_closure": 0
+  },
+  "user_manual_closure_links": 0,
+  "honesty_note": "自动回环只统计 Link::Type=1/2/3，其中 2=LocalSpaceClosure 为主要几何闭环；4=UserClosure 为用户手工闭环，绝不计入自动成功；0=neighbor、7=posePrior、9=gravity 均不算回环"
+ }
+}

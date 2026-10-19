@@ -1,0 +1,23 @@
+{
+  "verdict": "PASS for 03-LIO-BASE; PARTIAL for full 03-LIO",
+  "reviewer": "Codex independent",
+  "baseline": "1aeb8a1",
+  "source_units": "raw g and rad/s; FAST-LIO G/mean norm; no SI republisher",
+  "extrinsic_status": "manufacturer nominal from S manual, not field calibrated",
+  "tests": {
+    "bringup": 143,
+    "localization": 52,
+    "skips": 0
+  },
+  "offline_smoke": "codex_offline_smoke.json",
+  "report_only_followup": "specific-force/up and gravity/down fields clarified after smoke; full package rebuilt and 52 tests passed; algorithm binary/launch/params unchanged",
+  "remaining": [
+    "physical axis/sign validation",
+    "dynamic extrinsic validation",
+    "moving cart straight/lateral/turn/closed-loop accuracy",
+    "NoSync hardware timing precision",
+    "ARM64/AGX",
+    "complete SLAM/navigation"
+  ],
+  "no_commit_push": true
+}

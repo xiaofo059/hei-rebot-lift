@@ -1,0 +1,111 @@
+{
+ "final": true,
+ "clock": {
+  "use_sim_time": true,
+  "now_ns": 1792380530420370719,
+  "now_minus_odom_last_s": 0.064,
+  "now_minus_body_cloud_last_s": 0.064,
+  "map_to_odom_tf_last_stamp_ns": 1792380530520370719,
+  "odom_last_stamp_ns": 1792380530356574773,
+  "tf_and_odom_same_time_domain": true
+ },
+ "odom": {
+  "count": 2331,
+  "frames": [
+   "camera_init"
+  ],
+  "stamp_regressions": 0,
+  "nonfinite_position": 0
+ },
+ "body_cloud": {
+  "count": 2331,
+  "points": 8680103,
+  "frames": [
+   "body"
+  ],
+  "nonfinite_xyz": 0,
+  "has_normal_fields": true,
+  "nonzero_normal_points": 0,
+  "stamp_matches_odom": 2331,
+  "stamp_without_odom": 0
+ },
+ "adapted_cloud": {
+  "count": 2331,
+  "points": 8680103,
+  "frames": [
+   "body"
+  ],
+  "fields_last": [
+   "x",
+   "y",
+   "z",
+   "intensity"
+  ],
+  "fields_ok": 2331,
+  "fields_bad": 0,
+  "stamp_matches_body": 2331
+ },
+ "backend_map_cloud": {
+  "count": 55,
+  "nonempty_messages": 55,
+  "points": 689003,
+  "frames": [
+   "map"
+  ],
+  "last_stamp_ns": 1792380504356330156
+ },
+ "backend_map_path": {
+  "count": 221,
+  "nonempty_messages": 221,
+  "poses": 6472,
+  "max_poses_in_message": 56,
+  "frames": [
+   "map"
+  ]
+ },
+ "localization_pose": {
+  "count": 221,
+  "frames": [
+   "map"
+  ]
+ },
+ "tf_pairs": {
+  "camera_init->body": 2331,
+  "map->camera_init": 2475
+ },
+ "tf_pair_stamp_ranges": {
+  "camera_init->body": {
+   "count": 2331,
+   "first_stamp_ns": 1792380297356738805,
+   "last_stamp_ns": 1792380530356574773
+  },
+  "map->camera_init": {
+   "count": 2475,
+   "first_stamp_ns": 1792380297040948195,
+   "last_stamp_ns": 1792380530520370719
+  }
+ },
+ "tf_lookup_map_to_body": {
+  "latest_attempts": 122,
+  "latest_success": 116,
+  "latest_failures": 6,
+  "latest_last_error": "\"body\" passed to lookupTransform argument source_frame does not exist. ",
+  "latest_translation": {
+   "x": -0.0058,
+   "y": 0.058,
+   "z": -0.0017,
+   "stamp_ns": 1792380528856433629
+  },
+  "at_cloud_stamp_attempts": 116,
+  "at_cloud_stamp_success": 116,
+  "at_cloud_stamp_failures": 0,
+  "at_cloud_stamp_last_error": "",
+  "at_cloud_stamp_translation": {
+   "x": -0.0058,
+   "y": 0.058,
+   "z": -0.0017,
+   "stamp_ns": 1792380528856433629
+  }
+ },
+ "tf_forbidden_frames_observed": []
+}

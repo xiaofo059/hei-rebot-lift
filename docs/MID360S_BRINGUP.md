@@ -29,11 +29,11 @@
 | **01-HARDWARE** | 型号/固件、供电接线、实际 IP | **部分完成**（在线与点云已确认；固件/供电/线束记录待补齐） |
 | **02-PREP** | 不依赖实物的软件准备：SDK/driver underlay、自研 bringup、配置生成、录包与验收工具 | **DONE**（Codex 独立复审 RF-LIDAR-001～005 关闭，仅软件准备） |
 | **02-LIVE** | 接线后真实调通：只读连通性、话题频率、RViz、短包检查、30 分钟原始包与回放 | **DONE**（2026-10-17 修复、长时数据 QC、完整回放及正常退出通过；物理标定/硬件对时另验） |
-| **03-LIO** | FAST-LIO2 里程计与建图 | PLANNED，本任务不含 |
-| **04-SLAM** | RTAB-Map 三维闭环、地图与重定位 | PLANNED，本任务不含 |
-| **05-AGX** | AGX aarch64 部署与固定安装 | PLANNED，本任务不含 |
-| **06L/06A-BRIDGE** | LeRobot↔ROS 桥接（假 host → 实机） | PLANNED，本任务不含 |
-| **07L/07A-NAV** | 二维导航地图、Nav2 与实机导航 | PLANNED，本任务不含 |
+| **03-LIO** | FAST-LIO2 里程计与建图 | PARTIAL：离线接入通过；运动/现场核验待完成，见 [LIO 文档](MID360S_LIO.md) |
+| **04-SLAM** | RTAB-Map 三维闭环、地图与重定位 | PARTIAL：电脑端离线软件链路通过；用户报告有限实时目视测试，未独立验收；见 [SLAM 文档](MID360S_SLAM.md) |
+| **05-AGX** | AGX aarch64 部署与固定安装 | PLANNED，尚未开始 |
+| **06L/06A-BRIDGE** | LeRobot↔ROS 桥接（假 host → 实机） | PLANNED，尚未开始 |
+| **07L/07A-NAV** | 二维导航地图、Nav2 与实机导航 | PLANNED，尚未开始 |
 
 **结论口径**：02-PREP 只证明「软件可构建、可导入、参数正确、验收工具不虚报」。
 它**不**证明雷达可用、时间同步正确、点云物理正确，也不包含任何 LIO/SLAM/导航能力。

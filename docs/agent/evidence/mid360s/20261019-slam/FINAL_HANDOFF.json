@@ -1,0 +1,125 @@
+{
+ "kind": "hei_lidar_04_slam_final_handoff",
+ "generated_at": "2026-10-19T12:23:10+0800",
+ "task": "HEI-LIDAR-04-SLAM-LAPTOP-BASE-20261019",
+ "status": "PARTIAL: software/integration verified on tabletop bag; no field 30-50m closure, no 3-position relocalization accuracy, no field extrinsics, no live/AGX",
+ "repo": {
+  "path": "/home/robo/robotopia/hei-rebot-lift",
+  "branch": "feat/mid360s-lio",
+  "head": "1aeb8a19952cd9011c428a2fbea063683f0cade5",
+  "committed": false
+ },
+ "runtime_frozen": {
+  "checked_pairs": 19,
+  "all_source_installed_match": true,
+  "manifest": "/home/robo/robotopia/hei-rebot-lift/docs/agent/evidence/mid360s/20261019-slam/03-p2-build-test/final_runtime_hashes_proxguess.json",
+  "installed_mapping_config_has_proximity_odom_guess": true,
+  "note": "no rebuild after freeze; docs/README/evidence edits do not change runtime files"
+ },
+ "tests": {
+  "dsh": "87 passed (pure unit + 2 real node startup)",
+  "codex_independent": "/home/robo/hei-data/mid360s_slam_20261019/codex_final_pytest.log",
+  "codex_result": "87 passed in 10.11s"
+ },
+ "new_final_mapping": {
+  "session": "mapping_proxguess_20261019_121802",
+  "database": "/home/robo/hei-data/mid360s_slam_20261019/mapping_proxguess_20261019_121802/rtabmap_mapping.db",
+  "database_sha256": "b30fbaecb9d31c273808e4bff2e1a77bba396c2a1bf138207ee0b356a06356b3",
+  "nodes": 55,
+  "scans": 55,
+  "directed_links": {
+   "0": 108,
+   "2": 50
+  },
+  "independent_type2_geometric_constraints": 25,
+  "user_manual_type4_links": 0,
+  "missing_visual_warn": 0,
+  "full_inputs_odom_2331_body_cloud_2331_points_8680103_finite": true,
+  "backend_cloud_nonempty_messages": 55,
+  "backend_path_nonempty_messages": 221,
+  "historical_tf_queries": "116/116 success",
+  "supervision": "/home/robo/hei-data/mid360s_slam_20261019/codex_final_mapping_supervision.json",
+  "db_review": "/home/robo/hei-data/mid360s_slam_20261019/codex_final_db_review.json",
+  "exit_note": "Codex took over orphaned launch after DSH harness cancellation: single SIGINT, 5 children clean, no escalation/residual/child-died, parent exit code unavailable; original harness not claimed clean",
+  "probe_report": "/home/robo/hei-data/mid360s_slam_20261019/mapping_proxguess_20261019_121802/probe_report.json"
+ },
+ "new_final_export": {
+  "directory": "/home/robo/hei-data/mid360s_slam_20261019/export_optimized_final_proxguess_20261019_122137",
+  "ply_vertices": 48855,
+  "ply_bytes": 1564190,
+  "ply_sha256": "60f7e5e663fbb349ef49e67826f152af0eaa96327cf83d1324dce4f8374c03b5",
+  "poses_rows": 55,
+  "poses_columns": 9,
+  "poses_sha256": "663f3274820690745f03e18fdb41e5f669a97cf6a2eb8e0127dd2a0d4afb8bed",
+  "database_sha256_unchanged": true,
+  "strict_validation_passed": true
+ },
+ "old_config_baseline": {
+  "database": "/home/robo/hei-data/mid360s_slam_20261019/codex_full_map/rtabmap_mapping.db",
+  "database_sha256": "afab12b8d5238c42dbc7887cc9e21fe5975c1acce6c08a705e6170af8e569d86",
+  "nodes": 52,
+  "directed_links": {
+   "0": 102,
+   "2": 28
+  },
+  "independent_type2": 14,
+  "codex_acceptance": "/home/robo/hei-data/mid360s_slam_20261019/codex_mapping_acceptance.json",
+  "old_export": "/home/robo/hei-data/mid360s_slam_20261019/export_optimized_20261019_120641.final",
+  "note": "kept as historical baseline; not presented as new DB result"
+ },
+ "localization_readonly_evidence": {
+  "database": "/home/robo/hei-data/mid360s_slam_20261019/codex_full_map/rtabmap_mapping.db",
+  "database_sha256_before_after": "afab12b8d5238c42dbc7887cc9e21fe5975c1acce6c08a705e6170af8e569d86 (unchanged)",
+  "experiment": "ProximityOdomGuess=true A2 (same old DB, read-only, 55 s)",
+  "info_messages": 36,
+  "info_with_ref_id": 36,
+  "proximity_detection_acceptances": 9,
+  "accepted_map_node_ids": [
+   1,
+   29,
+   31,
+   33,
+   36,
+   38,
+   40,
+   44,
+   47
+  ],
+  "missing_visual_warn": 0,
+  "initialpose_published": true,
+  "acceptance_before_initialpose": 0,
+  "acceptance_after_initialpose": "starts from map node 1 then continues",
+  "collector_json": "/home/robo/robotopia/hei-rebot-lift/docs/agent/evidence/mid360s/20261019-slam/05-localization/experiment_proxguess2_collector.json",
+  "limits": "single tabletop trajectory, same DB, no groundtruth; not 3-position field relocalization accuracy"
+ },
+ "installer": {
+  "script": "/home/robo/robotopia/hei-rebot-lift/extensions/tools/install_rtabmap_laptop.sh",
+  "verify_log": "/home/robo/robotopia/hei-rebot-lift/docs/agent/evidence/mid360s/20261019-slam/06-installer/installer_verify.log",
+  "codex_independent": [
+   "/home/robo/hei-data/mid360s_slam_20261019/codex_installer_verify.log",
+   "/home/robo/hei-data/mid360s_slam_20261019/codex_installer_fresh.log",
+   "/home/robo/hei-data/mid360s_slam_20261019/codex_installer_reject_existing.log"
+  ],
+  "arch_guard": "amd64 only; rejects aarch64/AGX"
+ },
+ "docs": {
+  "task_doc": "/home/robo/robotopia/hei-rebot-lift/docs/MID360S_SLAM.md",
+  "package_readme": "/home/robo/robotopia/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_slam/README.md",
+  "evidence_index": "/home/robo/robotopia/hei-rebot-lift/docs/agent/evidence/mid360s/20261019-slam/README.md",
+  "evidence_sha256_manifest": "/home/robo/robotopia/hei-rebot-lift/docs/agent/evidence/mid360s/20261019-slam/evidence_sha256_manifest.txt"
+ },
+ "data_protection": {
+  "prestate_dirty_untracked_protected": "69 files unchanged, 0 changed by DSH (checklist in 07-git-scope/prestate_protection_report.json)",
+  "codex_owned_files": "TASK_BOARD.md and EXECUTION_LOG.md changed by Codex only; not written by DSH",
+  "database_backups": "/home/robo/hei-data/mid360s_slam_20261019/_db_backups"
+ },
+ "not_executed": [
+  "field 30-50 m loop closure accuracy",
+  "3-position field relocalization accuracy",
+  "field extrinsics calibration",
+  "live hardware mapping",
+  "AGX / aarch64 deployment",
+  "RViz human visual inspection"
+ ],
+ "next_acceptance_steps": "see docs/MID360S_SLAM.md section 9 (field 30-50m closure + 3-position relocalization)"
+}

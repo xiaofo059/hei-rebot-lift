@@ -1,0 +1,11 @@
+{
+ "kind": "hei_mid360s_slam_runtime_freeze",
+ "frozen_at": "2026-10-19T12:02:00+08:00",
+ "branch": "feat/mid360s-lio",
+ "head": "1aeb8a19952cd9011c428a2fbea063683f0cade5",
+ "note": "Runtime (package lib/launch/config/entry points) frozen for Codex full 233s replay. No rebuild after freeze; pure unit tests and docs/install-script edits only. Codex owns the Domain-89 full run.",
+ "source_installed_all_match": true,
+ "checked_pairs": 19,
+ "rtabmap_version": "0.23.13",
+ "entry_points": ["slam_cloud_adapter", "slam_cloud_probe", "slam_db_tools", "slam_run_bounded"]
+}

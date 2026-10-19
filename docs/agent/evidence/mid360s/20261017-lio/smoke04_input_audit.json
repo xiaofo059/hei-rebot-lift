@@ -1,0 +1,92 @@
+{
+  "kind": "mid360s_lio_input_audit",
+  "window_seconds_param": 6.0,
+  "topics": {
+    "lidar": "/livox/lidar",
+    "imu": "/livox/imu"
+  },
+  "imu": {
+    "count": 40,
+    "frame_ids": [
+      "livox_frame"
+    ],
+    "acc_mean_raw": [
+      0.029361895471811294,
+      -0.04370869696140289,
+      0.9940880060195922
+    ],
+    "acc_std_raw": [
+      0.0033519138605503083,
+      0.0038393733142921796,
+      0.0056474870644615165
+    ],
+    "acc_norm_mean_raw": 0.995493860944413,
+    "gyro_mean_raw": [
+      -0.006971496669575572,
+      6.0516525991261005e-05,
+      0.0030571604147553444
+    ],
+    "gyro_norm_mean_raw": 0.007910089450650613,
+    "orientation_unique_count": 1,
+    "orientation_all_default": true,
+    "stamp_monotonic": true,
+    "static_window": true,
+    "gravity_direction_est": [
+      0.029495167639186068,
+      -0.043907088539452264,
+      0.9986001215010566
+    ]
+  },
+  "lidar": {
+    "frames": 39,
+    "frame_ids": [
+      "lidar_link"
+    ],
+    "points": 779904,
+    "header_equals_timebase_frames": 39,
+    "stamp_monotonic": true,
+    "per_point_inversions": 5928,
+    "worst_regression_ns": 467931,
+    "frames_last_point_equals_max": 39,
+    "max_offset_ns": 108553158
+  },
+  "unit_contract": {
+    "input_acc_unit_detected": "g",
+    "driver_declared_acc_unit": "g",
+    "gyro_unit": "rad/s",
+    "orientation_valid": false,
+    "fastlio_acc_scale": 9.854405320685125,
+    "conversion_in_this_package": "none",
+    "explanation": "FAST-LIO 在 IMU 初始化后用 |mean_acc| 把加速度归一到 G_m_s2=9.81（IMU_Processing.hpp:260），重力方向也只取 mean_acc 的方向（:193）。因此原始 g 与已换算的 m/s^2 都会落到同一量级；本包不做 g->m/s^2 换算，避免重复转换，也不把原始消息标成 SI。注意 cov_acc 的 G/|mean_acc| 缩放随后被 cov_acc_scale 覆盖（:359 与 :362），所以不能声称协方差随单位自动换算。"
+  },
+  "extrinsic_contract": {
+    "input": "MID-360S 原始 rosbag（CustomMsg + sensor_msgs/Imu，未做单位换算）",
+    "extrinsic_status": "UNCALIBRATED_NOMINAL",
+    "extrinsic_source": "Livox Mid-360S User Manual 2026-06-01 §3.5 p.22 的 IMU 芯片位置 [11.0, 23.29, -44.12] mm（点云坐标）+ 同段“IMU 三轴与点云坐标同向”，经 p_I = R_IL p_L + t_IL、R_IL = I 得 t_IL = [-0.011, -0.02329, +0.04412] m；与上游 config/mid360.yaml 的 extrinsic_T 一致（交叉核对，不是来源）",
+    "imu_acc_unit": "g（driver 冻结源码自述 + 本包短窗口实测范数≈0.995）",
+    "imu_gyro_unit": "rad/s",
+    "imu_orientation": "无效（driver 未发布，消息字段恒为默认值）",
+    "acc_conversion": "无（FAST-LIO IMU_Processing.hpp:260 自行归一化）",
+    "time_sync": "NoSync（主机 epoch 锚点 + steady 已过时间），非硬件 PTP",
+    "tf_contract": "唯一发布者 fastlio_mapping；camera_init -> body。本包不发布任何 TF，不发布 base_link 或 map。"
+  },
+  "tf_contract": {
+    "this_package_publishes_tf": false,
+    "fastlio_publishes_tf": true,
+    "fastlio_frames": [
+      "camera_init",
+      "body"
+    ],
+    "base_link_published": false,
+    "map_published": false
+  },
+  "count_interpretation": "count 只表示本节点实际收到的样本数，受 rclpy 单线程调度与回放倍速影响，不是频率证据；话题频率以 02-LIVE 全量 QC 与 bag 元数据为准。",
+  "known_unknowns": [
+    "IMU 与 LiDAR 的现场标定外参（R_IL 偏航与 t_IL 实测值）：UNKNOWN，需现场标定/多姿态数据",
+    "IMU 轴符号与安装方向：名义同向，单一静止姿态不足以证明，UNKNOWN",
+    "IMU 与 LiDAR 的硬件时间同步精度（NoSync 为主机 epoch+steady 映射，非 PTP）：UNKNOWN",
+    "IMU 噪声/随机游走与 bias 稳定性：UNKNOWN（未做 Allan 方差）",
+    "base_link 与 body/IMU 的安装外参：UNKNOWN（本轮不发布任何 base_link 变换）"
+  ],
+  "limitations": "单一静止窗口只能给出量纲/方向/量级的粗核，不能证明全部轴符号、偏航或IMU-LiDAR 外参；也不代表任何运动里程计精度。"
+}

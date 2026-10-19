@@ -1,0 +1,5 @@
+sending SIGINT to launch parent PID=174387 (not process group)
+LAUNCH_EXIT=143
+--- residual ---
+174412 /home/robo/robotopia/hei-rebot-lift/extensions/third_party/fast_lio_ws/install/fast_lio/lib/fast_lio/fastlio_mapping --ros-args -r __node:=fastlio_mapping --params-file /home/robo/robotopia/hei-rebot-lift/extensions/ros2_ws/install/hei_robot_localization/share/hei_robot_localization/config/mid360s_fastlio_uncalibrated.yaml --params-file /tmp/launch_params_d61f5fc_
+174414 /usr/bin/python3 /home/robo/robotopia/hei-rebot-lift/extensions/ros2_ws/install/hei_robot_localization/lib/hei_robot_localization/lio_input_audit --ros-args -r __node:=lio_input_audit --params-file /tmp/launch_params_nu6kcxud

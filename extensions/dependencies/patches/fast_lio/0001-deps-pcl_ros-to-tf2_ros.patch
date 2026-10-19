@@ -1,0 +1,43 @@
+上游 FAST_LIO_ROS2 的构建依赖与实际 include 不一致（审计基线 2fffc570）：
+  * src/laserMapping.cpp:59 实际 include <tf2_ros/transform_broadcaster.h>，但
+    CMakeLists.txt 的 find_package 与依赖列表都没有 tf2_ros；上游只是靠 pcl_ros
+    的传递依赖拿到头文件。
+  * pcl_ros 在全仓库源码中 0 处引用，本机未安装，任务又禁止 apt 全局安装。
+最小修复：删除未使用的 pcl_ros，显式声明实际使用的 tf2_ros。
+不改源码逻辑、不改 message 定义、不引入新的运行时依赖。
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e091f3a..f26bc3f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -57,7 +57,7 @@ find_package(sensor_msgs REQUIRED)
+ find_package(std_msgs REQUIRED)
+ find_package(std_srvs REQUIRED)
+ find_package(visualization_msgs REQUIRED)
+-find_package(pcl_ros REQUIRED)
++find_package(tf2_ros REQUIRED)
+ find_package(pcl_conversions REQUIRED)
+ find_package(livox_ros_driver2 REQUIRED)
+ find_package(rosidl_default_generators REQUIRED)
+@@ -71,7 +71,7 @@ set(dependencies
+   std_msgs
+   std_srvs
+   visualization_msgs
+-  pcl_ros
++  tf2_ros
+   pcl_conversions
+   livox_ros_driver2
+ )
+diff --git a/package.xml b/package.xml
+index 8c39e18..729bde8 100644
+--- a/package.xml
++++ b/package.xml
+@@ -25,7 +25,7 @@
+   <depend>sensor_msgs</depend>
+   <depend>common_interfaces</depend>
+   <depend>tf2</depend>
+-  <depend>pcl_ros</depend>
++  <depend>tf2_ros</depend>
+   <depend>pcl_conversions</depend>
+   <depend>livox_ros_driver2</depend>
+ 

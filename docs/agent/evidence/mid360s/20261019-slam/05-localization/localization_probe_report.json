@@ -1,0 +1,162 @@
+{
+ "kind": "mid360s_slam_cloud_probe",
+ "final": true,
+ "generated_at": "2026-10-19T12:10:19+0800",
+ "contract": {
+  "expected_tf_pairs": [
+   "camera_init->body",
+   "map->camera_init"
+  ],
+  "forbidden_frames": [
+   "base_link",
+   "odom",
+   "base_footprint"
+  ],
+  "adapted_fields": [
+   "x",
+   "y",
+   "z",
+   "intensity"
+  ],
+  "lio_body_cloud_topic": "/cloud_registered_body",
+  "adapter_topic": "/slam/lidar_cloud_xyzi"
+ },
+ "odom": {
+  "count": 690,
+  "frames": [
+   "camera_init"
+  ],
+  "first_stamp_ns": 1792380297255135536,
+  "last_stamp_ns": 1792380366155517101,
+  "stamp_regressions": 0,
+  "nonfinite_position": 0,
+  "nonfinite_quaternion": 0,
+  "quat_norm_min": 0.999999999999967,
+  "quat_norm_max": 1.0000000000000002
+ },
+ "body_cloud": {
+  "count": 690,
+  "points": 2689183,
+  "nonfinite_xyz": 0,
+  "frames": [
+   "body"
+  ],
+  "first_stamp_ns": 1792380297255135536,
+  "last_stamp_ns": 1792380366155517101,
+  "stamp_regressions": 0,
+  "fields_last": [
+   "x",
+   "y",
+   "z",
+   "intensity",
+   "normal_x",
+   "normal_y",
+   "normal_z",
+   "curvature"
+  ],
+  "has_normal_fields": true,
+  "nonzero_normal_points": 0,
+  "stamp_matches_odom": 690,
+  "stamp_without_odom": 0
+ },
+ "adapted_cloud": {
+  "count": 689,
+  "points": 2684699,
+  "frames": [
+   "body"
+  ],
+  "fields_last": [
+   "x",
+   "y",
+   "z",
+   "intensity"
+  ],
+  "fields_ok": 689,
+  "fields_bad": 0,
+  "stamp_matches_body": 689,
+  "stamp_without_body": 0,
+  "first_stamp_ns": 1792380297255135536,
+  "last_stamp_ns": 1792380366055203914
+ },
+ "localization_pose": {
+  "count": 66,
+  "frames": [
+   "map"
+  ]
+ },
+ "backend_map_cloud": {
+  "count": 1,
+  "nonempty_messages": 1,
+  "points": 18263,
+  "frames": [
+   "map"
+  ],
+  "last_stamp_ns": 1792380297255135536
+ },
+ "backend_map_path": {
+  "count": 66,
+  "nonempty_messages": 66,
+  "poses": 3432,
+  "max_poses_in_message": 52,
+  "frames": [
+   "map"
+  ]
+ },
+ "assembled_cloud": {
+  "count": 0,
+  "nonempty_messages": 0,
+  "points": 0,
+  "frames": []
+ },
+ "tf": {
+  "pairs": {
+   "camera_init->body": 690,
+   "map->camera_init": 1482
+  },
+  "pair_stamp_ranges": {
+   "camera_init->body": {
+    "count": 690,
+    "first_stamp_ns": 1792380297255135536,
+    "last_stamp_ns": 1792380366155517101
+   },
+   "map->camera_init": {
+    "count": 1482,
+    "first_stamp_ns": 1792380297028078932,
+    "last_stamp_ns": 1792380366227713831
+   }
+  },
+  "transforms": 2172,
+  "forbidden_frames_observed": [],
+  "lookup_map_to_body": {
+   "latest_attempts": 37,
+   "latest_success": 34,
+   "latest_failures": 3,
+   "latest_last_error": "\"body\" passed to lookupTransform argument source_frame does not exist. ",
+   "latest_translation": {
+    "x": 0.6397,
+    "y": 0.03,
+    "z": -0.0139,
+    "stamp_ns": 1792380364864871740
+   },
+   "at_cloud_stamp_attempts": 34,
+   "at_cloud_stamp_success": 34,
+   "at_cloud_stamp_failures": 0,
+   "at_cloud_stamp_last_error": "",
+   "at_cloud_stamp_translation": {
+    "x": 0.6397,
+    "y": 0.03,
+    "z": -0.0139,
+    "stamp_ns": 1792380364864871740
+   }
+  }
+ },
+ "clock": {
+  "use_sim_time": true,
+  "now_ns": 1792380366167716569,
+  "now_minus_odom_last_s": 0.012,
+  "now_minus_body_cloud_last_s": 0.012,
+  "map_to_odom_tf_last_stamp_ns": 1792380366227713831,
+  "odom_last_stamp_ns": 1792380366155517101,
+  "tf_and_odom_same_time_domain": true
+ }
+}

@@ -1,0 +1,52 @@
+{
+ "kind": "rtabmap_export",
+ "database": "/home/robo/hei-data/mid360s_slam_20261019/codex_full_map/rtabmap_mapping.db",
+ "database_sha256_before": "afab12b8d5238c42dbc7887cc9e21fe5975c1acce6c08a705e6170af8e569d86",
+ "database_sha256_after": "afab12b8d5238c42dbc7887cc9e21fe5975c1acce6c08a705e6170af8e569d86",
+ "output_dir": "/home/robo/hei-data/mid360s_slam_20261019/export_optimized_20261019_120436",
+ "command": [
+  "/home/robo/robotopia/hei-rebot-lift/extensions/third_party/rtabmap_local/prefix/opt/ros/humble/bin/rtabmap-export",
+  "--cloud",
+  "--scan",
+  "--poses",
+  "--poses_format",
+  "11",
+  "--opt",
+  "2",
+  "--output_dir",
+  "/home/robo/hei-data/mid360s_slam_20261019/export_optimized_20261019_120436",
+  "/home/robo/hei-data/mid360s_slam_20261019/codex_full_map/rtabmap_mapping.db"
+ ],
+ "returncode": 0,
+ "duration_s": 0.219,
+ "log": "/home/robo/hei-data/mid360s_slam_20261019/export_optimized_20261019_120436/rtabmap_export.log",
+ "output_files": [
+  {
+   "name": "rtabmap_mapping_poses.txt",
+   "size": 4555,
+   "sha256": "bd71b8d2cf28ff41a727b6a54fa52c7c284011019e04773227a2261280104828"
+  }
+ ],
+ "checks": {
+  "database_unmodified": true,
+  "returncode_zero": true,
+  "cloud_file_present": false,
+  "cloud_geometry": null,
+  "cloud_vertices": null,
+  "cloud_non_empty": false,
+  "poses_file_present": true,
+  "poses_validation": {
+   "valid": true,
+   "expected_columns": 9,
+   "rows": 52,
+   "invalid_rows": [],
+   "nonfinite_rows": 0,
+   "column_counts": {
+    "9": 52
+   }
+  },
+  "pose_count": 52,
+  "poses_non_empty": true
+ },
+ "passed": false
+}

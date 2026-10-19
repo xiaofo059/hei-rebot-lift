@@ -1,0 +1,16 @@
+{
+ "kind": "codex_new_config_full_run_evidence_references_readonly",
+ "note": "Codex owns these files; referenced by path+sha256, not modified",
+ "files": [
+  {
+   "path": "/home/robo/hei-data/mid360s_slam_20261019/codex_final_mapping_supervision.json",
+   "size": 4079,
+   "sha256": "ba85851699de5201dcbf7988847278a69384efd66bd09fb8ac9246bb81f05c66"
+  },
+  {
+   "path": "/home/robo/hei-data/mid360s_slam_20261019/codex_final_db_review.json",
+   "size": 369,
+   "sha256": "8391cc8c8581afd2dbe204c62e37abd3b2b64397f3bfe16afe4fee71c5b3a149"
+  }
+ ]
+}

@@ -1,0 +1,33 @@
+{
+  "source": "unchanged formal bag, 5-15s receive-time window",
+  "count": 2000,
+  "frame_ids": [
+    "livox_frame"
+  ],
+  "orientation_values": [
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "acc_mean_raw_g": [
+    0.029147173792123796,
+    -0.04316816965315957,
+    0.9935870294570923
+  ],
+  "acc_std_raw_g": [
+    0.0034155682850155185,
+    0.006310150013465761,
+    0.005469395246342407
+  ],
+  "acc_norm_mean_raw": 0.9949760940062649,
+  "gyro_mean_rad_s": [
+    -0.0063829380720853805,
+    0.0003369526511523873,
+    0.0028457056768238544
+  ],
+  "gyro_norm_mean_rad_s": 0.012172362597803249,
+  "limitation": "Single pose cannot prove axes signs, yaw or extrinsics; units based on driver contract."
+}

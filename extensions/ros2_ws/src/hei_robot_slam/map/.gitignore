@@ -1,0 +1,3 @@
+# Generated RTAB-Map databases and exports stay local; do not commit map data.
+*
+!.gitignore

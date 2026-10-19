@@ -1,0 +1,49 @@
+laserMapping.cpp sync_packages() 原用 meas.lidar->points.back().curvature 作为帧尾
+（第 399/406/407 行附近）。livox_ros_driver2 逐点只按 UDP 到达序追加
+（pub_handler.cpp:404/432/467，全链路无排序），末点不保证携带最大 offset_time。
+最小修复：对**实际保留点**求 max curvature 作为帧尾参考，同时用于
+lidar_mean_scantime 统计；不排序消息、不改逐点 offset_time、不改下采样集合。
+实测证据见 docs/agent/evidence/mid360s/20261017-lio/。
+
+diff --git a/src/laserMapping.cpp b/src/laserMapping.cpp
+index d441261..75ef416 100644
+--- a/src/laserMapping.cpp
++++ b/src/laserMapping.cpp
+@@ -391,20 +391,34 @@ bool sync_packages(MeasureGroup &meas)
+     {
+         meas.lidar = lidar_buffer.front();
+         meas.lidar_beg_time = time_buffer.front();
++        // HEI-LIDAR-20261017-03-LIO patch: frame end = MAX per-point offset.
++        // Points are only appended in UDP arrival order (livox_ros_driver2
++        // pub_handler.cpp:404/432/467, no sorting), so the last array element is
++        // not guaranteed to carry the largest offset_time. curvature holds
++        // offset_time/1e6 ms (preprocess.cpp:180). Never rewritten here: per-point
++        // times stay untouched, only the scan end reference is taken from the max.
++        double frame_end_curvature = 0.0;  // ms
++        for (const auto &pt : meas.lidar->points)
++        {
++            if (pt.curvature > frame_end_curvature)
++            {
++                frame_end_curvature = pt.curvature;
++            }
++        }
+         if (meas.lidar->points.size() <= 1) // time too little
+         {
+             lidar_end_time = meas.lidar_beg_time + lidar_mean_scantime;
+             std::cerr << "Too few input point cloud!\n";
+         }
+-        else if (meas.lidar->points.back().curvature / double(1000) < 0.5 * lidar_mean_scantime)
++        else if (frame_end_curvature / double(1000) < 0.5 * lidar_mean_scantime)
+         {
+             lidar_end_time = meas.lidar_beg_time + lidar_mean_scantime;
+         }
+         else
+         {
+             scan_num ++;
+-            lidar_end_time = meas.lidar_beg_time + meas.lidar->points.back().curvature / double(1000);
+-            lidar_mean_scantime += (meas.lidar->points.back().curvature / double(1000) - lidar_mean_scantime) / scan_num;
++            lidar_end_time = meas.lidar_beg_time + frame_end_curvature / double(1000);
++            lidar_mean_scantime += (frame_end_curvature / double(1000) - lidar_mean_scantime) / scan_num;
+         }
+ 
+         meas.lidar_end_time = lidar_end_time;

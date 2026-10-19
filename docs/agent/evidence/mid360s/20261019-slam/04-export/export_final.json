@@ -1,0 +1,84 @@
+{
+ "kind": "rtabmap_export",
+ "database": "/home/robo/hei-data/mid360s_slam_20261019/codex_full_map/rtabmap_mapping.db",
+ "database_sha256_before": "afab12b8d5238c42dbc7887cc9e21fe5975c1acce6c08a705e6170af8e569d86",
+ "database_sha256_after": "afab12b8d5238c42dbc7887cc9e21fe5975c1acce6c08a705e6170af8e569d86",
+ "output_dir": "/home/robo/hei-data/mid360s_slam_20261019/export_optimized_20261019_120641.final",
+ "command": [
+  "/home/robo/robotopia/hei-rebot-lift/extensions/third_party/rtabmap_local/prefix/opt/ros/humble/bin/rtabmap-export",
+  "--cloud",
+  "--scan",
+  "--poses",
+  "--poses_format",
+  "11",
+  "--opt",
+  "2",
+  "--voxel",
+  "0.05",
+  "--max_range",
+  "0",
+  "--output_dir",
+  "/home/robo/hei-data/mid360s_slam_20261019/export_optimized_20261019_120641.final",
+  "/home/robo/hei-data/mid360s_slam_20261019/codex_full_map/rtabmap_mapping.db"
+ ],
+ "returncode": 0,
+ "duration_s": 0.357,
+ "log": "/home/robo/hei-data/mid360s_slam_20261019/export_optimized_20261019_120641.final/rtabmap_export.log",
+ "output_files": [
+  {
+   "name": "rtabmap_mapping_cloud.ply",
+   "size": 1568382,
+   "sha256": "c093a5d4614fa6759c30bb655b6eb1522825b416eb9932bd4cea89ecd77e9e4c"
+  },
+  {
+   "name": "rtabmap_mapping_poses.txt",
+   "size": 4555,
+   "sha256": "bd71b8d2cf28ff41a727b6a54fa52c7c284011019e04773227a2261280104828"
+  }
+ ],
+ "checks": {
+  "database_unmodified": true,
+  "returncode_zero": true,
+  "cloud_file_present": true,
+  "cloud_geometry": {
+   "valid": true,
+   "reasons": [],
+   "format": "binary_little_endian",
+   "data_offset": 746,
+   "file_size": 1568382,
+   "header_vertex_count": 48986,
+   "vertex_properties": [
+    "x",
+    "y",
+    "z",
+    "intensity",
+    "nx",
+    "ny",
+    "nz",
+    "curvature"
+   ],
+   "vertex_size_bytes": 32,
+   "body_bytes_needed": 1567552,
+   "body_bytes_available": 1567636,
+   "parsed_vertices": 48986,
+   "nonfinite_xyz": 0,
+   "actual_vertex_count": 48986
+  },
+  "cloud_vertices": 48986,
+  "cloud_non_empty": true,
+  "poses_file_present": true,
+  "poses_validation": {
+   "valid": true,
+   "expected_columns": 9,
+   "rows": 52,
+   "invalid_rows": [],
+   "nonfinite_rows": 0,
+   "column_counts": {
+    "9": 52
+   }
+  },
+  "pose_count": 52,
+  "poses_non_empty": true
+ },
+ "passed": true
+}
