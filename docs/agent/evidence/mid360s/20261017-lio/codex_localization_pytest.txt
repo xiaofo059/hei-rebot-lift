@@ -1,0 +1,6 @@
+Starting >>> hei_robot_localization
+Finished <<< hei_robot_localization [0.90s]
+
+Summary: 1 package finished [1.17s]
+....................................................                     [100%]
+52 passed in 5.69s

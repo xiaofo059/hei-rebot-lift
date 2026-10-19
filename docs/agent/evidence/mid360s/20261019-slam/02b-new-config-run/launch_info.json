@@ -1,0 +1,78 @@
+{
+ "kind": "hei_mid360s_slam_offline_mapping",
+ "mode": "mapping",
+ "started_at": "2026-10-19T12:18:02+0800",
+ "bag_path": "/home/robo/hei-data/mid360s_lio_tests/table_motion_20261019_112456",
+ "run_dir": "/home/robo/hei-data/mid360s_slam_20261019/mapping_proxguess_20261019_121802",
+ "database_path": "/home/robo/hei-data/mid360s_slam_20261019/mapping_proxguess_20261019_121802/rtabmap_mapping.db",
+ "replay": {
+  "rate": 2.0,
+  "start_offset_s": 0.0,
+  "delay_s": "5",
+  "use_sim_time": true,
+  "bag_clock_hz": "100"
+ },
+ "frames": {
+  "map": "map",
+  "odom": "camera_init",
+  "base": "body"
+ },
+ "tf_contract": {
+  "frontend_publisher": "fastlio_mapping",
+  "frontend_tf": [
+   "camera_init",
+   "body"
+  ],
+  "backend_publisher": "rtabmap_slam/rtabmap",
+  "backend_tf": [
+   "map",
+   "camera_init"
+  ],
+  "forbidden_frames": [
+   "base_link",
+   "odom",
+   "base_footprint"
+  ],
+  "no_base_link_no_odom": true
+ },
+ "cloud_contract": {
+  "lio_body_cloud_topic": "/cloud_registered_body",
+  "adapter_topic": "/slam/lidar_cloud_xyzi",
+  "required_fields": [
+   "x",
+   "y",
+   "z",
+   "intensity"
+  ],
+  "dropped_unestimated_fields": [
+   "normal_x",
+   "normal_y",
+   "normal_z",
+   "curvature"
+  ],
+  "preserve": [
+   "header.stamp",
+   "header.frame_id",
+   "point xyz",
+   "intensity"
+  ],
+  "no_deskew": true,
+  "no_accumulated_map": true
+ },
+ "versions": {
+  "rtabmap_version": "0.23.13",
+  "rtabmap_ros_deb_pin": "0.23.13-1jammy.20261011.111917",
+  "rtabmap_pkg": "rtabmap_slam"
+ },
+ "rtabmap_params_file": {
+  "path": "/home/robo/robotopia/hei-rebot-lift/extensions/ros2_ws/install/hei_robot_slam/share/hei_robot_slam/config/rtabmap_3d_lidar_mapping.yaml",
+  "sha256": "1a51078794349963137dea6c7ae63081aa6b9823954c3100460e6a58c88aadf3"
+ },
+ "lio_config_file": {
+  "path": "/home/robo/robotopia/hei-rebot-lift/extensions/ros2_ws/install/hei_robot_localization/share/hei_robot_localization/config/mid360s_fastlio_uncalibrated.yaml",
+  "sha256": "dd0c0e5330b86f1e83fe59d6bc5c79bfb951e23c960a4ca6b612b70256c02729"
+ },
+ "probe_enabled": true,
+ "rviz_enabled": false,
+ "no_auto_delete": true
+}

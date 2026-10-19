@@ -1,0 +1,57 @@
+{
+  "kind": "independent laptop offline nominal-extrinsic smoke",
+  "launch_exit": 0,
+  "sigint_ignored_at_start": false,
+  "stop_escalated": false,
+  "odom_count": 420,
+  "odom_all_finite": true,
+  "odom_stamp_monotonic": true,
+  "odom_span_s": 41.895108222961426,
+  "odom_frames": [
+    [
+      "camera_init",
+      "body"
+    ]
+  ],
+  "max_abs_position_m": 0.09932621821672091,
+  "quaternion_norm_range": [
+    0.9999999999999922,
+    1.000000000000003
+  ],
+  "clouds": {
+    "/cloud_registered": {
+      "count": 419,
+      "points": 56970,
+      "bad_xyz": 0,
+      "frames": [
+        "camera_init"
+      ],
+      "stamp_monotonic": true
+    },
+    "/cloud_registered_body": {
+      "count": 419,
+      "points": 792839,
+      "bad_xyz": 0,
+      "frames": [
+        "body"
+      ],
+      "stamp_monotonic": true
+    }
+  },
+  "tf_pairs": [
+    [
+      "camera_init",
+      "body"
+    ]
+  ],
+  "child_clean_exit_count": 3,
+  "child_died_log": false,
+  "runtime_hashes_before": {
+    "/home/robo/robotopia/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_localization/hei_robot_localization/lio_input_audit.py": "45313e53efb840e11202f3666470485c22febecaa08f199499e5e5ff12a8ffdd",
+    "/home/robo/robotopia/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_localization/launch/fast_lio_mid360s_offline.launch.py": "ce145db03a74f95ed0ca8c6670a1a80ae13cca493b1ac71a439328dbece36a15",
+    "/home/robo/robotopia/hei-rebot-lift/extensions/third_party/fast_lio_ws/install/fast_lio/lib/fast_lio/fastlio_mapping": "e4fb4bd83d0b84c3712344f3bf7a0e54a76fe2e49ceba0d72fa593c6897808a5"
+  },
+  "runtime_hashes_unchanged": true,
+  "limits": "Only stationary bag/nominal sensor extrinsics; not motion accuracy, calibrated robot TF, hardware sync or full SLAM.",
+  "verdict": "PASS"
+}

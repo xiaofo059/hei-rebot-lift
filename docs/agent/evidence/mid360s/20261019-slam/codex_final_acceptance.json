@@ -1,0 +1,124 @@
+{
+  "task": "HEI-LIDAR-04-SLAM-LAPTOP-BASE-20261019",
+  "software_subtask": "DONE / independently reviewed and verified on laptop",
+  "overall_04_SLAM": "PARTIAL / field acceptance pending",
+  "implementer": "DSH-LAPTOP",
+  "reviewer": "Codex",
+  "tests": {
+    "passed": 87,
+    "failed": 0,
+    "skipped": 0,
+    "raw_log": "/home/robo/hei-data/mid360s_slam_20261019/codex_final_pytest.log",
+    "junit": "/home/robo/hei-data/mid360s_slam_20261019/codex_final_pytest.xml"
+  },
+  "mapping": {
+    "database": "/home/robo/hei-data/mid360s_slam_20261019/mapping_proxguess_20261019_121802/rtabmap_mapping.db",
+    "sha256": "b30fbaecb9d31c273808e4bff2e1a77bba396c2a1bf138207ee0b356a06356b3",
+    "integrity": "ok",
+    "nodes": 55,
+    "scans": 55,
+    "directed_links": {
+      "0": 108,
+      "2": 50
+    },
+    "unique_type2": 25,
+    "optimization_blobs": [
+      123,
+      2469
+    ]
+  },
+  "export": {
+    "ply_file": "/home/robo/hei-data/mid360s_slam_20261019/export_optimized_final_proxguess_20261019_122137/rtabmap_mapping_cloud.ply",
+    "ply_sha256": "60f7e5e663fbb349ef49e67826f152af0eaa96327cf83d1324dce4f8374c03b5",
+    "points": 48855,
+    "xyz_all_finite": true,
+    "xyz_min": [
+      -5.059037685394287,
+      -17.182506561279297,
+      -0.6242186427116394
+    ],
+    "xyz_max": [
+      7.15464973449707,
+      9.309671401977539,
+      3.606747627258301
+    ],
+    "trajectory_rows": 55,
+    "trajectory_all_finite": true,
+    "quaternion_norm_range": [
+      0.999999514105882,
+      1.000000517726366
+    ],
+    "preview": "/home/robo/hei-data/mid360s_slam_20261019/codex_final_map_preview.png",
+    "limit": "Independent parse of final export; not a field accuracy figure"
+  },
+  "localization": {
+    "scope": "Read-only old map, temporary ProximityOdomGuess=true exactly matching final config; single tabletop trajectory",
+    "messages": 36,
+    "accepted_proximity_updates": 9,
+    "accepted_map_ids": [
+      1,
+      29,
+      31,
+      33,
+      36,
+      38,
+      40,
+      44,
+      47
+    ],
+    "map_sha256_unchanged": "afab12b8d5238c42dbc7887cc9e21fe5975c1acce6c08a705e6170af8e569d86",
+    "raw": "/home/robo/robotopia/hei-rebot-lift/docs/agent/evidence/mid360s/20261019-slam/05-localization/experiment_proxguess2_collector.json",
+    "not_proven": "3-position field relocalization or accuracy; new-map localization not separately replayed"
+  },
+  "runtime_check": {
+    "checked": 19,
+    "mismatch": [],
+    "source_config_pairs": 15,
+    "installed_entry_points": 4
+  },
+  "installer": {
+    "isolated_fresh_prefix_install_exit": 0,
+    "verify_exit": 0,
+    "refuse_existing": {
+      "returncode": 1,
+      "refused_existing_unpack": true,
+      "env_and_manifest_unchanged": true
+    },
+    "raw_fresh_log": "/home/robo/hei-data/mid360s_slam_20261019/codex_installer_fresh.log"
+  },
+  "lifecycle": {
+    "kind": "Codex takeover of orphaned launch after DSH harness cancellation",
+    "pid": 84665,
+    "pgid": 84665,
+    "command": "/usr/bin/python3 /opt/ros/humble/bin/ros2 launch hei_robot_slam slam_offline_mapping.launch.py bag_path:=/home/robo/hei-data/mid360s_lio_tests/table_motion_20261019_112456 uncalibrated:=true probe:=true rate:=2.0 session:=mapping_proxguess_20261019_121802 ",
+    "takeover_wall_time": 1792383564.7586305,
+    "log": "/home/robo/hei-data/mid360s_slam_20261019/_launch_logs/mapping_proxguess_20261019_121802.harness.log",
+    "harness_clean_claim": false,
+    "stop_escalations": [],
+    "bag_player_clean_exit_observed": true,
+    "parent_exit_code": null,
+    "single_sigint_sent": true,
+    "residual_live_group_members": [],
+    "clean_child_log_count": 5,
+    "child_died_log": false,
+    "missing_visual_warning_count": 0,
+    "runtime_hashes_changed": [],
+    "finished_wall_time": 1792383612.9337585,
+    "launch_no_longer_live": true,
+    "final_probe_report": "/home/robo/hei-data/mid360s_slam_20261019/mapping_proxguess_20261019_121802/probe_report.json",
+    "scope_note": "Parent was not a Codex child, so parent wait exit code unavailable. Use actual node clean-exit logs, no live residuals, full probe counts and independent DB checks. Original DSH harness was cancelled, not clean."
+  },
+  "review_findings": "R01-R10 closed for software scope; root-cause and tests in codex_review.md outside repo",
+  "not_run": [
+    "30-50m field loop and metric accuracy",
+    "3-position field relocalization",
+    "physical live sensor SLAM launch",
+    "manual RViz GUI visual acceptance",
+    "AGX deployment and navigation"
+  ],
+  "git": {
+    "branch": "feat/mid360s-lio",
+    "head": "1aeb8a1",
+    "committed": false
+  }
+}

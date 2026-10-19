@@ -1,0 +1,26 @@
+{
+ "kind": "codex_full_run_evidence_references_readonly",
+ "note": "Codex owns these files; only referenced by path+sha256, not modified/copied",
+ "files": [
+  {
+   "path": "/home/robo/hei-data/mid360s_slam_20261019/codex_full_observer/result.json",
+   "size": 14543,
+   "sha256": "57e704195e50d4aa5c5bfd235b4031efed9be684186225ec72a3f6a0d9e97d2d"
+  },
+  {
+   "path": "/home/robo/hei-data/mid360s_slam_20261019/codex_full_observer/launch.log",
+   "size": 79646,
+   "sha256": "328a3e0d63b50d6bf8aac26296e40848f8a57ef7a617ae90ba26a087b0af61d4"
+  },
+  {
+   "path": "/home/robo/hei-data/mid360s_slam_20261019/codex_full_map/rtabmap_mapping.db",
+   "size": 2809856,
+   "sha256": "afab12b8d5238c42dbc7887cc9e21fe5975c1acce6c08a705e6170af8e569d86"
+  },
+  {
+   "path": "/home/robo/hei-data/mid360s_slam_20261019/codex_full_map/launch_info.json",
+   "size": 2061,
+   "sha256": "b65ea623ea011c8df1b048f911c4013a9f9eb49d915050f936c344c851870595"
+  }
+ ]
+}

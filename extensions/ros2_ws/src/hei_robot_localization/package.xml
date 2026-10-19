@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>hei_robot_localization</name>
+  <version>0.1.0</version>
+  <description>
+    HEI ReBot Lift 自研定位输入层：MID-360S -> FAST-LIO2 的输入契约、只读审计节点与
+    离线（uncalibrated）启动。当前只支持已有 rosbag 离线回放，不接硬件、不发布 TF、
+    不做 base_link / map 变换。不含 RTAB-Map 与导航。
+  </description>
+  <maintainer email="dev@hei-rebot-lift.invalid">HEI ReBot Lift</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <!-- 第三方 underlay：extensions/third_party/livox_ws（CustomMsg 消息包） -->
+  <exec_depend>livox_ros_driver2</exec_depend>
+  <!-- 第三方 underlay：extensions/third_party/fast_lio_ws（离线 LIO 节点） -->
+  <exec_depend>fast_lio</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

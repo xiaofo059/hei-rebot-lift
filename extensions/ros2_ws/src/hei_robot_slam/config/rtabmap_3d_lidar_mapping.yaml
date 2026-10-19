@@ -1,0 +1,64 @@
+# HEI MID-360S 三维 SLAM 建图参数（RTAB-Map 0.23.13 / ROS 2 Humble）
+#
+# 契约：本文件由 hei_robot_slam.slam_contract.validate_mapping_parameters() 校验；
+# 启动前任何一条不满足都会拒绝启动。修改前先读 docs/MID360S_SLAM.md。
+#
+# frame 分工：FAST-LIO 独占 camera_init->body；RTAB-Map 独占 map->camera_init。
+# 本包不发布任何 TF，也不伪造 base_link/odom。
+#
+# 模式：Mem/IncrementalMemory=true 建图；定位模式见 rtabmap_3d_lidar_localization.yaml。
+# 数据库：launch 指向**全新唯一** run 目录下的 rtabmap_mapping.db；
+# 本包绝不允许 -d / delete_db_on_start（旧库会被追加，所以必须全新路径）。
+"/**":
+  ros__parameters:
+    # --- ROS 2 wrapper（rtabmap_slam 0.23.13 CoreWrapper，参数名本机实测） ---
+    subscribe_depth: false
+    subscribe_rgb: false
+    subscribe_rgbd: false
+    subscribe_stereo: false
+    subscribe_scan: false
+    subscribe_scan_cloud: true
+    subscribe_odom: false          # 单一里程计来源：只用 FAST-LIO 的 /Odometry（经 odom_frame_id TF），不订阅第二路 odom topic
+    subscribe_odom_info: false     # 不启动 rtabmap_odom/ICP odometry 节点
+    subscribe_user_data: false
+    frame_id: body                 # 前端 body（IMU 体坐标，不是 base_link）
+    odom_frame_id: camera_init     # FAST-LIO 的 odometry 帧；RTAB 用 TF 取 odom，并独占发布 map->camera_init
+    map_frame_id: map
+    approx_sync: true
+    topic_queue_size: 10
+    sync_queue_size: 10
+    wait_for_transform: 0.3
+    odom_sensor_sync: false        # 点云已在 body 帧且与 odom 同 stamp，不做二次同步/去畸变
+    scan_cloud_max_points: 0       # 0 = 不截断；FAST-LIO 输出约 3.7k 点/帧
+    scan_cloud_is_2d: false
+    qos: 1                         # 1 = Reliable，与 FAST-LIO 默认 publisher QoS 匹配
+
+    # --- RTAB-Map 内部参数（字符串；名称按本机 0.23.13 Parameters.h） ---
+    Mem/IncrementalMemory: "true"       # 建图模式；false 才是定位模式
+    Mem/InitWMWithAllNodes: "false"
+    Mem/LocalizationReadOnly: "false"
+    Mem/STMSize: "30"                   # 短期记忆窗口；与官方 lidar3d 例一致
+    Mem/NotLinkedNodesKept: "false"     # 不保留未连入图的节点（官方 lidar3d 例）
+    Reg/Strategy: "1"                   # 1 = ICP 几何注册（无图像）
+    Reg/Force3DoF: "false"              # 真实 6DoF，禁止降维
+    Icp/Strategy: "1"                   # 1 = libpointmatcher（0=PCL，2=CCCoreLib）；是否点面由 Icp/PointToPlane 决定
+    Icp/PointToPlane: "true"
+    Icp/Force4DoF: "false"              # 不把 6DoF 限制成 x/y/z/yaw
+    Icp/Iterations: "10"
+    Icp/VoxelSize: "0.1"                # ICP 体素 0.1 m（室内小场景）
+    Icp/Epsilon: "0.001"
+    Icp/PointToPlaneK: "20"
+    Icp/PointToPlaneRadius: "0"
+    Icp/MaxTranslation: "3"
+    Icp/MaxCorrespondenceDistance: "1.0"  # 0.1 m 体素 x10（官方 3D 例的经验规则）
+    Icp/OutlierRatio: "0.7"
+    Icp/CorrespondenceRatio: "0.2"      # 回环 ICP 最小重叠比例（官方 3D 例默认 0.2，不为桌面包降低）
+    RGBD/ProximityMaxGraphDepth: "0"    # 0 = 忽略该深度上限（不是“限制深度”）；官方 lidar3d 例
+    RGBD/ProximityPathMaxNeighbors: "1" # 官方 lidar3d 例：one-to-many proximity 邻居数
+    RGBD/ProximityAngle: "0"            # one-to-one proximity 最大角度(deg)：0=不设角度上限（本机 Parameters.h 默认 45）
+    RGBD/ProximityOdomGuess: "true"     # 纯激光一对面 proximity：用 odom 相对位姿作为 ICP guess；false(默认)会传空 guess 走视觉路径，无图像时报 Missing visual features 且无法估计
+    RGBD/LinearUpdate: "0.05"           # 每移动 5 cm 才新增图节点
+    RGBD/AngularUpdate: "0.05"          # 每转 ~2.9 deg 才新增图节点
+    RGBD/CreateOccupancyGrid: "false"   # 不生成 2D 占据栅格本地缓存（官方 lidar3d 例）
+    Optimizer/Strategy: "2"             # 2 = GTSAM（本机默认）
+    Optimizer/GravitySigma: "0.3"       # 弱重力先验，不把 6DoF 压成 3DoF（GTSAM 默认）

@@ -1,0 +1,65 @@
+# MID-360S 离线 FAST-LIO2 参数（HEI-LIDAR-20261017-03-LIO）
+#
+# 状态：UNCALIBRATED（外参为厂商名义值，现场未标定）
+# 只允许离线回放使用；launch 要求显式 uncalibrated:=true 且 ROS_DOMAIN_ID=88 /
+# ROS_LOCALHOST_ONLY=1。
+#
+# 逐项依据见 hei_robot_localization/mid360s_lio_params.py 与 docs/MID360S_LIO.md。
+# 关键点：
+#   * lidar_type: 1 (AVIA) —— 只有该取值时 FAST-LIO 订阅 livox_ros_driver2/CustomMsg；
+#   * scan_line: 4 —— driver 对 MID-360 系列固定 line = i % 4；
+#   * time_sync_en: false —— 正式包为 NoSync（主机 epoch 锚点 + steady），不是硬件 PTP，
+#     打开它只会让 FAST-LIO 自己猜一个 lidar-IMU 偏置；
+#   * time_offset_lidar_to_imu: 0.0 —— 没有独立标定的时间偏置，不填假值；
+#   * extrinsic_T/R —— 手册名义值推导：IMU 芯片位置 [11.0, 23.29, -44.12] mm 在点云
+#     坐标中，换算 p_I = R_IL p_L + t_IL（R_IL = I）后 t_IL = -r_LI；
+#   * extrinsic_est_en: false —— 未标定不得靠在线估计把不确定性吃掉；
+#   * IMU 加速度保持原始 g，不做换算：FAST-LIO 用 |mean_acc| 自行归一化。
+/**:
+    ros__parameters:
+        feature_extract_enable: false
+        point_filter_num: 3
+        max_iteration: 3
+        filter_size_surf: 0.5
+        filter_size_map: 0.5
+        cube_side_length: 1000.0
+        runtime_pos_log_enable: false
+        map_file_path: "./test.pcd"
+
+        common:
+            lid_topic: "/livox/lidar"
+            imu_topic: "/livox/imu"
+            time_sync_en: false
+            time_offset_lidar_to_imu: 0.0
+
+        preprocess:
+            lidar_type: 1
+            scan_line: 4
+            blind: 0.5
+            timestamp_unit: 3
+            scan_rate: 10
+
+        mapping:
+            acc_cov: 0.1
+            gyr_cov: 0.1
+            b_acc_cov: 0.0001
+            b_gyr_cov: 0.0001
+            fov_degree: 360.0
+            det_range: 100.0
+            extrinsic_est_en: false
+            extrinsic_T: [ -0.011, -0.02329, 0.04412 ]
+            extrinsic_R: [ 1., 0., 0.,
+                            0., 1., 0.,
+                            0., 0., 1.]
+
+        publish:
+            path_en: true
+            effect_map_en: false
+            map_en: true
+            scan_publish_en: true
+            dense_publish_en: false
+            scan_bodyframe_pub_en: true
+
+        pcd_save:
+            pcd_save_en: false
+            interval: -1

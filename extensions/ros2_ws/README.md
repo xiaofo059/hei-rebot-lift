@@ -1,7 +1,7 @@
 # ROS 2 功能工作空间
 
 本工作空间统一管理自研 ROS 2 Humble 功能包，供 Jetson AGX 和笔记本共同开发。
-当前仅创建目录骨架，尚未安装 ROS、创建功能包或实现机器人桥接。
+2026-10-17：笔记本ROS2 Humble下已有hei_robot_bringup（MID-360S真实数据验收通过）与hei_robot_localization（FAST-LIO2静止包离线接入通过）。机器人桥接、导航和AGX部署尚未验收。
 
 ## 目录布局
 
@@ -19,7 +19,7 @@ ros2_ws/
 
 ## 功能包如何组织
 
-以下是按需创建的包名建议，不代表已有实现：
+以下按职责列包名；实际已有包以src目录及各包README为准，其余仍为规划：
 
 | 包名 | 职责 |
 | --- | --- |
@@ -86,3 +86,5 @@ source extensions/ros2_ws/install/local_setup.bash
 现有 host 需要完整动作字段，不能直接发送仅含底盘速度的消息；ROS 单位与驱动单位也需要转换。
 桥接、动作保持和多源协调的设计见 [双机工作流](../../docs/git_workflow_zh.md)。
 新增功能应通过明确接口接入，避免多个 ROS/LeRobot 进程同时占用电机串口或争抢控制。
+
+2026-10-19：新增 [hei_robot_slam](src/hei_robot_slam/README.md)：FAST-LIO2 + RTAB-Map三维建图/只读定位/严格导出，笔记本桌面包软件基线通过，现场SLAM精度与AGX未验收。详见 [三维SLAM说明](../../docs/MID360S_SLAM.md)。

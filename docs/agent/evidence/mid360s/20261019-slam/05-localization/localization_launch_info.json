@@ -1,0 +1,37 @@
+{
+ "kind": "hei_mid360s_slam_localization_readonly",
+ "mode": "localization",
+ "started_at": "2026-10-19T12:09:04+0800",
+ "bag_path": "/home/robo/hei-data/mid360s_lio_tests/table_motion_20261019_112456",
+ "database_path": "/home/robo/hei-data/mid360s_slam_20261019/codex_full_map/rtabmap_mapping.db",
+ "database_sha256_before": "afab12b8d5238c42dbc7887cc9e21fe5975c1acce6c08a705e6170af8e569d86",
+ "run_dir": "/home/robo/hei-data/mid360s_slam_20261019/localization_readonly_20261019_120903",
+ "replay": {
+  "rate": 1.0,
+  "start_offset_s": 0.0,
+  "delay_s": "5",
+  "use_sim_time": true,
+  "bag_clock_hz": "100"
+ },
+ "frames": {
+  "map": "map",
+  "odom": "camera_init",
+  "base": "body"
+ },
+ "initial_pose_topic": "/initialpose",
+ "initial_pose_example": "ros2 topic pub --once /initialpose geometry_msgs/msg/PoseWithCovarianceStamped \"{header: {frame_id: map}, pose: {pose: {position: {x: 0.0, y: 0.0, z: 0.0}, orientation: {w: 1.0}}}}\"",
+ "versions": {
+  "rtabmap_version": "0.23.13",
+  "rtabmap_ros_deb_pin": "0.23.13-1jammy.20261011.111917",
+  "rtabmap_pkg": "rtabmap_slam"
+ },
+ "rtabmap_params_file": {
+  "path": "/home/robo/robotopia/hei-rebot-lift/extensions/ros2_ws/install/hei_robot_slam/share/hei_robot_slam/config/rtabmap_3d_lidar_localization.yaml",
+  "sha256": "4ba0e215952313d5729b9ba3fc7fe41c1fecabb850a60fd47a6eb2ba7442c135"
+ },
+ "lio_config_file": {
+  "path": "/home/robo/robotopia/hei-rebot-lift/extensions/ros2_ws/install/hei_robot_localization/share/hei_robot_localization/config/mid360s_fastlio_uncalibrated.yaml",
+  "sha256": "dd0c0e5330b86f1e83fe59d6bc5c79bfb951e23c960a4ca6b612b70256c02729"
+ },
+ "database_expected_unmodified": true
+}

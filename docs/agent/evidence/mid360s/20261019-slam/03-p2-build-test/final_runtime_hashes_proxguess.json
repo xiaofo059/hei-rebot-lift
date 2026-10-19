@@ -1,0 +1,120 @@
+{
+ "kind": "hei_mid360s_slam_frozen_runtime_hashes_proxguess",
+ "frozen_at": "2026-10-19T12:21:00+08:00",
+ "note": "Final frozen runtime after ProximityOdomGuess=true config fix and rebuild. Docs/evidence edits do not change these files.",
+ "checked": 19,
+ "all_match": true,
+ "mismatch": [],
+ "pairs": [
+  {
+   "source": "src/hei_robot_slam/hei_robot_slam/__init__.py",
+   "source_sha256": "626e627e58dfb4a2aa7af5ec6ac2af6c6776a2e52a7118c2fe9e3c140c2596f0",
+   "installed_sha256": "626e627e58dfb4a2aa7af5ec6ac2af6c6776a2e52a7118c2fe9e3c140c2596f0",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/hei_robot_slam/cloud_adapter.py",
+   "source_sha256": "ce86b8d4f500dafdcd769c5e5f917951c61168b064a840c60655712e7925a12b",
+   "installed_sha256": "ce86b8d4f500dafdcd769c5e5f917951c61168b064a840c60655712e7925a12b",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/hei_robot_slam/cloud_probe.py",
+   "source_sha256": "f2196af8900d55e3d6ba2a6a531563a099aa353ae4ccddda53310a0201ea64a9",
+   "installed_sha256": "f2196af8900d55e3d6ba2a6a531563a099aa353ae4ccddda53310a0201ea64a9",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/hei_robot_slam/cloud_xyzi.py",
+   "source_sha256": "e101cb96e559198e9364e32c1aa152c7384396c8b0078f06798c44e132b4d02c",
+   "installed_sha256": "e101cb96e559198e9364e32c1aa152c7384396c8b0078f06798c44e132b4d02c",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/hei_robot_slam/db_tools.py",
+   "source_sha256": "ea8c97121571ea12850a030b1230d7fccad7799c9582b4307feca5a137752c8c",
+   "installed_sha256": "ea8c97121571ea12850a030b1230d7fccad7799c9582b4307feca5a137752c8c",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/hei_robot_slam/launch_support.py",
+   "source_sha256": "a6ac811157a4868389738c2c9bfd10d7b746f1d1075de6f7f1b40a15f3e958bb",
+   "installed_sha256": "a6ac811157a4868389738c2c9bfd10d7b746f1d1075de6f7f1b40a15f3e958bb",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/hei_robot_slam/run_bounded.py",
+   "source_sha256": "33c45e716783e63df86def3d7670acd5c7790be95a41caa3632b5c093de81dbe",
+   "installed_sha256": "33c45e716783e63df86def3d7670acd5c7790be95a41caa3632b5c093de81dbe",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/hei_robot_slam/slam_contract.py",
+   "source_sha256": "3588593a2e92b16e30a7711cadd77f53e94b048176e60a81584b8e3fe88184b2",
+   "installed_sha256": "3588593a2e92b16e30a7711cadd77f53e94b048176e60a81584b8e3fe88184b2",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/launch/slam_live_mapping.launch.py",
+   "source_sha256": "f199fb8f5cfb46f6b5063ace1c6f2247f5351ffc0c70b593fc07fedf1190fd90",
+   "installed_sha256": "f199fb8f5cfb46f6b5063ace1c6f2247f5351ffc0c70b593fc07fedf1190fd90",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/launch/slam_localization.launch.py",
+   "source_sha256": "2eb6e9c7c33e7904ee3c82f7728342b50f8d7839763cba4079627ab4d9813c2d",
+   "installed_sha256": "2eb6e9c7c33e7904ee3c82f7728342b50f8d7839763cba4079627ab4d9813c2d",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/launch/slam_offline_mapping.launch.py",
+   "source_sha256": "99b97e7a571176028a69fc39da8dcd5221512665cc0b04112a794a7ae669d8ec",
+   "installed_sha256": "99b97e7a571176028a69fc39da8dcd5221512665cc0b04112a794a7ae669d8ec",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/config/rtabmap_3d_lidar_localization.yaml",
+   "source_sha256": "08bdbced77fd9fac890bd158368ecb6a6941c47c6052c3aa84b863450ed4f10e",
+   "installed_sha256": "08bdbced77fd9fac890bd158368ecb6a6941c47c6052c3aa84b863450ed4f10e",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/config/rtabmap_3d_lidar_mapping.yaml",
+   "source_sha256": "1a51078794349963137dea6c7ae63081aa6b9823954c3100460e6a58c88aadf3",
+   "installed_sha256": "1a51078794349963137dea6c7ae63081aa6b9823954c3100460e6a58c88aadf3",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/config/slam_localization.rviz",
+   "source_sha256": "0bdf053182e55b815a3b33c8dbe1fd3fe4f6905160e9966bbd4085e665a8ef62",
+   "installed_sha256": "0bdf053182e55b815a3b33c8dbe1fd3fe4f6905160e9966bbd4085e665a8ef62",
+   "match": true
+  },
+  {
+   "source": "src/hei_robot_slam/config/slam_mapping.rviz",
+   "source_sha256": "933285953fef71c687ee79660c7986f87623b55ee2e744237bb7d7c76bb185a3",
+   "installed_sha256": "933285953fef71c687ee79660c7986f87623b55ee2e744237bb7d7c76bb185a3",
+   "match": true
+  },
+  {
+   "source": "entry_point:slam_cloud_adapter",
+   "installed_sha256": "7ce63679832a3acd43e9110fe2d75c19c754edb693958b81eb6acaf877794340",
+   "match": true
+  },
+  {
+   "source": "entry_point:slam_cloud_probe",
+   "installed_sha256": "685280c2ab36ada33302ac455806fc86b618e6d10c5e8576a0e0b39a8e07f125",
+   "match": true
+  },
+  {
+   "source": "entry_point:slam_db_tools",
+   "installed_sha256": "2bbf9beabcdf405b51ec837d44cf97fa7191df6a6d28b52bb009194ef1c9358b",
+   "match": true
+  },
+  {
+   "source": "entry_point:slam_run_bounded",
+   "installed_sha256": "04a82dfdd08bd6bfd00068190f25a55ebd5702112f395b7c3db19a94e6c98545",
+   "match": true
+  }
+ ]
+}

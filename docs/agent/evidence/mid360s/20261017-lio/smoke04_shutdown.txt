@@ -1,0 +1,15 @@
+t0 SIGINT -> launch parent PID=175788 only
+launch parent still alive after 20s
+t+2s alive: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/fast_lio_ws/install/fast_lio/lib/fast_lio/fastlio_mapping /usr/bin/python3
+t+4s alive: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/fast_lio_ws/install/fast_lio/lib/fast_lio/fastlio_mapping /usr/bin/python3
+t+6s alive: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/fast_lio_ws/install/fast_lio/lib/fast_lio/fastlio_mapping /usr/bin/python3
+t+8s alive: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/fast_lio_ws/install/fast_lio/lib/fast_lio/fastlio_mapping /usr/bin/python3
+t+10s alive: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/fast_lio_ws/install/fast_lio/lib/fast_lio/fastlio_mapping /usr/bin/python3
+t+12s alive: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/fast_lio_ws/install/fast_lio/lib/fast_lio/fastlio_mapping /usr/bin/python3
+t+14s alive: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/fast_lio_ws/install/fast_lio/lib/fast_lio/fastlio_mapping /usr/bin/python3
+t+16s alive: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/fast_lio_ws/install/fast_lio/lib/fast_lio/fastlio_mapping /usr/bin/python3
+t+18s alive: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/fast_lio_ws/install/fast_lio/lib/fast_lio/fastlio_mapping /usr/bin/python3
+t+20s alive: /home/robo/robotopia/hei-rebot-lift/extensions/third_party/fast_lio_ws/install/fast_lio/lib/fast_lio/fastlio_mapping /usr/bin/python3
+escalate SIGINT to remaining children
+--- final residual ---
+NO_RESIDUAL

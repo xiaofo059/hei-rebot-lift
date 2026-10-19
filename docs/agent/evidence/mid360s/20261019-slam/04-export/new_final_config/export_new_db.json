@@ -1,0 +1,84 @@
+{
+ "kind": "rtabmap_export",
+ "database": "/home/robo/hei-data/mid360s_slam_20261019/mapping_proxguess_20261019_121802/rtabmap_mapping.db",
+ "database_sha256_before": "b30fbaecb9d31c273808e4bff2e1a77bba396c2a1bf138207ee0b356a06356b3",
+ "database_sha256_after": "b30fbaecb9d31c273808e4bff2e1a77bba396c2a1bf138207ee0b356a06356b3",
+ "output_dir": "/home/robo/hei-data/mid360s_slam_20261019/export_optimized_final_proxguess_20261019_122137",
+ "command": [
+  "/home/robo/robotopia/hei-rebot-lift/extensions/third_party/rtabmap_local/prefix/opt/ros/humble/bin/rtabmap-export",
+  "--cloud",
+  "--scan",
+  "--poses",
+  "--poses_format",
+  "11",
+  "--opt",
+  "2",
+  "--voxel",
+  "0.05",
+  "--max_range",
+  "0",
+  "--output_dir",
+  "/home/robo/hei-data/mid360s_slam_20261019/export_optimized_final_proxguess_20261019_122137",
+  "/home/robo/hei-data/mid360s_slam_20261019/mapping_proxguess_20261019_121802/rtabmap_mapping.db"
+ ],
+ "returncode": 0,
+ "duration_s": 0.387,
+ "log": "/home/robo/hei-data/mid360s_slam_20261019/export_optimized_final_proxguess_20261019_122137/rtabmap_export.log",
+ "output_files": [
+  {
+   "name": "rtabmap_mapping_cloud.ply",
+   "size": 1564190,
+   "sha256": "60f7e5e663fbb349ef49e67826f152af0eaa96327cf83d1324dce4f8374c03b5"
+  },
+  {
+   "name": "rtabmap_mapping_poses.txt",
+   "size": 4795,
+   "sha256": "663f3274820690745f03e18fdb41e5f669a97cf6a2eb8e0127dd2a0d4afb8bed"
+  }
+ ],
+ "checks": {
+  "database_unmodified": true,
+  "returncode_zero": true,
+  "cloud_file_present": true,
+  "cloud_geometry": {
+   "valid": true,
+   "reasons": [],
+   "format": "binary_little_endian",
+   "data_offset": 746,
+   "file_size": 1564190,
+   "header_vertex_count": 48855,
+   "vertex_properties": [
+    "x",
+    "y",
+    "z",
+    "intensity",
+    "nx",
+    "ny",
+    "nz",
+    "curvature"
+   ],
+   "vertex_size_bytes": 32,
+   "body_bytes_needed": 1563360,
+   "body_bytes_available": 1563444,
+   "parsed_vertices": 48855,
+   "nonfinite_xyz": 0,
+   "actual_vertex_count": 48855
+  },
+  "cloud_vertices": 48855,
+  "cloud_non_empty": true,
+  "poses_file_present": true,
+  "poses_validation": {
+   "valid": true,
+   "expected_columns": 9,
+   "rows": 55,
+   "invalid_rows": [],
+   "nonfinite_rows": 0,
+   "column_counts": {
+    "9": 55
+   }
+  },
+  "pose_count": 55,
+  "poses_non_empty": true
+ },
+ "passed": true
+}

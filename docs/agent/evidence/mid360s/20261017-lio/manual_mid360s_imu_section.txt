@@ -1,0 +1,47 @@
+3.4 Coordinates
+The Cartesian coordinates O-XYZ of the product is defined as below: Point O is the origin,
+and O-XYZ is the point cloud coordinates of the product.
+
+18        © 2026 All Rights Reserved.
+
+                                                              Livox Mid-360S User Manual
+
+
+
+
+                                                                  360°
+                    Z
+
+                        O
+                                                        X
+                                                                  Z
+       X                              Y
+
+
+                                                                      Y
+
+
+
+
+3.5 Output Data
+The output information of LiDAR sensors includes: Information Push, Point Cloud Data
+and IMU Data. For detailed output information formats, refer to the communication
+protocol section of Livox Wiki: https://livox-wiki-cn.readthedocs.io
+
+IMU Data
+The LiDAR sensor is integrated with an IMU chip (with a 3-axis accelerometer and a 3-axis
+gyroscope). By default, the product starts to push IMU data at a frequency of 200 Hz
+after power-on, which can be enabled or disabled using the host computer. The IMU data
+contains the 3-axis acceleration and 3-axis angular velocity, the directions of which are the
+same with that of the point cloud coordinates. The position of the IMU chip in the point
+cloud coordinates is x=11.0 mm, y=23.29 mm, z=-44.12 mm.
+
+
+
+22       © 2026 All Rights Reserved.
+
+                                                             Livox Mid-360S User Manual
+
+
+Refer to the communication protocol section for specific communication protocol and
+data formats.

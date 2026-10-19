@@ -1,0 +1,15 @@
+ M README_FOR_AGENTS.md
+ M docs/MID360S_BRINGUP.md
+ M docs/agent/EXECUTION_LOG.md
+ M docs/agent/TASK_BOARD.md
+ M extensions/README.md
+ M extensions/ros2_ws/README.md
+?? docs/MID360S_LIO.md
+?? docs/agent/evidence/mid360s/20261017-lio/
+?? docs/agent/evidence/mid360s/20261019-slam/
+?? extensions/dependencies/fast_lio.repos
+?? extensions/dependencies/patches/fast_lio/
+?? extensions/ros2_ws/src/hei_robot_localization/
+?? extensions/ros2_ws/src/hei_robot_slam/
+?? extensions/tools/build_fast_lio_underlay.sh
+?? extensions/tools/install_rtabmap_laptop.sh

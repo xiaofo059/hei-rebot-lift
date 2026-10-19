@@ -729,3 +729,13 @@ IP 与环境可能变化，部署前重新确认；本文不固化本机 IP、�
 - **现象 [H 用户反馈]**：真机遥操作中左臂发生一次碰撞，之后关节 4、5、6 在使能后红灯闪烁，进入故障保护。
 - **定位与处理 [H 用户反馈]**：用户发现达妙电机的 `CAN Timeout` 参数被强制写成 `6000`，通过 DM 调试软件重新写为 `0` 后，故障保护解除。
 - **依据与待查**：用户提供的调试软件截图显示 CAN ID `0x4`、Master ID `0x14` 的 `CAN Timeout = 0`。本次未复现故障；当前 HEI 驱动及遥操作源码中未找到 `6000` 或 `TIMEOUT` 参数写入，写入来源及其与碰撞的关联仍待核查。这里记录本次现场恢复结果，不将 `0` 定为全项目通用配置。
+
+## 17. MID-360S/LIO笔记本阶段更新（2026-10-17）
+
+本节覆盖前文2026-10-12“ROS仅骨架”的历史快照：现有 [hei_robot_bringup](extensions/ros2_ws/src/hei_robot_bringup/README.md) 已完成MID-360S长时QC/完整回放及退出修复；[hei_robot_localization](extensions/ros2_ws/src/hei_robot_localization/README.md) 已完成FAST-LIO2名义外参下的静止包离线接入。分别阅读 [传感器流程](docs/MID360S_BRINGUP.md)、[LIO输入契约与证据](docs/MID360S_LIO.md)。
+原IMU加速度g、gyro rad/s、orientation无有效估计；FAST-LIO自行按初始化重力归一化。本轮TF仅camera_init→body，不能视作机器人odom→base_link。现场轴向、动态外参/运动精度、完整SLAM/导航及AGX均未验收；03-LIO总体PARTIAL。启动命令以模块README为准，禁止把本节当运动授权。
+
+## 18. MID-360S三维SLAM电脑端软件基线（2026-10-19）
+
+新增 [hei_robot_slam](extensions/ros2_ws/src/hei_robot_slam/README.md)，使用FAST-LIO2前端与RTAB-Map 0.23.13后端，提供XYZI字段适配、离线建图、只读定位、数据库/优化点云/轨迹保存导出及RViz配置。TF保持map→camera_init→body，未接入机器人base_link。运行与已知限制见 [MID360S_SLAM.md](docs/MID360S_SLAM.md)，终审见 [验收记录](docs/agent/evidence/mid360s/20261019-slam/codex_final_acceptance.json)。
+电脑端软件子任务DONE：完整233秒桌面包55持久节点、25独立几何空间约束，优化点云48855点/55姿态，旧库只读定位有9次接受，独立87 tests通过。用户之后报告实时建图/加载定位的有限目视观察：起点附近看似对齐、偏航约90°时明显错位/漂移；没有原始 `/info`、运行日志或误差测量，Codex 未独立复验。外参仍为厂商名义值；30–50m现场闭环精度、三位置重定位、定位误差、AGX部署和机器人固定安装未验收；03-LIO/04-SLAM总体均PARTIAL。不得将桌面测试或位姿话题输出当作现场精度验收，也不得把本节当机器人运动授权。

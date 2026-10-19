@@ -1,0 +1,42 @@
+# Third-party dependency lock for off-line FAST-LIO2 bring-up (HEI-LIDAR-20261017-03-LIO).
+#
+# Import with vcstool (NOT required for a manual clone; paths below match the
+# layout used by extensions/tools/build_fast_lio_underlay.sh):
+#
+#   mkdir -p extensions/third_party/fast_lio_ws
+#   vcs import extensions/third_party/fast_lio_ws < extensions/dependencies/fast_lio.repos
+#
+# Both entries are pinned to the commit SHA actually audited by this task, not to a
+# branch name: the upstream "ros2" branch head can move, and the line numbers cited
+# in docs/MID360S_LIO.md refer to exactly these two commits.
+#
+# ------------------------------------------------------------------ licenses
+# 许可状态按**冻结树里的实际文件**记录，不按上游元数据猜测：
+#   * FAST_LIO_ROS2 @ 2fffc570
+#       - package.xml:15 声明 <license>BSD</license>
+#       - 但该提交根目录 LICENSE 是 GNU GPL v2 全文
+#         (sha256 8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643)
+#       => 上游元数据与许可证文件**互相矛盾**，许可状态标记为
+#          UNCONFIRMED（以 GPL-2.0 文本为准做保守处理），不声称 BSD。
+#   * ikd-Tree @ e2e3f4e9（FAST_LIO_ROS2 的 gitlink 子模块）
+#       - 冻结树内只有 ikd_Tree.cpp / ikd_Tree.h / README.md 三个文件；
+#       - **没有** LICENSE 文件，README 与源码头也没有许可声明；
+#       => 许可状态 UNKNOWN（冻结证据不足以判定）。
+#          外部 GitHub API 在 2026-10-17 报告 GPL-2.0，但那是仓库页面元数据，
+#          不属于本轮冻结证据，按待确认处理。
+#   * 两者都只在本机构建使用，且整个 extensions/third_party/ 被 .gitignore 忽略，
+#     源码不入父仓库；分发前必须由人确认上述许可矛盾/缺失。
+#
+# ------------------------------------------------------------------ build
+# CMakeLists.txt 需要 livox_ros_driver2（本仓库冻结的 livox_ws underlay 提供），
+# 上游还声明了未被任何源码引用的 pcl_ros；这不通过 apt 全局安装解决，而是用
+# extensions/dependencies/patches/fast_lio/ 里的 tracked patch 最小纠正为 tf2_ros。
+repositories:
+  src/FAST_LIO_ROS2:
+    type: git
+    url: https://github.com/Ericsii/FAST_LIO_ROS2.git
+    version: 2fffc570a25d0df172720bac034fbdb6a13d2162  # branch ros2, audited 2026-10-17
+  src/FAST_LIO_ROS2/include/ikd-Tree:
+    type: git
+    url: https://github.com/hku-mars/ikd-Tree.git
+    version: e2e3f4e9d3b95a9e66b1ba83dc98d4a05ed8a3c4  # branch fast_lio (gitlink of FAST_LIO_ROS2 above)

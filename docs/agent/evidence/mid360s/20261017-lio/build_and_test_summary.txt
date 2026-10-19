@@ -1,0 +1,36 @@
+HEI-LIDAR-20261017-03-LIO-BASE · 构建与测试摘要（本轮实际执行）
+================================================================
+环境: fo / x86_64 / Ubuntu 22.04 / ROS 2 Humble / 干净 shell (PATH=/usr/bin:/bin)
+      cmake 3.22.1 (/usr/bin/cmake), g++ 11.4.0 (/usr/bin/g++)
+
+[1] bash -n extensions/tools/build_fast_lio_underlay.sh
+    exit = 0
+
+[2] extensions/tools/build_fast_lio_underlay.sh   (PARALLEL=4)
+    exit = 0
+    Summary: 1 package finished [1min 21s]
+    patch sha256:
+      978fe104222c2f90f3dc5eccb66a16e9afa81aadc6d9c8dd5b11c94e6e32b6e4  0001-deps-pcl_ros-to-tf2_ros.patch
+      758403474a8595610b6c0bf4520d847547dd657c72ff917504bf8d40fae208a0  0002-frame-end-from-max-point-offset.patch
+    install: extensions/third_party/fast_lio_ws/install/fast_lio/lib/fast_lio/fastlio_mapping (2,084,864 B)
+    ldd: 0 处 not found (记录 extensions/third_party/fast_lio_ws/ldd_fastlio_mapping.txt)
+    子模块 ikd-Tree @ e2e3f4e9... 工作区干净
+
+[3] colcon build --packages-select hei_robot_localization
+    exit = 0
+
+[4] colcon test --packages-select hei_robot_localization
+    colcon test-result --verbose
+    exit = 0
+    Summary: 51 tests, 0 errors, 0 failures, 0 skipped
+
+[5] 离线冒烟（Domain 88 / localhost only / 2x / 只读正式 bag）
+    smoke03: /Odometry 790, cloud 1578, all finite, stamps monotonic, frames camera_init/body
+             pos |max| = 0.1015 m, quat norm ~1.0
+             停止: SIGINT 被忽略（SigIgn=0000000001001006，后台 shell 继承 SIG_IGN）
+             父进程 exit 143 为 Codex 有界 TERM 清理，不作为算法退出证据
+    smoke04: /Odometry 890, cloud 1778, all finite, stamps monotonic, pos |max| = 0.0999 m
+             最终 NO_RESIDUAL
+    节点: 恰 4 个（fastlio_mapping / lio_input_audit / lio_output_collector / rosbag2_player）
+          → 审计节点唯一
+    边界: 冒烟不证明里程计精度，不构成运动验收；退出行为由 Codex 独立验证

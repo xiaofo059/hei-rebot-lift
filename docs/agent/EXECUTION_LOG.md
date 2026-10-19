@@ -252,3 +252,43 @@ Codex 通过UI回收可见内容，转录到本机同名相对路径，独立SHA
 - 全量QC完成：exit0 / PASS，30项中27 PASS、3 INFO、0 FAIL；18,648帧/372,964 IMU全部解码，372,972,288点全部检查。点云10.000Hz、IMU200.006Hz；两路header倒退/重复0；最大接收gap0.111917994s/0.018015592s，最大源gap0.111438554s/0.016172456s，双流源覆盖1864.653s。未采样、未放宽原门限；逐点offset到达顺序INFO不等于时间戳倒退。
 - 最终独立交叉核对：metadata、QC、capture、完整回放计数一致；两流全量CDR字节数/序列SHA256一致；冻结构建产物及patch哈希未变；原六份dirty基线均可重建且哈希一致。143项测试、扩展underlay suite与5次实际driver正常退出证据归档。补丁目录局部.gitattributes仅豁免统一diff格式必需的空白上下文，应用后源码仍执行diff --check。
 - 验收结论：02-FIX、02-RETEST、02-REPLAY与02-LIVE数值数据/生命周期验收DONE / PASS。详见 [验收索引](evidence/mid360s/20261017-acceptance/README.md) 与 codex_review.json。旧失败包保留；不声称完成硬件精确对时、物理标定、AGX或LIO/SLAM。未commit/push，未改网络/OS时间/机器人控制。
+
+## 2026-10-17 · 03-LIO 开始（进行中）
+
+- 用户授权开始IMU单位/轴向/外参与FAST-LIO2接入。预检分支feat/mid360s-lio、工作区干净；本地DSH PID21932及项目cwd核验，UI新会话下发结构化白名单任务并看到进行中。
+- 先审计FAST-LIO真实消费者（加速度归一化、逐点时间、外参方向、TF），再实现离线接入；不启动硬件/机器人host、不改原包或已验收Livox产物。Codex维护台账，DSH只写任务白名单。
+
+- 重派更正：首轮因DSH provider anthropic无adapter而失败，界面进行中并不代表实际运行；该轮未实施。用户修正配置后重派到当前DeepSeek，已看到实际read/command调用。原有dirty仅Codex台账。官方S手册已下载外部数据目录，第22页IMU同向、r_LI=[11,23.29,-44.12]mm；t_IL需取反，名义值不等于现场标定。
+
+- 独立Review修复点：帧尾由末点改保留点max、冗余pcl_ros改显式tf2_ros依赖、patch未知dirty拒绝/子模块SHA干净校验/稀疏安全回退/编译并发限制、审计计时器API、NaN/Inf启动参数、startup测试孤儿清理、运行期异常传播。
+- DSH smoke退出harness失败保留：后台shell继承SIG_IGN、setsid不重置；Codex从/proc确认SIGINT被忽略，有界TERM清理03/04轮。改用Python Popen显式恢复SIG_DFL，仅向launch父发一次SIGINT。最终独立27秒wall窗口得到420条odom（41.895s源时间），两路各419帧（56,970+792,839点XYZ全有限）；TF仅camera_init→body；launch exit0，3个child cleanly，无escalation，运行产物hash未变。关停context无效后审计只记录取消息告警，运行异常仍传播。原数据未改。
+- Codex独立回归：bringup143 passed/8.41s；localization51 passed/5.77s，无skip。最初两个目录一起pytest因同名test_launch_static导入冲突，改各包独立进程后通过，不改测试判据。最终方向字段报告语义修正待补测。
+
+- 最终补测：报告API重命名比力/up方向并显式给重力负向，补符号测试；初次pytest使用旧非symlink安装副本而失败，重建Python接入包后完整52 passed/5.69s。未改FAST-LIO二进制/launch/参数，无需重复长时采集。根目录/ROS工作空间入口索引更新当前阶段，旧架构快照保留。03-LIO-BASE DONE、03-LIO PARTIAL。
+
+## 2026-10-19 · HEI-LIDAR-04-SLAM-LAPTOP-BASE-20261019
+
+用户授权电脑端FAST-LIO + RTAB-Map完整三维SLAM软件部署。Codex已通过3080新会话提交含14项约束的结构化提示，看到DSH实际执行Git、ROS、apt依赖检查；PID15200 cwd=/home/robo/robotopia/hei-rebot-lift。现有分支feat/mid360s-lio @1aeb8a1，已有LIO改动保留；Codex备份dirty哈希及tracked diff至/home/robo/hei-data/mid360s_slam_20261019/codex_baseline/。RTAB-Map尚未安装，sudo非交互不可用（DSH报告），依赖部署仍在调查，不声称部署通过。03-LIO桌面动态全包验证有2331条有效odom；不等同现场30–50米闭环精度验收。04总体未DONE，本次仅软件子任务。
+
+### 2026-10-19 · 04-SLAM 电脑端终审完成
+
+DSH已交付hei_robot_slam与RTAB-Map 0.23.13独立本地前缀依赖，Codex独立Review并要求修正R01–R10。特别核查无图像one-to-one proximity默认空guess，按0.23.13-humble源码25d2135与A/B实测固化RGBD/ProximityOdomGuess=true，注册/优化阈值保留；静态/数据/生命周期回归独立87 passed（10.11s，0 skipped）。原始输出：/home/robo/hei-data/mid360s_slam_20261019/codex_final_pytest.log/xml。
+
+旧参数Codex独立完整回放：2335原始云/46708IMU全部收到、2331输出帧逐帧XYZI哈希相同，52节点/14空间约束；作为旧配置基线保留。新参数完整回放：mapping_proxguess_20261019_121802，2331有效输出、55地图帧/221轨迹、TF历史查询116/116；独立SQLite55节点/55扫描、25独立type2约束、integrity ok、视觉告警0。DB SHA=b30fbaecb9d31c273808e4bff2e1a77bba396c2a1bf138207ee0b356a06356b3。新正式导出48855个有限XYZ/55姿态；Codex独立解析并生成codex_final_map_preview.png。旧库A2只读定位36条/info中9次proximity接受、初始位姿被消费、原库SHA不变；不称三位置现场重定位通过。
+
+执行异常如实保留：harness取消并不终止独立session中的launch。Codex核对PID84665/PGID后接管，观察bag player正常EOF再只给父INT一次，5子节点clean、无升级/残留；父wait返回码不可得，原harness不能称clean。另一次预创建session导致启动被正确拒绝，等待空订阅的initialpose发布器由Codex精确中断；后续采用有界发布并检查订阅。接管原始记录codex_final_mapping_supervision.json。
+
+依赖独立verify、全新外部prefix默认安装与拒绝覆盖均通过；安装脚本不改系统源/全局环境。当前feat/mid360s-lio @1aeb8a1，未commit/push，未运行实机控制。软件子任务DONE，04总体PARTIAL，现场30–50m精度、3位置重定位、live/RViz人工目视/AGX留待下一批。仓库索引：docs/agent/evidence/mid360s/20261019-slam/codex_final_acceptance.json。
+
+### 2026-10-19 · 实时地图保存与只读定位入口补充
+
+- 用户希望把实时建图结果放在 `extensions/ros2_ws/src/hei_robot_slam/map/`，并用同一实机雷达在 RViz 查看已建地图上的定位。检查确认 map 目录此前不存在；新增 `.gitignore` 排除地图与导出数据。建图通过 `output_root:=.../map` + 每轮唯一 `session` 写入，不改通用数据根目录。
+- 发现原 `slam_localization.launch.py` 需要 rosbag，只能离线回放。新增 `slam_live_localization.launch.py`：真实雷达硬件和未标定外参双 opt-in、Domain 89/localhost 隔离、指定已存在数据库、复用 FAST-LIO 名义参数校验与 XYZI 适配、RTAB-Map 定位参数强制只读、RViz 可选；启动信息记录数据库 SHA256，且不启动底盘/机械臂/升降。
+- 验证：`colcon build --packages-select hei_robot_slam` 通过；新 launch `--show-args` 通过；全包 pytest **89 passed**；`git diff --check` 通过；`git check-ignore --no-index` 确认 map 子目录数据库会被忽略。未启动真实雷达/算法节点，未验证实机地图保存、初始位姿消费、定位成功率或 DB 运行前后哈希；仍待用户现场执行。
+- 未 commit/push，未切分支；原有 LIO 与 SLAM 实测产物保留。操作命令已补充到 `extensions/ros2_ws/src/hei_robot_slam/README.md` 与 `docs/MID360S_SLAM.md`。
+
+### 2026-10-19 · 用户报告的实时定位目视现象（未独立验收）
+
+- 用户报告已用实时雷达建图、加载同一地图观察定位；雷达放在接近建图初始位置/朝向时，RViz 画面看似与地图对齐；将偏航相对初始朝向转约 90° 后，画面明显错位/漂移，用户判断重定位失败。
+- 证据边界：这是用户操作后的目视描述/截图，不含本次运行的 `/info` 接受统计、同步原始日志、数据库哈希前后对照或独立测量误差；Codex 未在本轮接管该实时会话。因此只记录为有限现场观察，不判断具体根因，也不标记 04-SLAM 现场定位通过。
+- 结论：可继续做固定安装和导航前的软件集成规划，但定位鲁棒性、不同初始朝向重定位、外参与精度仍须用可复核数据单独验收；雷达尚未固定到机器人，AGX部署、桥接和导航仍按任务板保持 PLANNED。
