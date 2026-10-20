@@ -1,0 +1,742 @@
+{
+ "kind": "mid360s_slam_cloud_probe",
+ "final": true,
+ "generated_at": "2026-10-20T15:42:31+0800",
+ "contract": {
+  "expected_tf_pairs": [
+   "camera_init->body",
+   "map->camera_init"
+  ],
+  "forbidden_frames": [
+   "base_link",
+   "odom",
+   "base_footprint"
+  ],
+  "adapted_fields": [
+   "x",
+   "y",
+   "z",
+   "intensity"
+  ],
+  "lio_body_cloud_topic": "/cloud_registered_body",
+  "adapter_topic": "/slam/lidar_cloud_xyzi"
+ },
+ "odom": {
+  "count": 0,
+  "frames": [],
+  "first_stamp_ns": null,
+  "last_stamp_ns": null,
+  "stamp_regressions": 0,
+  "nonfinite_position": 0,
+  "nonfinite_quaternion": 0,
+  "quat_norm_min": null,
+  "quat_norm_max": null
+ },
+ "body_cloud": {
+  "count": 0,
+  "points": 0,
+  "nonfinite_xyz": 0,
+  "frames": [],
+  "first_stamp_ns": null,
+  "last_stamp_ns": null,
+  "stamp_regressions": 0,
+  "fields_last": [],
+  "has_normal_fields": false,
+  "nonzero_normal_points": 0,
+  "stamp_matches_odom": 0,
+  "stamp_without_odom": 0
+ },
+ "adapted_cloud": {
+  "count": 0,
+  "points": 0,
+  "frames": [],
+  "fields_last": [],
+  "fields_ok": 0,
+  "fields_bad": 0,
+  "stamp_matches_body": 0,
+  "stamp_without_body": 0,
+  "first_stamp_ns": null,
+  "last_stamp_ns": null
+ },
+ "localization_pose": {
+  "count": 1,
+  "frames": [
+   "map"
+  ]
+ },
+ "backend_map_cloud": {
+  "count": 0,
+  "nonempty_messages": 0,
+  "points": 0,
+  "frames": [],
+  "last_stamp_ns": null
+ },
+ "backend_map_path": {
+  "count": 0,
+  "nonempty_messages": 0,
+  "poses": 0,
+  "max_poses_in_message": 0,
+  "frames": []
+ },
+ "assembled_cloud": {
+  "count": 0,
+  "nonempty_messages": 0,
+  "points": 0,
+  "frames": []
+ },
+ "tf": {
+  "pairs": {
+   "map->camera_init": 4
+  },
+  "pair_stamp_ranges": {
+   "map->camera_init": {
+    "count": 4,
+    "first_stamp_ns": 1792482145916700862,
+    "last_stamp_ns": 1792482146407269276
+   }
+  },
+  "transforms": 4,
+  "forbidden_frames_observed": [],
+  "lookup_map_to_body": {
+   "latest_attempts": 11,
+   "latest_success": 0,
+   "latest_failures": 11,
+   "latest_last_error": "\"body\" passed to lookupTransform argument source_frame does not exist. ",
+   "latest_translation": null,
+   "at_cloud_stamp_attempts": 0,
+   "at_cloud_stamp_success": 0,
+   "at_cloud_stamp_failures": 0,
+   "at_cloud_stamp_last_error": "",
+   "at_cloud_stamp_translation": null
+  }
+ },
+ "clock": {
+  "use_sim_time": false,
+  "now_ns": 1792482151816264495,
+  "now_minus_odom_last_s": null,
+  "now_minus_body_cloud_last_s": null,
+  "map_to_odom_tf_last_stamp_ns": 1792482146407269276,
+  "odom_last_stamp_ns": null,
+  "tf_and_odom_same_time_domain": null
+ },
+ "localization_observability": {
+  "schema": "hei.localization_summary.v1",
+  "run_tag": "synthetic-domain91",
+  "final": true,
+  "generated_wall_ns": 1792482151816289683,
+  "generated_wall_iso": "2026-10-20T15:42:31.816+08:00",
+  "started_wall_ns": 1792482142875258949,
+  "event_sequence_last": 14,
+  "writer": {
+   "jsonl_path": "/tmp/pytest-of-robo/pytest-18/test_probe_localization_observ0/run/probe_report.localization_events.jsonl",
+   "summary_path": "/tmp/pytest-of-robo/pytest-18/test_probe_localization_observ0/run/probe_report.localization_summary.json",
+   "events_written": 14,
+   "write_errors": 0,
+   "last_error": null,
+   "closed": true,
+   "summary_reserved": true,
+   "run_tag": "synthetic-domain91"
+  },
+  "pending_observability": {
+   "rosout_subscribed": true,
+   "backend_log": {
+    "configured": true,
+    "path": "/tmp/pytest-of-robo/pytest-18/test_probe_localization_observ0/run/backend_localization.log",
+    "status": "active",
+    "lines_read": 4,
+    "bytes_read": 465,
+    "truncations": 1,
+    "rotations": 1,
+    "missing_events": 0,
+    "reappeared_events": 0,
+    "line_overflow_events": 0,
+    "open_errors": 0,
+    "note": "只读增量 tail；从启动时 EOF 开始，不修改源日志"
+   },
+   "pending_coverage": "rosout_plus_backend_log_tail",
+   "complete": false,
+   "note": "已配置 backend_log_path 只读 tail；rtabmap core UWARN 可由此补齐，但日志来源仍非 ROS topic 证据，且不保证所有内部 WARN 都写入该文件"
+  },
+  "cumulative": {
+   "info_events": 3,
+   "info_frames_with_accepted_ids": 2,
+   "backend_accepted_events": 2,
+   "backend_accepted_by_kind": {
+    "proximity_detection_id": 1,
+    "loop_closure_id": 1,
+    "landmark_id": 0
+   },
+   "bayes_accepted_hypothesis_frames": 1,
+   "small_movement_frames": 1,
+   "small_movement_frames_without_candidate": 1,
+   "candidate_frames": 1,
+   "rejected_frames": 0,
+   "optimization_frames": 3,
+   "pending_confirmation_events": 2,
+   "pending_by_source": {
+    "rosout": 1,
+    "backend_log": 1
+   },
+   "initialpose_events": 1,
+   "initialpose_received_log_events": 1,
+   "initialpose_received_log_by_source": {
+    "rosout": 1,
+    "backend_log": 0
+   },
+   "map_correction_restore_events": 1,
+   "map_loaded_events": 0,
+   "database_readonly_events": 0,
+   "visual_registration_missing_events": 0,
+   "candidate_link_added_events": 1,
+   "localization_pose_events": 1,
+   "tf_updates": 4,
+   "tf_change_events": 2,
+   "rosout_rtabmap_lines_seen": 2,
+   "rosout_localization_events": 2,
+   "backend_log_lines_read": 4,
+   "backend_log_relevant_events": 3,
+   "backend_log_other_events": 0,
+   "backend_log_truncation_events": 1,
+   "backend_log_rotation_events": 1,
+   "backend_log_missing_events": 0,
+   "backend_log_reappeared_events": 0,
+   "backend_log_overflow_events": 0,
+   "backend_log_error_events": 0
+  },
+  "derived": {
+   "state_hint": "accepted_ids_in_current_frame",
+   "historical_backend_accepted_total": 2,
+   "historical_accepted_persists_after_zero_frame": false,
+   "no_current_event": {
+    "info_frame_present": true,
+    "accepted_in_current_frame": true,
+    "note": "逐帧 accepted id 为 0 是正常现象，不清空历史累计；零帧不等于失败"
+   },
+   "initialpose_seen": true,
+   "latest_initialpose_seq": 1,
+   "last_accepted_seq": 14,
+   "accepted_since_latest_initialpose": true,
+   "pending_current_initialpose_attempt": false,
+   "initialpose_acceptance_note": "新 /initialpose 后历史累计 accepted 仍保留；accepted_since_latest_initialpose=False 表示这次初值之后尚无接受事件",
+   "last_accept_correlated_initialpose": {
+    "initialpose_event_seq": 1,
+    "initialpose_recv_wall_ns": 1792482142875258949,
+    "initialpose_source_stamp_ns": 1792482142874620980,
+    "delta_s": 5.768263417,
+    "association": "time_only_not_causal",
+    "note": "仅按接收时间关联到最近一次 /initialpose，不构成因果证明"
+   },
+   "candidate_link_added_total": 1,
+   "pending_since_last_accept": 0,
+   "events_since_last_accept": 0,
+   "tf_change_is_not_acceptance": true,
+   "small_movement_without_candidate_is_not_failure": true,
+   "pending_log_observability": {
+    "rosout_subscribed": true,
+    "backend_log": {
+     "configured": true,
+     "path": "/tmp/pytest-of-robo/pytest-18/test_probe_localization_observ0/run/backend_localization.log",
+     "status": "active",
+     "lines_read": 4,
+     "bytes_read": 465,
+     "truncations": 1,
+     "rotations": 1,
+     "missing_events": 0,
+     "reappeared_events": 0,
+     "line_overflow_events": 0,
+     "open_errors": 0,
+     "note": "只读增量 tail；从启动时 EOF 开始，不修改源日志"
+    },
+    "pending_coverage": "rosout_plus_backend_log_tail",
+    "complete": false,
+    "note": "已配置 backend_log_path 只读 tail；rtabmap core UWARN 可由此补齐，但日志来源仍非 ROS topic 证据，且不保证所有内部 WARN 都写入该文件"
+   },
+   "accuracy_note": "accepted 是后端事件证据；不是地图/定位精度验收，不能替代现场测量",
+   "accepted_semantics": {
+    "info_ids": "msg 级 proximity_detection_id/loop_closure_id 为后端接受 id 事件证据",
+    "bayes_hypothesis": "Loop/Accepted_hypothesis_id 是 Bayes 接受假设，不等于最终几何接受",
+    "candidate_link_added_log": "后端日志 Add local loop closure 行是 link 加入候选证据，仍可能被图优化拒绝/延迟确认；不计 accepted，不是精度通过",
+    "tf_or_pose": "TF 变化与 /localization_pose 发布都不代表 accepted"
+   }
+  },
+  "current": {
+   "latest_info": {
+    "seq": 14,
+    "recv_wall_ns": 1792482148643522366,
+    "source_stamp_ns": 1792482148642703162,
+    "ref_id": 12,
+    "accepted_ids": {
+     "proximity_detection_id": null,
+     "loop_closure_id": 7,
+     "landmark_id": null
+    },
+    "accepted_any": true,
+    "bayes_accepted_hypothesis_id": 0.0,
+    "bayes_accepted_hypothesis_frame": false,
+    "small_movement_frame": false,
+    "candidate_frame": false,
+    "rejected_frame": false,
+    "optimization_iterations": 1.0,
+    "unknown_fields": {
+     "candidate_fields_missing": [
+      "space_detections_icp_global",
+      "space_detections_visual",
+      "space_paths",
+      "space_scan_paths_checked",
+      "space_visual_paths_checked",
+      "highest_hypothesis_id",
+      "highest_hypothesis_value",
+      "hypothesis_ratio",
+      "space_last_detection_id",
+      "closest_node_distance_m",
+      "closest_node_angle_rad"
+     ],
+     "candidate_fields_known_count": 1,
+     "candidate_fields_total": 12,
+     "icp_fitness": "unknown_not_in_info_stats"
+    }
+   },
+   "latest_tf_change": {
+    "seq": 10,
+    "first_value": false,
+    "stamp_ns": 1792482146407269276,
+    "translation": {
+     "x": 0.3,
+     "y": 0.0,
+     "z": 0.0
+    },
+    "quaternion": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "w": 1.0
+    },
+    "translation_norm_m": 0.3,
+    "translation_delta_m": 0.19999999999999998,
+    "rotation_delta_rad": 0.0,
+    "recv_wall_ns": 1792482146409128729,
+    "acceptance_note": "TF change alone is not localization acceptance"
+   },
+   "latest_pending": {
+    "seq": 4,
+    "category": "localization_pending_confirmation",
+    "source": "backend_log",
+    "raw": "SYNTHETIC pending Localization was good, but waiting for another one",
+    "parsed_stamp_ns": null,
+    "nearest_id": null,
+    "recv_wall_ns": 1792482143633710599,
+    "correlated_initial_pose": {
+     "initialpose_event_seq": 1,
+     "initialpose_recv_wall_ns": 1792482142875258949,
+     "initialpose_source_stamp_ns": 1792482142874620980,
+     "delta_s": 0.75845165,
+     "association": "time_only_not_causal",
+     "note": "仅按接收时间关联到最近一次 /initialpose，不构成因果证明"
+    },
+    "accepted": false,
+    "note": "pending candidate; not accepted evidence"
+   }
+  },
+  "last": {
+   "accepted_event": {
+    "seq": 14,
+    "kind": "info_accepted_ids",
+    "ref_id": 12,
+    "accepted_ids": {},
+    "recv_wall_ns": 1792482148643522366,
+    "source_stamp_ns": 1792482148642703162,
+    "correlated_initial_pose": {
+     "initialpose_event_seq": 1,
+     "initialpose_recv_wall_ns": 1792482142875258949,
+     "initialpose_source_stamp_ns": 1792482142874620980,
+     "delta_s": 5.768263417,
+     "association": "time_only_not_causal",
+     "note": "仅按接收时间关联到最近一次 /initialpose，不构成因果证明"
+    }
+   },
+   "pending_event": {
+    "seq": 4,
+    "category": "localization_pending_confirmation",
+    "source": "backend_log",
+    "raw": "SYNTHETIC pending Localization was good, but waiting for another one",
+    "parsed_stamp_ns": null,
+    "nearest_id": null,
+    "recv_wall_ns": 1792482143633710599,
+    "correlated_initial_pose": {
+     "initialpose_event_seq": 1,
+     "initialpose_recv_wall_ns": 1792482142875258949,
+     "initialpose_source_stamp_ns": 1792482142874620980,
+     "delta_s": 0.75845165,
+     "association": "time_only_not_causal",
+     "note": "仅按接收时间关联到最近一次 /initialpose，不构成因果证明"
+    },
+    "accepted": false,
+    "note": "pending candidate; not accepted evidence"
+   },
+   "initialpose_event": {
+    "seq": 1,
+    "recv_wall_ns": 1792482142875258949,
+    "source_stamp_ns": 1792482142874620980,
+    "frame_id": "map",
+    "position": {
+     "x": 0.1,
+     "y": 0.2,
+     "z": 0.0
+    },
+    "orientation": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "w": 1.0
+    },
+    "valid": true
+   },
+   "tf_change_event": {
+    "seq": 10,
+    "first_value": false,
+    "stamp_ns": 1792482146407269276,
+    "translation": {
+     "x": 0.3,
+     "y": 0.0,
+     "z": 0.0
+    },
+    "quaternion": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "w": 1.0
+    },
+    "translation_norm_m": 0.3,
+    "translation_delta_m": 0.19999999999999998,
+    "rotation_delta_rad": 0.0,
+    "recv_wall_ns": 1792482146409128729,
+    "acceptance_note": "TF change alone is not localization acceptance"
+   },
+   "backend_log_event": {
+    "schema": "hei.localization_event.v1",
+    "seq": 8,
+    "event": "backend_log",
+    "source": "backend_log_tail",
+    "run_tag": "synthetic-domain91",
+    "source_stamp_ns": 1792480356000000000,
+    "source_stamp_unknown": false,
+    "recv_wall_ns": 1792482145233911521,
+    "recv_mono_ns": 8094086798399,
+    "recv_wall_iso": "2026-10-20T15:42:25.233+08:00",
+    "data": {
+     "category": "map_correction_restore",
+     "localization_relevant": true,
+     "raw": "SYNTHETIC map correction (2026-10-20 15:12:36.000) Rtabmap.cpp:1376::process() Update map correction based on last localization saved in database! correction = xyz=0,0,0 rpy=0,0,0, nearest id = 5",
+     "parsed_stamp_ns": 1792480356000000000,
+     "nearest_id": 5,
+     "source_note": "backend_log_path 只读增量 tail；该日志非 ROS topic 证据"
+    }
+   },
+   "rosout_localization_event": {
+    "schema": "hei.localization_event.v1",
+    "seq": 3,
+    "event": "rosout",
+    "source": "ros2_rosout",
+    "run_tag": "synthetic-domain91",
+    "source_stamp_ns": 1792482142874857808,
+    "source_stamp_unknown": false,
+    "recv_wall_ns": 1792482142876051114,
+    "recv_mono_ns": 8091728937584,
+    "recv_wall_iso": "2026-10-20T15:42:22.876+08:00",
+    "data": {
+     "category": "localization_pending_confirmation",
+     "localization_relevant": true,
+     "node_name": "rtabmap",
+     "level": 30,
+     "raw": "[ WARN] (2026-10-20 14:56:17.274) Rtabmap.cpp:3911::process() Localization was good, but waiting for another one to be more accurate (RGBD/MaxOdomCacheSize>0)",
+     "parsed_stamp_ns": 1792479377273999872,
+     "nearest_id": null,
+     "source_note": "/rosout 仅覆盖通过 ROS 日志发布的 rtabmap 行；core UWARN 可能不在其中"
+    }
+   },
+   "candidate_link_added_event": {
+    "seq": 5,
+    "kind": "candidate_link_added",
+    "raw": "[ INFO] (2026-10-20 15:12:35.308) Rtabmap.cpp:3076::process() [Scan matching] Add local loop closure in SPACE (40->1) xyz=0.1,0.2,0.0",
+    "recv_wall_ns": 1792482143633817349,
+    "source_stamp_ns": 1792480355308000000,
+    "accepted": false,
+    "correlated_initial_pose": {
+     "initialpose_event_seq": 1,
+     "initialpose_recv_wall_ns": 1792482142875258949,
+     "initialpose_source_stamp_ns": 1792482142874620980,
+     "delta_s": 0.7585584,
+     "association": "time_only_not_causal",
+     "note": "仅按接收时间关联到最近一次 /initialpose，不构成因果证明"
+    },
+    "note": "后端 link 加入候选；后续仍可能被图优化拒绝或延迟确认，不是 accepted/精度证据"
+   },
+   "localization_pose_event": {
+    "seq": 13,
+    "recv_wall_ns": 1792482148236703393,
+    "source_stamp_ns": 1792482148236229358,
+    "frame_id": "map",
+    "position": {
+     "x": 0.3,
+     "y": 0.2,
+     "z": 0.0
+    },
+    "orientation": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "w": 1.0
+    }
+   },
+   "info_event": {
+    "seq": 14,
+    "recv_wall_ns": 1792482148643522366,
+    "source_stamp_ns": 1792482148642703162,
+    "ref_id": 12,
+    "accepted_ids": {
+     "proximity_detection_id": null,
+     "loop_closure_id": 7,
+     "landmark_id": null
+    },
+    "accepted_any": true,
+    "bayes_accepted_hypothesis_id": 0.0,
+    "bayes_accepted_hypothesis_frame": false,
+    "small_movement_frame": false,
+    "candidate_frame": false,
+    "rejected_frame": false,
+    "optimization_iterations": 1.0,
+    "unknown_fields": {
+     "candidate_fields_missing": [
+      "space_detections_icp_global",
+      "space_detections_visual",
+      "space_paths",
+      "space_scan_paths_checked",
+      "space_visual_paths_checked",
+      "highest_hypothesis_id",
+      "highest_hypothesis_value",
+      "hypothesis_ratio",
+      "space_last_detection_id",
+      "closest_node_distance_m",
+      "closest_node_angle_rad"
+     ],
+     "candidate_fields_known_count": 1,
+     "candidate_fields_total": 12,
+     "icp_fitness": "unknown_not_in_info_stats"
+    }
+   }
+  },
+  "recent": {
+   "accepted": [
+    {
+     "seq": 11,
+     "kind": "info_accepted_ids",
+     "ref_id": 12,
+     "accepted_ids": {},
+     "recv_wall_ns": 1792482147020328944,
+     "source_stamp_ns": 1792482147019474659,
+     "correlated_initial_pose": {
+      "initialpose_event_seq": 1,
+      "initialpose_recv_wall_ns": 1792482142875258949,
+      "initialpose_source_stamp_ns": 1792482142874620980,
+      "delta_s": 4.145069995,
+      "association": "time_only_not_causal",
+      "note": "仅按接收时间关联到最近一次 /initialpose，不构成因果证明"
+     }
+    },
+    {
+     "seq": 14,
+     "kind": "info_accepted_ids",
+     "ref_id": 12,
+     "accepted_ids": {},
+     "recv_wall_ns": 1792482148643522366,
+     "source_stamp_ns": 1792482148642703162,
+     "correlated_initial_pose": {
+      "initialpose_event_seq": 1,
+      "initialpose_recv_wall_ns": 1792482142875258949,
+      "initialpose_source_stamp_ns": 1792482142874620980,
+      "delta_s": 5.768263417,
+      "association": "time_only_not_causal",
+      "note": "仅按接收时间关联到最近一次 /initialpose，不构成因果证明"
+     }
+    }
+   ],
+   "pending": [
+    {
+     "seq": 3,
+     "category": "localization_pending_confirmation",
+     "source": "rosout",
+     "raw": "[ WARN] (2026-10-20 14:56:17.274) Rtabmap.cpp:3911::process() Localization was good, but waiting for another one to be more accurate (RGBD/MaxOdomCacheSize>0)",
+     "parsed_stamp_ns": 1792479377273999872,
+     "nearest_id": null,
+     "recv_wall_ns": 1792482142876051114,
+     "correlated_initial_pose": {
+      "initialpose_event_seq": 1,
+      "initialpose_recv_wall_ns": 1792482142875258949,
+      "initialpose_source_stamp_ns": 1792482142874620980,
+      "delta_s": 0.000792165,
+      "association": "time_only_not_causal",
+      "note": "仅按接收时间关联到最近一次 /initialpose，不构成因果证明"
+     },
+     "accepted": false,
+     "note": "pending candidate; not accepted evidence"
+    },
+    {
+     "seq": 4,
+     "category": "localization_pending_confirmation",
+     "source": "backend_log",
+     "raw": "SYNTHETIC pending Localization was good, but waiting for another one",
+     "parsed_stamp_ns": null,
+     "nearest_id": null,
+     "recv_wall_ns": 1792482143633710599,
+     "correlated_initial_pose": {
+      "initialpose_event_seq": 1,
+      "initialpose_recv_wall_ns": 1792482142875258949,
+      "initialpose_source_stamp_ns": 1792482142874620980,
+      "delta_s": 0.75845165,
+      "association": "time_only_not_causal",
+      "note": "仅按接收时间关联到最近一次 /initialpose，不构成因果证明"
+     },
+     "accepted": false,
+     "note": "pending candidate; not accepted evidence"
+    }
+   ],
+   "initialpose": [
+    {
+     "seq": 1,
+     "recv_wall_ns": 1792482142875258949,
+     "source_stamp_ns": 1792482142874620980,
+     "frame_id": "map",
+     "position": {
+      "x": 0.1,
+      "y": 0.2,
+      "z": 0.0
+     },
+     "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+     },
+     "valid": true
+    }
+   ],
+   "tf_changes": [
+    {
+     "seq": 9,
+     "first_value": true,
+     "stamp_ns": 1792482145916700862,
+     "translation": {
+      "x": 0.1,
+      "y": 0.0,
+      "z": 0.0
+     },
+     "quaternion": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+     },
+     "translation_norm_m": 0.1,
+     "translation_delta_m": null,
+     "rotation_delta_rad": null,
+     "recv_wall_ns": 1792482145917760996,
+     "acceptance_note": "TF change alone is not localization acceptance"
+    },
+    {
+     "seq": 10,
+     "first_value": false,
+     "stamp_ns": 1792482146407269276,
+     "translation": {
+      "x": 0.3,
+      "y": 0.0,
+      "z": 0.0
+     },
+     "quaternion": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+     },
+     "translation_norm_m": 0.3,
+     "translation_delta_m": 0.19999999999999998,
+     "rotation_delta_rad": 0.0,
+     "recv_wall_ns": 1792482146409128729,
+     "acceptance_note": "TF change alone is not localization acceptance"
+    }
+   ],
+   "backend_relevant": [
+    {
+     "seq": 4,
+     "category": "localization_pending_confirmation",
+     "raw": "SYNTHETIC pending Localization was good, but waiting for another one",
+     "parsed_stamp_ns": null
+    },
+    {
+     "seq": 5,
+     "category": "candidate_link_added",
+     "raw": "[ INFO] (2026-10-20 15:12:35.308) Rtabmap.cpp:3076::process() [Scan matching] Add local loop closure in SPACE (40->1) xyz=0.1,0.2,0.0",
+     "parsed_stamp_ns": 1792480355308000000
+    },
+    {
+     "seq": 8,
+     "category": "map_correction_restore",
+     "raw": "SYNTHETIC map correction (2026-10-20 15:12:36.000) Rtabmap.cpp:1376::process() Update map correction based on last localization saved in database! correction = xyz=0,0,0 rpy=0,0,0, nearest id = 5",
+     "parsed_stamp_ns": 1792480356000000000
+    }
+   ],
+   "rosout_relevant": [
+    {
+     "seq": 3,
+     "category": "localization_pending_confirmation",
+     "source": "rosout",
+     "raw": "[ WARN] (2026-10-20 14:56:17.274) Rtabmap.cpp:3911::process() Localization was good, but waiting for another one to be more accurate (RGBD/MaxOdomCacheSize>0)"
+    }
+   ],
+   "localization_pose": [
+    {
+     "seq": 13,
+     "recv_wall_ns": 1792482148236703393,
+     "source_stamp_ns": 1792482148236229358,
+     "frame_id": "map",
+     "position": {
+      "x": 0.3,
+      "y": 0.2,
+      "z": 0.0
+     },
+     "orientation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+     }
+    }
+   ],
+   "candidate_link_added": [
+    {
+     "seq": 5,
+     "kind": "candidate_link_added",
+     "raw": "[ INFO] (2026-10-20 15:12:35.308) Rtabmap.cpp:3076::process() [Scan matching] Add local loop closure in SPACE (40->1) xyz=0.1,0.2,0.0",
+     "recv_wall_ns": 1792482143633817349,
+     "source_stamp_ns": 1792480355308000000,
+     "accepted": false,
+     "correlated_initial_pose": {
+      "initialpose_event_seq": 1,
+      "initialpose_recv_wall_ns": 1792482142875258949,
+      "initialpose_source_stamp_ns": 1792482142874620980,
+      "delta_s": 0.7585584,
+      "association": "time_only_not_causal",
+      "note": "仅按接收时间关联到最近一次 /initialpose，不构成因果证明"
+     },
+     "note": "后端 link 加入候选；后续仍可能被图优化拒绝或延迟确认，不是 accepted/精度证据"
+    }
+   ]
+  },
+  "event_status": {
+   "enabled": true,
+   "status": "active",
+   "error": null,
+   "jsonl_path": "/tmp/pytest-of-robo/pytest-18/test_probe_localization_observ0/run/probe_report.localization_events.jsonl",
+   "summary_path": "/tmp/pytest-of-robo/pytest-18/test_probe_localization_observ0/run/probe_report.localization_summary.json"
+  }
+ }
+}

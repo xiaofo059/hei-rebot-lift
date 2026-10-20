@@ -1,0 +1,4 @@
+# Codex-owned files (DSH did not edit; recorded at freeze)
+# sha256  path
+1a3faf86744577b01691e4f4cb47850358104ed6df7af82a2996e28047fdae44  docs/agent/TASK_BOARD.md
+ea032560357119d66caff309357dc8f5f14fb6705b884f580277d2104f955f9f  docs/agent/EXECUTION_LOG.md

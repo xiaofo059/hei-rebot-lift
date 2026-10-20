@@ -24,13 +24,16 @@ import rclpy
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import Path as NavPath
+from rcl_interfaces.msg import Log as RosLog
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
+from rtabmap_msgs.msg import Info as RtabmapInfo
 from sensor_msgs.msg import PointCloud2
 from tf2_msgs.msg import TFMessage
 import tf2_ros
 
+from hei_robot_slam import localization_events as LE
 from hei_robot_slam import slam_contract as C
 from hei_robot_slam.cloud_xyzi import field_names, structured_points
 
@@ -84,6 +87,60 @@ def _cloud_geometry(msg: PointCloud2) -> dict[str, Any]:
     return result
 
 
+def _ros_msg_to_plain(value: Any, depth: int = 0) -> Any:
+    """把 ROS 消息递归转成 JSON 友好纯数据（用于 /info 全量事件；不改变数值语义）。"""
+    if depth > 10:
+        return "<max_depth>"
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    if isinstance(value, (bytes, bytearray)):
+        return {"bytes_length": len(value)}
+    if isinstance(value, (list, tuple)):
+        return [_ros_msg_to_plain(item, depth + 1) for item in value]
+    fields = getattr(value, "get_fields_and_field_types", None)
+    if callable(fields):
+        try:
+            names = fields().keys()
+        except (AttributeError, TypeError):
+            return str(value)
+        return {str(name): _ros_msg_to_plain(getattr(value, name, None), depth + 1) for name in names}
+    return str(value)
+
+
+def _pose_payload(msg: PoseWithCovarianceStamped) -> dict[str, Any]:
+    pose = msg.pose.pose
+    return {
+        "header_stamp_ns": _stamp_ns(msg.header.stamp),
+        "frame_id": str(msg.header.frame_id),
+        "position": {"x": pose.position.x, "y": pose.position.y, "z": pose.position.z},
+        "orientation": {
+            "x": pose.orientation.x,
+            "y": pose.orientation.y,
+            "z": pose.orientation.z,
+            "w": pose.orientation.w,
+        },
+        "covariance": list(msg.pose.covariance),
+    }
+
+
+def _info_payload(msg: RtabmapInfo) -> dict[str, Any]:
+    transform = msg.loop_closure_transform
+    return {
+        "header_stamp_ns": _stamp_ns(msg.header.stamp),
+        "header_frame_id": str(msg.header.frame_id),
+        "ref_id": int(msg.ref_id),
+        "loop_closure_id": int(msg.loop_closure_id),
+        "proximity_detection_id": int(msg.proximity_detection_id),
+        "landmark_id": int(msg.landmark_id),
+        "loop_closure_transform": _ros_msg_to_plain(transform),
+        "wm_state": [int(item) for item in msg.wm_state],
+        # 只保留定位相关字段 + 全量 stats；posterior/likelihood/odom_cache 等与
+        # accepted/pending 判定无关，为控制 JSONL 体积不进入事件。
+        "stats_keys": [str(item) for item in msg.stats_keys],
+        "stats_values": [float(item) for item in msg.stats_values],
+    }
+
+
 class CloudProbe(Node):
     def __init__(self) -> None:
         super().__init__("slam_cloud_probe")
@@ -97,6 +154,15 @@ class CloudProbe(Node):
         self.declare_parameter("map_path_topic", "/mapPath")
         self.declare_parameter("assembled_cloud_topic", "")
         self.declare_parameter("qos_reliability", "reliable")
+        self.declare_parameter("localization_events_enabled", True)
+        self.declare_parameter("info_topic", "/info")
+        self.declare_parameter("initialpose_topic", "/initialpose")
+        self.declare_parameter("rosout_topic", "/rosout")
+        self.declare_parameter("backend_log_path", "")
+        self.declare_parameter("backend_log_poll_s", 0.5)
+        self.declare_parameter("backend_log_max_bytes_per_poll", 262144)
+        self.declare_parameter("backend_log_max_line_bytes", 8192)
+        self.declare_parameter("run_tag", "")
 
         report_path = str(self.get_parameter("report_path").value)
         self._report_path = Path(report_path) if report_path else None
@@ -184,6 +250,80 @@ class CloudProbe(Node):
             "at_cloud_stamp_translation": None,
         }
 
+        # ---- 定位连续取证（任务 HEI-SLAM-OBS-20261020）---------------------
+        self._run_tag = str(self.get_parameter("run_tag").value).strip()
+        self._obs: LE.LocalizationObservationState | None = None
+        self._loc_writer: LE.EventTimelineWriter | None = None
+        self._backend_tail: LE.BackendLogTailer | None = None
+        self._backend_timer = None
+        self._loc_events_status: dict[str, Any] = {
+            "enabled": False,
+            "status": "disabled_no_report_path",
+            "error": None,
+            "jsonl_path": None,
+            "summary_path": None,
+        }
+        events_enabled = bool(self.get_parameter("localization_events_enabled").value)
+        if self._report_path is None:
+            self._loc_events_status["status"] = "disabled_no_report_path"
+        elif not events_enabled:
+            self._loc_events_status["status"] = "disabled_by_parameter"
+        else:
+            try:
+                self._loc_writer = LE.EventTimelineWriter(self._report_path, self._run_tag)
+                self._obs = LE.LocalizationObservationState(
+                    run_tag=self._run_tag, rosout_subscribed=True
+                )
+                self._obs.set_writer_state(self._loc_writer.state)
+                self._loc_events_status.update(
+                    {
+                        "enabled": True,
+                        "status": "active",
+                        "jsonl_path": str(self._loc_writer.jsonl_path),
+                        "summary_path": str(self._loc_writer.summary_path),
+                    }
+                )
+            except (OSError, RuntimeError) as exc:
+                self._obs = None
+                self._loc_writer = None
+                self._loc_events_status.update(
+                    {"enabled": False, "status": "failed", "error": f"{type(exc).__name__}: {exc}"}
+                )
+                self.get_logger().error(
+                    f"定位事件时间线初始化失败（旧探针功能继续，不写 JSONL）：{exc}"
+                )
+        if self._obs is not None and self._loc_writer is not None:
+            backend_log_path = str(self.get_parameter("backend_log_path").value).strip()
+            if backend_log_path:
+                self._backend_tail = LE.BackendLogTailer(
+                    backend_log_path,
+                    max_bytes_per_poll=int(self.get_parameter("backend_log_max_bytes_per_poll").value),
+                    max_line_bytes=int(self.get_parameter("backend_log_max_line_bytes").value),
+                )
+                self._obs.set_backend_log_state(self._backend_tail.state)
+                for meta in self._backend_tail.start():
+                    self._write_loc_event(
+                        self._obs.on_backend_log_meta(
+                            str(meta.get("kind", "open_error")),
+                            dict(meta.get("detail") or {}),
+                            *self._now_ns(),
+                        )
+                    )
+                self._obs.set_backend_log_state(self._backend_tail.state)
+                self._backend_timer = self.create_timer(
+                    max(0.2, float(self.get_parameter("backend_log_poll_s").value)),
+                    self._poll_backend_log,
+                )
+                self.get_logger().info(
+                    "定位取证：backend_log_path 只读 tail 已启动（从启动时 EOF 开始）："
+                    f"{backend_log_path}"
+                )
+            self.get_logger().info(
+                "定位取证已启用："
+                f"JSONL={self._loc_writer.jsonl_path} summary={self._loc_writer.summary_path} "
+                f"backend_log={'enabled' if self._backend_tail else 'disabled(rosout-only-partial)'}"
+            )
+
         self._subs = [
             self.create_subscription(
                 Odometry, str(self.get_parameter("odom_topic").value), self._odom_cb, qos
@@ -225,11 +365,31 @@ class CloudProbe(Node):
             self._subs.append(
                 self.create_subscription(PointCloud2, assembled_topic, self._assembled_cloud_cb, qos)
             )
+        if self._obs is not None:
+            info_topic = str(self.get_parameter("info_topic").value)
+            initialpose_topic = str(self.get_parameter("initialpose_topic").value)
+            rosout_topic = str(self.get_parameter("rosout_topic").value)
+            self._subs.extend(
+                [
+                    self.create_subscription(RtabmapInfo, info_topic, self._info_cb, _qos(reliability, depth=20)),
+                    self.create_subscription(
+                        PoseWithCovarianceStamped, initialpose_topic, self._initialpose_cb, _qos(reliability, depth=10)
+                    ),
+                    self.create_subscription(
+                        RosLog, rosout_topic, self._rosout_cb, _qos("reliable", depth=200)
+                    ),
+                ]
+            )
         self._timer = self.create_timer(self._report_period, self._write_report)
         self.get_logger().info(
             "slam_cloud_probe 启动（只读）：odom/body_cloud/adapted_cloud/tf/localization_pose；"
             f"report={self._report_path}"
         )
+        if self._obs is not None and self._loc_writer is not None:
+            self.get_logger().info(
+                "定位取证文件："
+                f"{self._loc_writer.jsonl_path} ；{self._loc_writer.summary_path}"
+            )
 
     # ---- callbacks -------------------------------------------------------
     def _odom_cb(self, msg: Odometry) -> None:
@@ -300,8 +460,110 @@ class CloudProbe(Node):
     def _pose_cb(self, msg: PoseWithCovarianceStamped) -> None:
         self._localization_pose["count"] += 1
         self._localization_pose["frames"].add(str(msg.header.frame_id))
+        if self._obs is not None:
+            self._write_loc_event(
+                self._obs.on_localization_pose(
+                    _pose_payload(msg), *self._now_ns()
+                )
+            )
+
+    # ---- localization observability（HEI-SLAM-OBS-20261020）--------------
+    def _now_ns(self) -> tuple[int, int]:
+        return LE.now_times_ns()
+
+    def _write_loc_event(self, event: dict[str, Any] | None) -> None:
+        if self._obs is None or event is None:
+            return
+        if self._loc_writer is not None:
+            if not self._loc_writer.write(event):
+                self.get_logger().warning(
+                    f"定位事件 JSONL 写入失败：{self._loc_writer.state.get('last_error')}"
+                )
+            self._obs.set_writer_state(self._loc_writer.state)
+
+    def _info_cb(self, msg: RtabmapInfo) -> None:
+        if self._obs is None:
+            return
+        self._write_loc_event(self._obs.on_info(_info_payload(msg), *self._now_ns()))
+
+    def _initialpose_cb(self, msg: PoseWithCovarianceStamped) -> None:
+        if self._obs is None:
+            return
+        self._write_loc_event(self._obs.on_initialpose(_pose_payload(msg), *self._now_ns()))
+
+    def _rosout_cb(self, msg: RosLog) -> None:
+        if self._obs is None:
+            return
+        if "rtabmap" not in str(msg.name).lower():
+            return
+        self._write_loc_event(
+            self._obs.on_rosout(
+                msg.name,
+                msg.msg,
+                msg.level,
+                *self._now_ns(),
+                source_stamp_ns=_stamp_ns(msg.stamp),
+            )
+        )
+
+    def _poll_backend_log(self) -> None:
+        if self._obs is None or self._backend_tail is None:
+            return
+        try:
+            items = self._backend_tail.poll()
+        except Exception as exc:  # noqa: BLE001 - 取证失败不能打断探针核心功能
+            self.get_logger().warning(f"backend_log tail 读取失败：{exc}")
+            return
+        for item in items:
+            wall_ns, mono_ns = self._now_ns()
+            kind = str(item.get("kind", ""))
+            if kind == "line":
+                event = self._obs.on_backend_log_line(str(item.get("line", "")), wall_ns, mono_ns)
+            else:
+                event = self._obs.on_backend_log_meta(kind, dict(item.get("detail") or {}), wall_ns, mono_ns)
+            self._write_loc_event(event)
+        self._obs.set_backend_log_state(self._backend_tail.state)
+
+    def _observability_snapshot(self, final: bool) -> dict[str, Any]:
+        summary = self._observability_summary(final=final)
+        if summary is not None:
+            summary["event_status"] = dict(self._loc_events_status)
+            return summary
+        return {
+            "schema": LE.SUMMARY_SCHEMA_VERSION,
+            "enabled": False,
+            "status": self._loc_events_status["status"],
+            "error": self._loc_events_status["error"],
+            "writer": None,
+            "pending_observability": {
+                "rosout_subscribed": False,
+                "backend_log": {"configured": False, "status": "not_configured"},
+                "pending_coverage": "disabled",
+                "complete": False,
+            },
+            "note": "定位连续取证未启用；status 区分 disabled_no_report_path/disabled_by_parameter/failed",
+        }
+
+    def _observability_summary(self, final: bool) -> dict[str, Any] | None:
+        if self._obs is None:
+            return None
+        if self._loc_writer is not None:
+            self._obs.set_writer_state(self._loc_writer.state)
+        return self._obs.summary(final=final, generated_wall_ns=time.time_ns())
+
+    def _write_observability_summary(self, final: bool) -> None:
+        summary = self._observability_summary(final)
+        if summary is None or self._loc_writer is None:
+            return
+        summary["event_status"] = dict(self._loc_events_status)
+        if not self._loc_writer.write_summary(summary):
+            self.get_logger().warning(
+                f"定位取证 summary 写入失败：{self._loc_writer.state.get('last_error')}"
+            )
+        self._obs.set_writer_state(self._loc_writer.state)
 
     def _record_tf(self, msg: TFMessage) -> None:
+        obs_times = self._now_ns() if self._obs is not None else None
         for transform in msg.transforms:
             parent = str(transform.header.frame_id)
             child = str(transform.child_frame_id)
@@ -319,6 +581,23 @@ class CloudProbe(Node):
             for frame in C.FORBIDDEN_FRAMES:
                 if frame in (parent, child):
                     self._tf_forbidden.add(frame)
+            if (
+                self._obs is not None
+                and obs_times is not None
+                and parent == C.MAP_FRAME
+                and child == C.ODOM_FRAME
+            ):
+                translation = transform.transform.translation
+                rotation = transform.transform.rotation
+                self._write_loc_event(
+                    self._obs.on_tf_map_to_camera_init(
+                        {"x": translation.x, "y": translation.y, "z": translation.z},
+                        {"x": rotation.x, "y": rotation.y, "z": rotation.z, "w": rotation.w},
+                        obs_times[0],
+                        obs_times[1],
+                        source_stamp_ns=stamp_ns,
+                    )
+                )
 
     def _tf_cb(self, msg: TFMessage) -> None:
         self._record_tf(msg)
@@ -428,6 +707,7 @@ class CloudProbe(Node):
                 "lookup_map_to_body": dict(self._tf_lookup),
             },
             "clock": self._clock_snapshot(),
+            "localization_observability": self._observability_snapshot(final=final),
         }
 
     def _do_tf_lookup(self) -> None:
@@ -473,10 +753,23 @@ class CloudProbe(Node):
                 json.dump(self._snapshot(final=False), handle, ensure_ascii=False, indent=1)
                 handle.write("\n")
             os.replace(tmp, self._report_path)
+            self._write_observability_summary(final=False)
         except OSError as exc:
             self.get_logger().warning(f"探针报告写入失败：{exc}")
 
     def finalize(self) -> None:
+        # 关停顺序：最后 poll 后端日志 -> close JSONL -> 更新 writer 状态 -> 写 final summary。
+        # summary 写盘不依赖 JSONL 句柄，因此能在 close 之后反映最终 closed/错误状态。
+        if self._obs is not None and self._backend_tail is not None:
+            try:
+                self._poll_backend_log()
+            except Exception as exc:  # noqa: BLE001 - 关停阶段不能因取证失败丢报告
+                self.get_logger().warning(f"关停前 backend_log 最后 poll 失败：{exc}")
+        closed_state = None
+        if self._loc_writer is not None:
+            closed_state = self._loc_writer.close()
+            if self._obs is not None:
+                self._obs.set_writer_state(closed_state)
         if self._report_path is None:
             return
         try:
@@ -484,11 +777,21 @@ class CloudProbe(Node):
             tmp = str(self._report_path) + ".tmp"
             with open(tmp, "w", encoding="utf-8") as handle:
                 json.dump(self._snapshot(final=True), handle, ensure_ascii=False, indent=1)
-                handle.write("\n")
+                handle.write(chr(10))
             os.replace(tmp, self._report_path)
             self.get_logger().info(f"探针最终报告已写入：{self._report_path}")
         except OSError as exc:
             self.get_logger().warning(f"探针最终报告写入失败：{exc}")
+        finally:
+            self._write_observability_summary(final=True)
+        if closed_state is not None:
+            self.get_logger().info(
+                "定位取证已关闭："
+                f"jsonl={closed_state.get('jsonl_path')} "
+                f"summary={closed_state.get('summary_path')} "
+                f"events={closed_state.get('events_written')} "
+                f"errors={closed_state.get('write_errors')}"
+            )
 
 
 def main(args=None) -> None:

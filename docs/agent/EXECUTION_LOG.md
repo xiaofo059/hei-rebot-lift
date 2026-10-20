@@ -292,3 +292,23 @@ DSH已交付hei_robot_slam与RTAB-Map 0.23.13独立本地前缀依赖，Codex独
 - 用户报告已用实时雷达建图、加载同一地图观察定位；雷达放在接近建图初始位置/朝向时，RViz 画面看似与地图对齐；将偏航相对初始朝向转约 90° 后，画面明显错位/漂移，用户判断重定位失败。
 - 证据边界：这是用户操作后的目视描述/截图，不含本次运行的 `/info` 接受统计、同步原始日志、数据库哈希前后对照或独立测量误差；Codex 未在本轮接管该实时会话。因此只记录为有限现场观察，不判断具体根因，也不标记 04-SLAM 现场定位通过。
 - 结论：可继续做固定安装和导航前的软件集成规划，但定位鲁棒性、不同初始朝向重定位、外参与精度仍须用可复核数据单独验收；雷达尚未固定到机器人，AGX部署、桥接和导航仍按任务板保持 PLANNED。
+
+### 2026-10-20 · HEI-SLAM-OBS-20261020 派发
+
+- 核对分支及干净工作区；3080 DSH 页面空闲后提交14字段任务，UI已显示运行中。实施只限hei_robot_slam监测/测试/README及新证据目录。
+- 运行中的定位链路保留，禁止DSH占用Domain89；测试隔离Domain91。监测修复不等同定位精度验收。
+
+### 2026-10-20 · HEI-SLAM-OBS-20261020 独立审查与验收
+
+- 已纠正候选link日志误算accepted、状态键尾斜杠、QoS深度位置参数、关闭落盘顺序、初值尝试与历史区分、缺失ID未知及零优化次数计数；DSH实施并冻结。
+- 独立全量122 tests通过（Domain92）；最后优化帧计数修正后独立32 tests通过，DSH最终全量123 tests通过。历史真实数据重分析保留9次接受，不作为本轮现场定位通过。
+- 只读monitor现场接收108条/info并正常SIGINT关闭，final=true/closed=true/写错误0；最终版monitor保持运行，目录见codex_acceptance.json，原算法节点未重启、原地图SHA一致。
+- 未执行新的初值偏差恢复/机器人动作/精度测试，未提交推送。
+
+### 2026-10-20 · 用户确认功能测试并关闭现场
+
+- 单次SIGINT关闭定位launch81476和RViz81608，父会话exit0；随后停止只读monitor81576并确认final/closed=true、write_errors=0。无算法/GUI残留，数据库SHA与定位前一致、SQLite integrity ok/40节点。
+- 最终连续记录：81接受帧/2076Info/2初值/2拒绝。原始shutdown_review.json在/home/robo/hei-data/localization_observability/yaw180_20261020_155411/。
+- 已下发14字段DSH总结任务，仅允许docs/agent/MID360S_SLAM_TEST_SUMMARY_20261020.md；小范围功能通过与精度/AGX/全局重定位边界分开。监测摘要ID字段缺陷如实列待办，未擅自扩展为代码修复。
+
+- DSH已交付MID360S_SLAM_TEST_SUMMARY_20261020.md；Codex逐段核对关键计数、实际run并列路径、测试版本、现场与synthetic来源及已知小缺陷。纠正将15:47/15:49现场测试误判为metric修复前的时序错误后，审查通过；Markdown本地链接全存在、git diff --check通过。未commit/push。

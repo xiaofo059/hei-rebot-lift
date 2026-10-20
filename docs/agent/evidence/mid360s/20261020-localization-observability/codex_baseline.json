@@ -1,0 +1,7 @@
+{
+  "head": "fbe160bb5a4a9cdb36bc1ab069ed72d9cc9a2e42",
+  "branch": "codex/slam-mapping-relocalization-test",
+  "database_path": "/home/robo/robotopia/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_slam/map/mapping_retest_20261020_145316/rtabmap_mapping.db",
+  "database_sha256": "97dfdf59973031152daf86742a031eb49d656cc62096d82dc72282b075f2facf",
+  "note": "Codex read-only baseline; live algorithms not restarted for observability work."
+}
