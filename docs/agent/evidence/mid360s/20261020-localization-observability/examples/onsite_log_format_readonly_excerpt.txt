@@ -1,0 +1,13 @@
+# On-site log format evidence (read-only excerpt; source not modified)
+# source: /tmp/hei_slam_localization_newmap.log
+# size: 636791 bytes; mtime: 2026-10-20 15:42:27.613176608 +0800
+# Purpose: verify rtabmap core UWARN lines are NOT ROS-format /rosout lines (ANSI + Rtabmap.cpp timestamp, no ROS node prefix).
+
+## rtabmap core UWARN (not published by rclcpp /rosout)
+[rtabmap-4] ^[[33m[ WARN] (2026-10-20 14:56:17.274) Rtabmap.cpp:3911::process() Localization was good, but waiting for another one to be more accurate (RGBD/MaxOdomCacheSize>0)^[[0m^M
+[rtabmap-4] ^[[33m[ WARN] (2026-10-20 14:58:57.838) Rtabmap.cpp:3911::process() Localization was good, but waiting for another one to be more accurate (RGBD/MaxOdomCacheSize>0)^[[0m^M
+[rtabmap-4] ^[[33m[ WARN] (2026-10-20 14:56:17.234) Rtabmap.cpp:1376::process() Update map correction based on last localization saved in database! correction = xyz=0.000699,0.031656,0.014060 rpy=0.016026,-0.007844,0.053625, nearest id = 109 of last pose = xyz=-0.008701,0.019431,0.006454 rpy=0.010579,-0.002221,0.053673
+
+## ROS-style line (published via rclcpp log; appears with [INFO] [stamp] [node])
+[rtabmap-4] [INFO] [1792479536.867050488] [rtabmap]: initialpose received: xyz=0.028451,0.004140,0.000000 rpy=0.000000,0.000000,-0.002546
+[rtabmap-4] [INFO] [1792480354.473927402] [rtabmap]: initialpose received: xyz=0.895366,-0.924415,0.000000 rpy=0.000000,0.000000,-0.064134

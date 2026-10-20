@@ -1,0 +1,61 @@
+{
+  "source": "/home/robo/hei-data/localization_observability/live_20261020_154242",
+  "final": true,
+  "writer": {
+    "jsonl_path": "/home/robo/hei-data/localization_observability/live_20261020_154242/probe_report.localization_events.jsonl",
+    "summary_path": "/home/robo/hei-data/localization_observability/live_20261020_154242/probe_report.localization_summary.json",
+    "events_written": 325,
+    "write_errors": 0,
+    "last_error": null,
+    "closed": true,
+    "summary_reserved": true,
+    "run_tag": "live-readonly-monitor"
+  },
+  "cumulative": {
+    "info_events": 108,
+    "info_frames_with_accepted_ids": 0,
+    "backend_accepted_events": 0,
+    "backend_accepted_by_kind": {
+      "proximity_detection_id": 0,
+      "loop_closure_id": 0,
+      "landmark_id": 0
+    },
+    "bayes_accepted_hypothesis_frames": 0,
+    "small_movement_frames": 108,
+    "small_movement_frames_without_candidate": 108,
+    "candidate_frames": 0,
+    "rejected_frames": 0,
+    "optimization_frames": 108,
+    "pending_confirmation_events": 0,
+    "pending_by_source": {
+      "rosout": 0,
+      "backend_log": 0
+    },
+    "initialpose_events": 0,
+    "initialpose_received_log_events": 0,
+    "initialpose_received_log_by_source": {
+      "rosout": 0,
+      "backend_log": 0
+    },
+    "map_correction_restore_events": 0,
+    "map_loaded_events": 0,
+    "database_readonly_events": 0,
+    "visual_registration_missing_events": 0,
+    "candidate_link_added_events": 0,
+    "localization_pose_events": 108,
+    "tf_updates": 2246,
+    "tf_change_events": 1,
+    "rosout_rtabmap_lines_seen": 108,
+    "rosout_localization_events": 0,
+    "backend_log_lines_read": 120,
+    "backend_log_relevant_events": 0,
+    "backend_log_other_events": 108,
+    "backend_log_truncation_events": 0,
+    "backend_log_rotation_events": 0,
+    "backend_log_missing_events": 0,
+    "backend_log_reappeared_events": 0,
+    "backend_log_overflow_events": 0,
+    "backend_log_error_events": 0
+  },
+  "note": "Read-only real streams; no new initialpose or correction test was injected. This observer preceded optimization_frames metric fix; that metric not used as acceptance."
+}

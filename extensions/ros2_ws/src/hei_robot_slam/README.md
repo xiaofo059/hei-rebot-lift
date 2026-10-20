@@ -165,6 +165,53 @@ WARN 为 0；初始位姿发布前 proximity 接受为 0，发布后从 map 节�
 所有参数在启动前由 hei_robot_slam.slam_contract 校验：frame 不符、3DoF/4DoF、缺 3D 点云订阅、
 auto-delete 数据库、定位非只读、缺 ProximityOdomGuess 等都会拒绝启动。
 
+## 定位连续取证（探针 JSONL / summary）
+
+`slam_cloud_probe` 在 `report_path` 存在时自动启用（任务 HEI-SLAM-OBS-20261020），不改变旧契约计数，
+在 report 旁派生**独占新文件**（已存在则自动加 `__02` 等后缀，不覆盖既有时间线）：
+
+* `<report_stem>.localization_events.jsonl`：逐事件时间线，每条 flush；
+* `<report_stem>.localization_summary.json`：累计 + 最近/最后事件，周期写、关停写 final。
+
+事件类型：`info`、`initialpose`、`rosout`、`backend_log`、`tf_map_to_camera_init`、
+`localization_pose`。每条事件带 `source_stamp_ns`、`recv_wall_ns`、`recv_mono_ns`；
+缺字段/时间戳未知时置 `null` 并标 `source_stamp_unknown`；stats 非有限值安全置 `null`，
+不伪造 ICP fitness。
+
+**语义（不要混用）**
+
+| 概念 | 判定 | 说明 |
+| --- | --- | --- |
+| accepted | 仅 `/info` 非零 `proximity_detection_id` / `loop_closure_id` | 后端事件证据，不是精度验收 |
+| pending | `Localization was good, but waiting ...` | 候选延迟确认，不是 accepted |
+| candidate_link_added | 后端日志 `Add local loop closure in SPACE` | link 加入候选，仍可能被图优化拒绝，不计 accepted |
+| no_current_event | 当前帧 accepted id 为 0 | 正常现象，不清空历史累计，不等于失败 |
+| TF / localization_pose | 只记录 | 不代表 accepted |
+
+**pending 日志可观测性**：rtabmap 核心 UWARN（如 `Localization was good`、`Update map correction`）
+通常直写 stderr（ANSI + Rtabmap.cpp 时间戳），**不发布到 `/rosout`**。需要完整 pending 证据时，
+以只读方式启动 observer 并显式传后端日志路径（从启动时 EOF 增量 tail，不修改源文件）：
+
+```bash
+ros2 run hei_robot_slam slam_cloud_probe --ros-args \
+  -p report_path:=/home/robo/hei-data/.../probe_report.json \
+  -p backend_log_path:=/tmp/hei_slam_localization_newmap.log
+```
+
+未配置时 summary 的 `pending_observability.pending_coverage=rosout_only_partial` 且 `complete=false`，
+明确说明 pending 日志可观测性不足（不允许把 rosout 当完整捕获）。
+
+**读 summary**：`cumulative` 是历史累计（清零帧不改变）；`current`/`last` 是当前/最后事件；
+`derived.state_hint` 给出当前证据状态；`derived.accepted_since_latest_initialpose` 用
+last accepted seq 与 latest initialpose seq 比较——新 `/initialpose` 后历史累计仍保留，但该字段为
+false 时表示这次初值之后尚无接受事件；`derived.pending_current_initialpose_attempt` 对应为 true。
+`event_status` 明确区分 `active` / `disabled_no_report_path` / `disabled_by_parameter` / `failed`（含 error）。
+`cumulative.optimization_frames` 只统计 iterations>0（0 或字段缺失不计）。
+
+**边界**：本功能只做观测，不修改算法/参数/TF/点云/驱动；所有 ROS 测试只用 Domain 91 合成数据
+（Domain 89 属于现场会话，禁止测试占用）。accepted 计数不是地图/定位精度验收，现场结论仍需独立测量。
+
+
 ## 工具
 
 ```bash

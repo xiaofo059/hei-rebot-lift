@@ -1,0 +1,4 @@
+Provenance: these artifacts are from the Domain 91 SYNTHETIC end-to-end pytest
+(test/test_localization_observability_integration.py). All Info/initialpose/TF/rosout
+messages were synthesized by a test publisher; no real RTAB-Map/FAST-LIO/driver was run.
+They are NOT on-site localization evidence and NOT precision acceptance.

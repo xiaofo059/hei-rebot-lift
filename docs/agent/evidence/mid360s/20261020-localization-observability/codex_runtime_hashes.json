@@ -1,0 +1,12 @@
+[
+  {
+    "source": "extensions/ros2_ws/src/hei_robot_slam/hei_robot_slam/cloud_probe.py",
+    "installed": "extensions/ros2_ws/install/hei_robot_slam/lib/python3.10/site-packages/hei_robot_slam/cloud_probe.py",
+    "sha256": "5545792a2ea19bd6ff695ebcb6a31121f72fce9fe1fd6f0bc6f7f3967bb95428"
+  },
+  {
+    "source": "extensions/ros2_ws/src/hei_robot_slam/hei_robot_slam/localization_events.py",
+    "installed": "extensions/ros2_ws/install/hei_robot_slam/lib/python3.10/site-packages/hei_robot_slam/localization_events.py",
+    "sha256": "46c8c13e28ce26af6e7e3f9fcb7c0c8beb15fb59e7e96d0a173fbdec85ca5831"
+  }
+]

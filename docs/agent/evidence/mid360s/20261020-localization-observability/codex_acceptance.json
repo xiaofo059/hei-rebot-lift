@@ -1,0 +1,39 @@
+{
+  "task": "HEI-SLAM-OBS-20261020",
+  "reviewed_at": "2026-10-20T15:46:02.344792+08:00",
+  "status": "DONE_observability_only",
+  "implementation": "DSH-LAPTOP",
+  "independent_reviewer": "Codex",
+  "independent_full_suite": "122 passed; before final optimization count-only correction",
+  "independent_final_targeted_suite": "32 passed after final correction",
+  "dsh_final_full_suite": "123 passed; raw/full_pytest_domain91.log",
+  "archived_real_record_reanalysis": "9 accepted historical frames retained after 18 stationary zero frames; not new live localization validation",
+  "live_monitor_directory": "/home/robo/hei-data/localization_observability/live_20261020_154443",
+  "live_readonly_observation": {
+    "info_frames": 75,
+    "adapted_cloud_frames": 780,
+    "writer_errors": 0,
+    "log_coverage": "rosout_plus_backend_log_tail"
+  },
+  "live_shutdown_smoke": "108 Info frames; clean exit; final=true; writer.closed=true; writer errors=0",
+  "map_database_unchanged": true,
+  "findings_closed": [
+    "per-frame vs cumulative counters",
+    "candidate link logs are not accepted",
+    "pending confirmation is not accepted",
+    "trailing slash stat keys",
+    "QoS depth keyword",
+    "closed final summary",
+    "missing IDs remain unknown",
+    "exclusive output paths",
+    "current initialpose attempt separate from history",
+    "zero optimization iterations not counted as optimization"
+  ],
+  "runtime_changes": "Only added read-only monitor; existing lidar/FAST-LIO/RTAB processes untouched.",
+  "not_validated": [
+    "new biased initialpose recovery trial",
+    "field precision",
+    "arbitrary-position global relocalization"
+  ],
+  "git": "uncommitted; no push"
+}

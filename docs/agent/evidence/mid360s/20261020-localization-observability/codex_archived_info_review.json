@@ -1,0 +1,268 @@
+{
+  "source": "docs/agent/evidence/mid360s/20261019-slam/05-localization/experiment_proxguess2_collector.json",
+  "historical_real_dataset_not_new_live_test": true,
+  "archived_accepted_frames": 9,
+  "summary": {
+    "schema": "hei.localization_summary.v1",
+    "run_tag": "codex_archived_real_info_reanalysis",
+    "final": true,
+    "generated_wall_ns": null,
+    "generated_wall_iso": null,
+    "started_wall_ns": 1792481000000000000,
+    "event_sequence_last": 54,
+    "writer": {},
+    "pending_observability": {
+      "rosout_subscribed": true,
+      "backend_log": {
+        "configured": false,
+        "status": "not_configured",
+        "note": "backend_log_path 未配置：rtabmap core UWARN（如 Localization was good waiting / Update map correction）通常不发布到 /rosout，pending 日志可观测性不足"
+      },
+      "pending_coverage": "rosout_only_partial",
+      "complete": false,
+      "note": "未配置 backend_log_path：rtabmap core UWARN（Localization was good waiting / Update map correction 等）通常直接写 stderr、不发布到 /rosout；pending 日志可观测性不足，相关计数可能偏低"
+    },
+    "cumulative": {
+      "info_events": 54,
+      "info_frames_with_accepted_ids": 9,
+      "backend_accepted_events": 9,
+      "backend_accepted_by_kind": {
+        "proximity_detection_id": 9,
+        "loop_closure_id": 0,
+        "landmark_id": 0
+      },
+      "bayes_accepted_hypothesis_frames": 0,
+      "small_movement_frames": 18,
+      "small_movement_frames_without_candidate": 18,
+      "candidate_frames": 10,
+      "rejected_frames": 1,
+      "optimization_frames": 54,
+      "pending_confirmation_events": 0,
+      "pending_by_source": {
+        "rosout": 0,
+        "backend_log": 0
+      },
+      "initialpose_events": 0,
+      "initialpose_received_log_events": 0,
+      "initialpose_received_log_by_source": {
+        "rosout": 0,
+        "backend_log": 0
+      },
+      "map_correction_restore_events": 0,
+      "map_loaded_events": 0,
+      "database_readonly_events": 0,
+      "visual_registration_missing_events": 0,
+      "candidate_link_added_events": 0,
+      "localization_pose_events": 0,
+      "tf_updates": 0,
+      "tf_change_events": 0,
+      "rosout_rtabmap_lines_seen": 0,
+      "rosout_localization_events": 0,
+      "backend_log_lines_read": 0,
+      "backend_log_relevant_events": 0,
+      "backend_log_other_events": 0,
+      "backend_log_truncation_events": 0,
+      "backend_log_rotation_events": 0,
+      "backend_log_missing_events": 0,
+      "backend_log_reappeared_events": 0,
+      "backend_log_overflow_events": 0
+    },
+    "derived": {
+      "state_hint": "historical_accepted_evidence_no_current_frame_event",
+      "historical_backend_accepted_total": 9,
+      "historical_accepted_persists_after_zero_frame": true,
+      "no_current_event": {
+        "info_frame_present": true,
+        "accepted_in_current_frame": false,
+        "note": "逐帧 accepted id 为 0 是正常现象，不清空历史累计；零帧不等于失败"
+      },
+      "initialpose_seen": false,
+      "last_accept_correlated_initialpose": null,
+      "candidate_link_added_total": 0,
+      "pending_since_last_accept": 0,
+      "events_since_last_accept": 18,
+      "tf_change_is_not_acceptance": true,
+      "small_movement_without_candidate_is_not_failure": true,
+      "pending_log_observability": {
+        "rosout_subscribed": true,
+        "backend_log": {
+          "configured": false,
+          "status": "not_configured",
+          "note": "backend_log_path 未配置：rtabmap core UWARN（如 Localization was good waiting / Update map correction）通常不发布到 /rosout，pending 日志可观测性不足"
+        },
+        "pending_coverage": "rosout_only_partial",
+        "complete": false,
+        "note": "未配置 backend_log_path：rtabmap core UWARN（Localization was good waiting / Update map correction 等）通常直接写 stderr、不发布到 /rosout；pending 日志可观测性不足，相关计数可能偏低"
+      },
+      "accuracy_note": "accepted 是后端事件证据；不是地图/定位精度验收，不能替代现场测量",
+      "accepted_semantics": {
+        "info_ids": "msg 级 proximity_detection_id/loop_closure_id 为后端接受 id 事件证据",
+        "bayes_hypothesis": "Loop/Accepted_hypothesis_id 是 Bayes 接受假设，不等于最终几何接受",
+        "candidate_link_added_log": "后端日志 Add local loop closure 行是 link 加入候选证据，仍可能被图优化拒绝/延迟确认；不计 accepted，不是精度通过",
+        "tf_or_pose": "TF 变化与 /localization_pose 发布都不代表 accepted"
+      }
+    },
+    "current": {
+      "latest_info": {
+        "seq": 54,
+        "recv_wall_ns": 1792482017000000000,
+        "source_stamp_ns": null,
+        "ref_id": 1571,
+        "accepted_ids": {
+          "proximity_detection_id": null,
+          "loop_closure_id": null,
+          "landmark_id": null
+        },
+        "accepted_any": false,
+        "bayes_accepted_hypothesis_id": 0.0,
+        "bayes_accepted_hypothesis_frame": false,
+        "small_movement_frame": true,
+        "candidate_frame": false,
+        "rejected_frame": false,
+        "optimization_iterations": 0.0,
+        "unknown_fields": {
+          "candidate_fields_missing": [],
+          "candidate_fields_known_count": 12,
+          "candidate_fields_total": 12,
+          "icp_fitness": "unknown_not_in_info_stats"
+        }
+      },
+      "latest_tf_change": null,
+      "latest_pending": null
+    },
+    "last": {
+      "accepted_event": {
+        "seq": 36,
+        "kind": "info_accepted_ids",
+        "ref_id": 267,
+        "accepted_ids": {},
+        "recv_wall_ns": 1792481035000000000,
+        "source_stamp_ns": 1792380344655377152,
+        "correlated_initial_pose": null
+      },
+      "pending_event": null,
+      "initialpose_event": null,
+      "tf_change_event": null,
+      "backend_log_event": null,
+      "rosout_localization_event": null,
+      "candidate_link_added_event": null,
+      "localization_pose_event": null,
+      "info_event": {
+        "seq": 54,
+        "recv_wall_ns": 1792482017000000000,
+        "source_stamp_ns": null,
+        "ref_id": 1571,
+        "accepted_ids": {
+          "proximity_detection_id": null,
+          "loop_closure_id": null,
+          "landmark_id": null
+        },
+        "accepted_any": false,
+        "bayes_accepted_hypothesis_id": 0.0,
+        "bayes_accepted_hypothesis_frame": false,
+        "small_movement_frame": true,
+        "candidate_frame": false,
+        "rejected_frame": false,
+        "optimization_iterations": 0.0,
+        "unknown_fields": {
+          "candidate_fields_missing": [],
+          "candidate_fields_known_count": 12,
+          "candidate_fields_total": 12,
+          "icp_fitness": "unknown_not_in_info_stats"
+        }
+      }
+    },
+    "recent": {
+      "accepted": [
+        {
+          "seq": 11,
+          "kind": "info_accepted_ids",
+          "ref_id": 242,
+          "accepted_ids": {},
+          "recv_wall_ns": 1792481010000000000,
+          "source_stamp_ns": 1792380318554937600,
+          "correlated_initial_pose": null
+        },
+        {
+          "seq": 19,
+          "kind": "info_accepted_ids",
+          "ref_id": 250,
+          "accepted_ids": {},
+          "recv_wall_ns": 1792481018000000000,
+          "source_stamp_ns": 1792380327055159552,
+          "correlated_initial_pose": null
+        },
+        {
+          "seq": 21,
+          "kind": "info_accepted_ids",
+          "ref_id": 252,
+          "accepted_ids": {},
+          "recv_wall_ns": 1792481020000000000,
+          "source_stamp_ns": 1792380329255054592,
+          "correlated_initial_pose": null
+        },
+        {
+          "seq": 23,
+          "kind": "info_accepted_ids",
+          "ref_id": 254,
+          "accepted_ids": {},
+          "recv_wall_ns": 1792481022000000000,
+          "source_stamp_ns": 1792380331255159040,
+          "correlated_initial_pose": null
+        },
+        {
+          "seq": 26,
+          "kind": "info_accepted_ids",
+          "ref_id": 257,
+          "accepted_ids": {},
+          "recv_wall_ns": 1792481025000000000,
+          "source_stamp_ns": 1792380334355186944,
+          "correlated_initial_pose": null
+        },
+        {
+          "seq": 28,
+          "kind": "info_accepted_ids",
+          "ref_id": 259,
+          "accepted_ids": {},
+          "recv_wall_ns": 1792481027000000000,
+          "source_stamp_ns": 1792380336555078656,
+          "correlated_initial_pose": null
+        },
+        {
+          "seq": 30,
+          "kind": "info_accepted_ids",
+          "ref_id": 261,
+          "accepted_ids": {},
+          "recv_wall_ns": 1792481029000000000,
+          "source_stamp_ns": 1792380338654844672,
+          "correlated_initial_pose": null
+        },
+        {
+          "seq": 34,
+          "kind": "info_accepted_ids",
+          "ref_id": 265,
+          "accepted_ids": {},
+          "recv_wall_ns": 1792481033000000000,
+          "source_stamp_ns": 1792380342655246336,
+          "correlated_initial_pose": null
+        },
+        {
+          "seq": 36,
+          "kind": "info_accepted_ids",
+          "ref_id": 267,
+          "accepted_ids": {},
+          "recv_wall_ns": 1792481035000000000,
+          "source_stamp_ns": 1792380344655377152,
+          "correlated_initial_pose": null
+        }
+      ],
+      "pending": [],
+      "initialpose": [],
+      "tf_changes": [],
+      "backend_relevant": [],
+      "rosout_relevant": [],
+      "localization_pose": [],
+      "candidate_link_added": []
+    }
+  }
+}

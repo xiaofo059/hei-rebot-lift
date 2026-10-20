@@ -124,3 +124,22 @@
 - 操作例外：DSH后台harness被取消后launch仍存活，由Codex接管至player EOF、一次INT正常回收；5子节点正常退出、无残留/升级，父wait退出码不可得，不能称原harness clean。
 - 验收索引：[codex_final_acceptance.json](evidence/mid360s/20261019-slam/codex_final_acceptance.json)，运行说明：[MID360S_SLAM.md](../MID360S_SLAM.md)。未commit/push；既有LIO源码保留。
 - 下一门槛：解决线缆拖拽/固定采集后完成30–50m实采闭环、度量精度与3位置重定位；现场外参/live GUI/AGX未验收。本轮不启动机器人运动。03-LIO-MOTION仍PARTIAL。
+
+### 2026-10-20 · 定位连续取证
+
+- HEI-SLAM-OBS-20261020：**DONE（连续取证软件范围）**；DSH-LAPTOP 实施，Codex 独立审查。分支 `codex/slam-mapping-relocalization-test`。
+- 范围：探针连续 JSONL、/initialpose、/info、定位日志、map→camera_init 变化与累计摘要；保留旧点云契约。不改算法参数、驱动、地图或运行中的 Domain89。
+- 验收：逐帧零值不清历史累计；pending 与 accepted 区分；Domain91 合成端到端及既有回归通过；Codex 在现场仅增加只读观察器。未授权提交推送。
+
+- Codex终审：独立完整回归122 passed，最后计数修正后针对32 passed；DSH最终完整123 passed。历史实录9帧接受后追加18帧静止零计数仍保留9；Domain92隔离验证，现场只读监测108帧并干净关闭，最终监测器已重新接入。地图SHA不变。
+- 证据：[codex_acceptance.json](evidence/mid360s/20261020-localization-observability/codex_acceptance.json)。本次未进行新的偏差恢复动作或精度验收，未commit/push。
+
+### 2026-10-20 · 实时建图与重定位功能测试收尾
+
+- 本轮电脑端小范围建图/保存加载/粗初值恢复/运动时配准：**功能测试通过（用户目视确认 + Codex连续事件核验）**。不升级为完整度量验收。
+- 当前定位测试已正常停止，驱动/FAST-LIO/RTAB/RViz/monitor无残留；最终81帧接受、2076条Info，地图SHA一致、SQLite integrity ok/40节点。
+- 180°无初值：82帧候选0接受；粗初值后约1.276秒接受。任意位姿自动全局定位尚不保证。
+- HEI-SLAM-SESSION-SUMMARY-20261020：DONE（DSH编写、Codex审查通过），DSH-LAPTOP仅编写总结，Codex审查；不改代码、不重启测试、不提交推送。
+- 已知监测元数据待办：last.accepted_event.accepted_ids取值路径错误导致摘要为空；原始JSONL配准ID与累计完整，后续另修。
+
+- 工作总结：[MID360S_SLAM_TEST_SUMMARY_20261020.md](MID360S_SLAM_TEST_SUMMARY_20261020.md)。链接核验通过，证据时序已纠正；未来按本轮功能边界交接，不把早期acceptance快照的not_validated覆盖后续实测。

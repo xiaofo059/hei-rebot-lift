@@ -1,0 +1,24 @@
+# git status --porcelain (scope check)
+ M docs/agent/EXECUTION_LOG.md
+ M docs/agent/TASK_BOARD.md
+ M extensions/ros2_ws/src/hei_robot_slam/README.md
+ M extensions/ros2_ws/src/hei_robot_slam/hei_robot_slam/cloud_probe.py
+ M extensions/ros2_ws/src/hei_robot_slam/package.xml
+ M extensions/ros2_ws/src/hei_robot_slam/test/test_node_startup.py
+?? docs/agent/evidence/mid360s/20261020-localization-observability/
+?? extensions/ros2_ws/src/hei_robot_slam/hei_robot_slam/localization_events.py
+?? extensions/ros2_ws/src/hei_robot_slam/test/test_localization_events.py
+?? extensions/ros2_ws/src/hei_robot_slam/test/test_localization_observability_integration.py
+
+# git diff --stat (tracked modifications)
+ docs/agent/EXECUTION_LOG.md                        |   5 +
+ docs/agent/TASK_BOARD.md                           |   6 +
+ extensions/ros2_ws/src/hei_robot_slam/README.md    |  47 ++++
+ .../hei_robot_slam/hei_robot_slam/cloud_probe.py   | 305 ++++++++++++++++++++-
+ extensions/ros2_ws/src/hei_robot_slam/package.xml  |   1 +
+ .../src/hei_robot_slam/test/test_node_startup.py   |  78 +++++-
+ 6 files changed, 438 insertions(+), 4 deletions(-)
+
+# branch/head
+codex/slam-mapping-relocalization-test
+fbe160bb5a4a9cdb36bc1ab069ed72d9cc9a2e42
