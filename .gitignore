@@ -31,3 +31,10 @@ Thumbs.db
 /extensions/ros2_ws/build/
 /extensions/ros2_ws/install/
 /extensions/ros2_ws/log/
+
+# External sources and locally extracted dependencies (locked in extensions/dependencies)
+/extensions/third_party/
+/extensions/ros2_ws/src/livox_ros_driver2/
+/extensions/ros2_ws/src/fast_lio/
+/extensions/ros2_ws/src/rtabmap/
+/extensions/ros2_ws/src/rtabmap_ros/

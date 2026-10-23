@@ -1,0 +1,21 @@
+repositories:
+  ros2_ws/src/livox_ros_driver2:
+    type: git
+    url: https://github.com/Livox-SDK/livox_ros_driver2.git
+    version: 21445540f0d100dc86a7e6df312dd70bbdb4afdf
+  ros2_ws/src/fast_lio:
+    type: git
+    url: https://github.com/hku-mars/FAST_LIO.git
+    version: a4743b095409588842a5b30ddfa27e29d2f99164
+  ros2_ws/src/rtabmap:
+    type: git
+    url: https://github.com/introlab/rtabmap.git
+    version: 25d2135b266761cfd2c0c1e772775a470802e4b0
+  ros2_ws/src/rtabmap_ros:
+    type: git
+    url: https://github.com/introlab/rtabmap_ros.git
+    version: 4084dca73201f5621820f945f847a0aa7b1de198
+  third_party/Livox-SDK2:
+    type: git
+    url: https://github.com/Livox-SDK/Livox-SDK2.git
+    version: c0796f04c143143899c87a773d9f6b7136453c0b

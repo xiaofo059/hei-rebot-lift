@@ -1,0 +1,9 @@
+repositories:
+  rtabmap:
+    type: git
+    url: https://github.com/introlab/rtabmap.git
+    version: 25d2135b266761cfd2c0c1e772775a470802e4b0
+  rtabmap_ros:
+    type: git
+    url: https://github.com/introlab/rtabmap_ros.git
+    version: 4084dca73201f5621820f945f847a0aa7b1de198
