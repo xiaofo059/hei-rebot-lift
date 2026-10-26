@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>hei_robot_mapping</name>
+  <version>0.1.0</version>
+  <description>MID-360S and FAST-LIO2 integration for RTAB-Map online mapping.</description>
+  <maintainer email="user@localhost.invalid">HEI ReBot Lift developers</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>rtabmap_slam</exec_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>
