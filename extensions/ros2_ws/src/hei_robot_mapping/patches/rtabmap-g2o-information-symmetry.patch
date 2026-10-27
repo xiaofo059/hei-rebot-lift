@@ -1,0 +1,26 @@
+diff --git a/corelib/src/optimizer/OptimizerG2O.cpp b/corelib/src/optimizer/OptimizerG2O.cpp
+index 1eeffec..3e98aff 100644
+--- a/corelib/src/optimizer/OptimizerG2O.cpp
++++ b/corelib/src/optimizer/OptimizerG2O.cpp
+@@ -993,6 +993,21 @@ std::map<int, Transform> OptimizerG2O::optimize(
+ 					if(!isCovarianceIgnored())
+ 					{
+ 						memcpy(information.data(), iter->second.infMatrix().data, iter->second.infMatrix().total()*sizeof(double));
++						// Inverting a full odometry covariance can introduce round-off
++						// asymmetry. g2o checks symmetry before optimization. Repair only
++						// negligible discrepancies; keep invalid matrices for its checks.
++						if(information.allFinite() &&
++						   information.isApprox(information.transpose(), 1e-10))
++						{
++							for(int row=0; row<6; ++row)
++							{
++								for(int col=row+1; col<6; ++col)
++								{
++									const double value = 0.5*information(row,col) + 0.5*information(col,row);
++									information(row,col) = information(col,row) = value;
++								}
++							}
++						}
+ 					}
+ 
+ 					Eigen::Affine3d a = iter->second.transform().toEigen3d();

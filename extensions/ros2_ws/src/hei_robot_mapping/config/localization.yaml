@@ -1,0 +1,21 @@
+# Overrides shared mapping.yaml for localization against an existing laser map.
+/**:
+  ros__parameters:
+    'Mem/IncrementalMemory': 'false'
+    'Mem/InitWMWithAllNodes': 'true'
+    'Mem/LocalizationReadOnly': 'true'
+    'Mem/LocalizationDataSaved': 'false'
+    # Load the map into working memory; do not evict nodes from a read-only DB.
+    'Rtabmap/MemoryThr': '0'
+    'Rtabmap/TimeThr': '0'
+    'Rtabmap/DetectionRate': '2.0'
+    # Keep trying registration while stationary, too.
+    'RGBD/LinearUpdate': '0'
+    'RGBD/AngularUpdate': '0'
+    'RGBD/StartAtOrigin': 'true'
+    'RGBD/ProximityBySpace': 'true'
+    'RGBD/ProximityOdomGuess': 'true'
+    'RGBD/ProximityPathMaxNeighbors': '1'
+    # The upstream 0.2 m limit is too small for an approximate user pose.
+    # Keep correction bounded; correspondence and graph checks still apply.
+    'Icp/MaxTranslation': '1.0'

@@ -36,6 +36,7 @@
     'Icp/CorrespondenceRatio': '0.2'
     'RGBD/NeighborLinkRefining': 'false'
     'RGBD/ProximityBySpace': 'true'
+    'RGBD/ProximityOdomGuess': 'true' # Use odometry guess for proximity detection.
     'RGBD/LinearUpdate': '0.1'
     'RGBD/AngularUpdate': '0.1'
     'Optimizer/Strategy': '1'  # g2o is available on this AGX.
