@@ -1,0 +1,153 @@
+/*
+Copyright (c) 2010-2016, Mathieu Labbe - IntRoLab - Universite de Sherbrooke
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the Universite de Sherbrooke nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+#ifndef REGISTRATIONVIS_H_
+#define REGISTRATIONVIS_H_
+
+#include "rtabmap/core/rtabmap_core_export.h" // DLL export/import defines
+
+#include <rtabmap/core/Registration.h>
+#include <rtabmap/core/Signature.h>
+
+namespace rtabmap {
+
+class Feature2D;
+
+#ifdef RTABMAP_PYTHON
+class PyMatcher;
+#endif
+
+/**
+ * @class RegistrationVis
+ * @brief Visual registration between two signatures using features and geometry.
+ *
+ * Extracts and matches features (@ref Feature2D), then estimates motion with
+ * **Vis/EstimationType** (3D→3D, 3D→2D PnP, or 2D→2D epipolar). Supports RGB-D
+ * (@ref CameraModel + depth), stereo (@ref StereoCameraModel), optical flow, GMS,
+ * and optional Python matchers when built with Python support.
+ *
+ * Can chain a child registration (e.g. @ref RegistrationIcp in
+ * @ref Registration::kTypeVisIcp). Feature-related Vis/ parameters are mapped
+ * to Kp/ for @ref Feature2D::create().
+ *
+ * @see Registration
+ * @see RegistrationInfo
+ */
+class RTABMAP_CORE_EXPORT RegistrationVis : public Registration
+{
+public:
+	/** @brief @p child is owned and deleted in the destructor. */
+	RegistrationVis(const ParametersMap & parameters = ParametersMap(), Registration * child = 0);
+	virtual ~RegistrationVis();
+
+	/** @brief Parses Vis/ and feature parameters; recreates feature detectors. */
+	virtual void parseParameters(const ParametersMap & parameters);
+
+	/** @return **Vis/InlierDistance** (m). */
+	float getInlierDistance() const {return _inlierDistance;}
+	/** @return **Vis/Iterations** (RANSAC iterations). */
+	int getIterations() const {return _iterations;}
+	/** @return **Vis/MinInliers**. */
+	int getMinInliers() const {return _minInliers;}
+	/** @return **Vis/CorNNType** nearest-neighbor strategy. */
+	int getNNType() const {return _nnType;}
+	/** @return Name of the **Vis/CorNNType** nearest-neighbor strategy in use. */
+	std::string getNNTypeName() const {return getNNTypeName(_nnType);}
+
+	/**
+	 * @brief Name of a Vis/CorNNType value
+	 */
+	static std::string getNNTypeName(int nnType);
+	/** @return **Vis/CorNNDR** ratio test threshold. */
+	float getNNDR() const {return _nndr;}
+	/** @return **Vis/EstimationType** (0: 3D→3D, 1: PnP, 2: epipolar). */
+	int getEstimationType() const {return _estimationType;}
+
+	/** @return Feature detector used for the “from” signature. */
+	const Feature2D * getDetector() const {return _detectorFrom;}
+
+protected:
+	virtual Transform computeTransformationImpl(
+			Signature & from,
+			Signature & to,
+			Transform guess,
+			RegistrationInfo & info) const;
+
+	virtual bool isImageRequiredImpl() const {return true;}
+	virtual bool canUseGuessImpl() const {return _correspondencesApproach != 0 || _guessWinSize>0;}
+	virtual int getMinVisualCorrespondencesImpl() const {return _minInliers;}
+
+private:
+	int _minInliers;
+	float _inlierDistance;
+	int _iterations;
+	int _refineIterations;
+	float _epipolarGeometryVar;
+	int _estimationType;
+	float _PnPReprojError;
+	int _PnPFlags;
+	int _PnPRefineIterations;
+	int  _PnPVarMedianRatio;
+	float _PnPMaxVar;
+	bool _PnPSplitLinearCovarianceComponents;
+	unsigned int _multiSamplingPolicy;
+	int _correspondencesApproach;
+	int _flowWinSize;
+	int _flowIterations;
+	float _flowEps;
+	int _flowMaxLevel;
+	bool _flowGpu;
+	bool _flowUseMinEigenVals;
+	float _flowMinEigThreshold;
+	float _flowErrorThreshold;
+	float _nndr;
+	int _nnType;
+	bool _gmsWithRotation;
+	bool _gmsWithScale;
+	double _gmsThresholdFactor;
+	int _guessWinSize;
+	bool _guessMatchToProjection;
+	int _bundleAdjustment;
+	bool _depthAsMask;
+	float _maskFloorThreshold;
+	float _minInliersDistributionThr;
+	float _maxInliersMeanDistance;
+
+	ParametersMap _featureParameters;
+	ParametersMap _bundleParameters;
+
+	Feature2D * _detectorFrom;
+	Feature2D * _detectorTo;
+
+#ifdef RTABMAP_PYTHON
+	PyMatcher * _pyMatcher;
+#endif
+};
+
+}
+
+#endif /* REGISTRATION_H_ */
