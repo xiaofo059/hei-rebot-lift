@@ -34,6 +34,7 @@ source install/setup.bash
 ## 手动运行
 
 先按既有流程启动雷达驱动（xfer_format:=1），等待数据稳定，再启动 FAST-LIO2。
+FAST-LIO2 的 IMU 订阅采用 BEST_EFFORT（深度 10），驱动的 IMU 发布保持 RELIABLE。
 确认 /Odometry 和 /cloud_registered_body 正常后，在另一个终端执行：
 
 ```bash

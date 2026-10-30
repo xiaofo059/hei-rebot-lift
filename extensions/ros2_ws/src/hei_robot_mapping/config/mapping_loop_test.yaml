@@ -1,0 +1,50 @@
+/**:
+  ros__parameters:
+    frame_id: body
+    map_frame_id: map
+    # Empty selects synchronized Odometry messages, not TF-only odometry.
+    odom_frame_id: ''
+    publish_tf: true
+    subscribe_odom: true
+    subscribe_depth: false
+    subscribe_rgb: false
+    subscribe_stereo: false
+    subscribe_rgbd: false
+    subscribe_scan: false
+    subscribe_scan_cloud: true
+    # FAST-LIO2 uses the same scan-end stamp for odometry and body cloud.
+    approx_sync: false
+    topic_queue_size: 30
+    sync_queue_size: 30
+    qos: 1
+    qos_odom: 1
+    qos_scan: 1
+    wait_for_transform: 0.2
+    # This stage is in-memory mapping only. No default ~/.ros/rtabmap.db writes.
+    database_path: ''
+    'Mem/IncrementalMemory': 'true'
+    'Mem/InitWMWithAllNodes': 'false'
+    'Rtabmap/DetectionRate': '2.0'
+    'Reg/Strategy': '1'
+    'Reg/Force3DoF': 'false'
+    'Icp/Strategy': '0'  # Installed backend is PCL, not libpointmatcher.
+    'Icp/PointToPlane': 'true'
+    'Icp/PointToPlaneK': '20'
+    'Icp/Iterations': '20'
+    'Icp/VoxelSize': '0.15'
+    'Icp/MaxCorrespondenceDistance': '1.0'
+    'Icp/CorrespondenceRatio': '0.2'
+    'RGBD/NeighborLinkRefining': 'false'
+    'RGBD/ProximityBySpace': 'true'
+    # Test only: compare the default 3.0 with 4.0; keep rejection enabled.
+    'RGBD/OptimizeMaxError': '4.0'
+    'RGBD/ProximityOdomGuess': 'true' # Use odometry guess for proximity detection.
+    'RGBD/LinearUpdate': '0.1'
+    'RGBD/AngularUpdate': '0.1'
+    'Optimizer/Strategy': '1'  # g2o is available on this AGX.
+    'Optimizer/GravitySigma': '0'
+    'Grid/Sensor': '0'
+    'Grid/3D': 'true'
+    'Grid/CellSize': '0.1'
+    'Grid/RangeMin': '0.5'
+    'Grid/RangeMax': '30.0'
