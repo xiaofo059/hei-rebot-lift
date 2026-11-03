@@ -182,3 +182,8 @@ examples/hei_rebot_lift/VR_mujoco_ik/telegrip/*.pem
 *.urdf
 *.xml
 *.part
+# Keep the self-contained long-gripper robot model under version control.
+!examples/hei_rebot_lift/VR_mujoco_ik/long_gripper/model/**/*.stl
+!examples/hei_rebot_lift/VR_mujoco_ik/long_gripper/model/**/*.STL
+!examples/hei_rebot_lift/VR_mujoco_ik/long_gripper/model/**/*.urdf
+!examples/hei_rebot_lift/VR_mujoco_ik/long_gripper/model/**/*.xml

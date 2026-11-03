@@ -72,7 +72,7 @@ WHEEL_JOINTS = (
 )
 BASE_FRAME = "base_footprint"
 
-DEFAULT_ARM_Q = np.array([0.0, -0.5, -0.5, 0.0, 0.0, 0.0], dtype=float)
+DEFAULT_ARM_Q = np.array([0.0, -0.6, -0.6, 0.6, 0.0, 0.0], dtype=float)
 GRIPPER_OPEN_M = 0.05
 GRIPPER_CLOSED_M = 0.0
 

@@ -287,6 +287,16 @@ cd examples/hei_rebot_lift/VR_mujoco_ik
 ./run_hei_robot_vr_real.sh --enable-real-publish
 ```
 
+真机控制时如不需要 MuJoCo 窗口，可关闭 viewer 以减少渲染开销：
+
+```bash
+./run_hei_robot_vr_real.sh --enable-real-publish --no-viewer
+```
+
+无界面模式仍会加载 URDF、运行 FK/IK、接收反馈并发布真机命令；只跳过窗口渲染。
+使用 `Ctrl+C` 退出，VR 手柄控制保持不变。`--headless-check` 只执行自检且不会发布
+真机命令，不能替代 `--no-viewer`。
+
 真机模式只加载完整机器人 URDF，用于逆解计算和实机状态显示；不会加载仿真地面、
 桌子、可抓取物体及其他调试场景元素。真机模式的升降显示速度默认为约
 `0.0286 m/s`，对应当前 `18 rad/s` 电机限速和 `10 mm/rev` 丝杆导程；硬件参数
@@ -316,6 +326,28 @@ VR 数据或实机反馈任意一路超时，程序都会先发送底盘/升降�
 首次实机测试建议架起底盘轮子，让升降远离上下限位，每次只测一条手臂且减小动作幅度。
 按 grip 前先确认日志已显示新鲜反馈和 `command bridge ARMED`。关闭 viewer，或 VR/
 实机反馈超时时，底盘和升降会停止，机械臂保持最后关节目标。
+
+#### 长夹爪独立版本
+
+长夹爪使用独立URDF和独立入口，不会覆盖上述原版。左右TCP已移动到长指尖端中心，
+关节名称、开合范围和控制协议保持不变。详细模型差异见
+[长夹爪模型说明](long_gripper/README_zh.md)。
+
+```bash
+./long_gripper/run_vr_sim.sh
+```
+
+```bash
+./long_gripper/run_vr_real.sh --enable-real-publish
+```
+
+```bash
+./long_gripper/run_vr_real.sh --enable-real-publish --no-viewer
+```
+
+```bash
+./long_gripper/run_vr_physics.sh
+```
 
 ### 3C. 启动原有双臂实机 MuJoCo IK 链路
 

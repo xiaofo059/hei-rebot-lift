@@ -295,6 +295,18 @@ cd examples/hei_rebot_lift/VR_mujoco_ik
 ./run_hei_robot_vr_real.sh --enable-real-publish
 ```
 
+To keep real control active without opening the MuJoCo window, disable the
+viewer and its rendering cost:
+
+```bash
+./run_hei_robot_vr_real.sh --enable-real-publish --no-viewer
+```
+
+This mode still loads the URDF, runs FK/IK, receives feedback, and publishes
+real-robot commands. Use `Ctrl+C` to stop it; VR controller behavior is
+unchanged. `--headless-check` only runs self-checks and never publishes real
+commands, so it is not a replacement for `--no-viewer`.
+
 Real-robot mode loads only the complete robot URDF for IK and state
 visualization. It does not load the simulation floor, table, graspable objects,
 or other debug-scene elements. Its lift visualization defaults to about
@@ -336,6 +348,20 @@ stops, and test one arm at a time at low motion amplitude. Confirm that the log
 shows fresh feedback and `command bridge ARMED` before pressing grip. Closing
 the viewer or losing either safety stream stops chassis/lift commands; the arms
 hold their latest joint targets.
+
+#### Independent Long-Gripper Variant
+
+The long-gripper model and launchers are separate from the original version.
+They move both TCP frames to the long fingertips while preserving joint names,
+opening ranges, and the command protocol. Model details are recorded in the
+[long-gripper model notes](long_gripper/README_zh.md).
+
+```bash
+./long_gripper/run_vr_sim.sh
+./long_gripper/run_vr_real.sh --enable-real-publish
+./long_gripper/run_vr_real.sh --enable-real-publish --no-viewer
+./long_gripper/run_vr_physics.sh
+```
 
 ### 3C. Start the Existing Dual-Arm Real-Robot Pipeline
 
