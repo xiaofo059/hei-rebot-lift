@@ -1,0 +1,21 @@
+# This file is read by the launch/xacro, not directly by a ROS node.
+hardware:
+  port: /dev/hei_chassis
+  baud_rate: 921600
+  io_rate: 100
+  command_timeout: 0.2
+  feedback_timeout: 0.2
+  max_motor_speed: 9.0
+  max_motor_acceleration: 8.0
+  # Damiao TIMEOUT register 9: 1 tick = 50us. 6000 ticks = 300ms.
+  # Written to RAM and read back at activation. No flash save, encoder zero or fault clear.
+  motor_timeout_ticks: 6000
+  # DM4310 feedback mapping. Read-back must agree before motors are enabled.
+  pmax: 12.5
+  vmax: 30.0
+  tmax: 10.0
+  motor_ids: [1, 2, 3, 4]
+  master_ids: [17, 18, 19, 20]
+  # Positive external transmission ratios: motor radians per wheel radian.
+  # The DM feedback already describes its output shaft; do not multiply internal gearing again.
+  motor_to_wheel_ratios: [1.0, 1.0, 1.0, 1.0]

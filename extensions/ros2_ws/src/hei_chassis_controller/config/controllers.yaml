@@ -1,0 +1,33 @@
+# Standard ROS axes: +X forward, +Y left, +Z up; SI units throughout.
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    chassis_controller:
+      type: hei_chassis_controller/OmniChassisController
+
+chassis_controller:
+  ros__parameters:
+    # Required order: RF / RR / LR / LF = motor IDs 1 / 2 / 3 / 4.
+    joints: [front_right_wheel_joint, rear_right_wheel_joint, rear_left_wheel_joint, front_left_wheel_joint]
+    # CAD mesh radius ~0.076m; wheel center spacing ~0.447168m on both axes.
+    # Initial model values: measure/calibrate on the physical chassis before navigation.
+    wheel_radius: 0.076
+    half_length: 0.223584
+    half_width: 0.223584
+    wheel_signs: [1.0, 1.0, 1.0, 1.0]
+    max_linear_speed: 0.25       # m/s; limits hypot(vx, vy)
+    max_angular_speed: 0.5      # rad/s
+    max_wheel_speed: 9.0        # wheel rad/s (hardware additionally limits motor rad/s)
+    max_wheel_acceleration: 8.0 # wheel rad/s^2
+    cmd_vel_timeout: 0.3        # seconds, monotonic clock; immediate zero on timeout
+    cmd_vel_topic: /cmd_vel
+    odom_topic: /chassis/odom
+    odom_frame_id: wheel_odom   # independent encoder odometry, not FAST-LIO's odom
+    base_frame_id: base_link
+    publish_odom_tf: false     # keep false with FAST-LIO2 / RTAB-Map
+    publish_rate: 30.0
+    # Starting estimates only; not a claim of calibrated covariance/accuracy.
+    pose_covariance_diagonal: [0.05, 0.05, 1000000.0, 1000000.0, 1000000.0, 0.1]
+    twist_covariance_diagonal: [0.02, 0.02, 1000000.0, 1000000.0, 1000000.0, 0.05]

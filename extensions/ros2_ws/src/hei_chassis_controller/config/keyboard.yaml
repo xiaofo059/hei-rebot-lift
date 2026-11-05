@@ -1,0 +1,10 @@
+chassis_keyboard:
+  ros__parameters:
+    cmd_vel_topic: /cmd_vel
+    # Per-gear speeds, SI units. Start in low gear for mapping.
+    linear_speeds: [0.05, 0.10, 0.15]  # m/s, low / medium / high
+    angular_speeds: [0.15, 0.30, 0.45] # rad/s, low / medium / high
+    initial_gear: 1
+    publish_rate: 20.0
+    # Terminal input has no key-up events. A movement key must be repeated to renew this lease.
+    key_timeout: 0.25                 # seconds, steady clock

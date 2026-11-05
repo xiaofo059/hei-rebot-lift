@@ -1,0 +1,5 @@
+<library path="hei_chassis_plugins">
+  <class name="hei_chassis_controller/DamiaoChassisSystem" type="hei_chassis_controller::DamiaoChassisSystem" base_class_type="hardware_interface::SystemInterface">
+    <description>Chassis-only DM4310 U2CAN hardware, bounded serial IO and latched communication faults.</description>
+  </class>
+</library>

@@ -1,0 +1,5 @@
+<library path="hei_chassis_plugins">
+  <class name="hei_chassis_controller/OmniChassisController" type="hei_chassis_controller::OmniChassisController" base_class_type="controller_interface::ControllerInterface">
+    <description>Four-wheel O-type omni base velocity controller with wheel feedback odometry.</description>
+  </class>
+</library>

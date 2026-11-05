@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="hei_chassis">
+  <xacro:arg name="use_mock_hardware" default="true"/>
+  <xacro:arg name="hardware_config" default=""/>
+  <xacro:arg name="port" default="/dev/hei_chassis"/>
+  <xacro:arg name="wheel_radius" default="0.076"/>
+  <xacro:arg name="half_length" default="0.223584"/>
+  <xacro:arg name="half_width" default="0.223584"/>
+  <xacro:arg name="base_frame" default="base_link"/>
+  <xacro:property name="hw" value="${xacro.load_yaml('$(arg hardware_config)')['hardware']}"/>
+  <xacro:property name="radius" value="$(arg wheel_radius)"/>
+  <xacro:property name="a" value="$(arg half_length)"/>
+  <xacro:property name="b" value="$(arg half_width)"/>
+  <!-- Chassis-only schematic, origin at wheel-center plane and geometric center.
+       Not the full robot collision model or calibrated sensor transform. -->
+  <link name="$(arg base_frame)">
+    <visual><origin xyz="0 0 0.06"/><geometry><box size="0.42 0.42 0.12"/></geometry>
+      <material name="base_color"><color rgba="0.25 0.35 0.45 1"/></material></visual>
+  </link>
+  <xacro:macro name="wheel" params="name x y yaw">
+    <link name="${name}_wheel_link"><visual><geometry><cylinder radius="${radius}" length="0.04"/></geometry>
+      <material name="wheel_color"><color rgba="0.15 0.15 0.15 1"/></material></visual></link>
+    <joint name="${name}_wheel_joint" type="continuous">
+      <parent link="$(arg base_frame)"/><child link="${name}_wheel_link"/>
+      <origin xyz="${x} ${y} 0" rpy="${pi/2} 0 ${yaw}"/><axis xyz="0 0 1"/>
+    </joint>
+  </xacro:macro>
+  <xacro:wheel name="front_right" x="${a}" y="${-b}" yaw="${-3*pi/4}"/>
+  <xacro:wheel name="rear_right" x="${-a}" y="${-b}" yaw="${3*pi/4}"/>
+  <xacro:wheel name="rear_left" x="${-a}" y="${b}" yaw="${pi/4}"/>
+  <xacro:wheel name="front_left" x="${a}" y="${b}" yaw="${-pi/4}"/>
+  <ros2_control name="HeiChassisSystem" type="system">
+    <hardware>
+      <xacro:if value="$(arg use_mock_hardware)"><plugin>mock_components/GenericSystem</plugin></xacro:if>
+      <xacro:unless value="$(arg use_mock_hardware)"><plugin>hei_chassis_controller/DamiaoChassisSystem</plugin></xacro:unless>
+      <param name="port">$(arg port)</param>
+      <param name="baud_rate">${hw['baud_rate']}</param><param name="io_rate">${hw['io_rate']}</param>
+      <param name="command_timeout">${hw['command_timeout']}</param><param name="feedback_timeout">${hw['feedback_timeout']}</param>
+      <param name="max_motor_speed">${hw['max_motor_speed']}</param><param name="max_motor_acceleration">${hw['max_motor_acceleration']}</param>
+      <param name="motor_timeout_ticks">${hw['motor_timeout_ticks']}</param>
+      <param name="pmax">${hw['pmax']}</param><param name="vmax">${hw['vmax']}</param><param name="tmax">${hw['tmax']}</param>
+    </hardware>
+    <xacro:macro name="control_wheel" params="name index">
+      <joint name="${name}_wheel_joint">
+        <param name="motor_id">${hw['motor_ids'][index]}</param><param name="master_id">${hw['master_ids'][index]}</param>
+        <param name="motor_to_wheel_ratio">${hw['motor_to_wheel_ratios'][index]}</param>
+        <command_interface name="velocity"/>
+        <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+        <state_interface name="velocity"><param name="initial_value">0.0</param></state_interface>
+        <state_interface name="effort"><param name="initial_value">0.0</param></state_interface>
+      </joint>
+    </xacro:macro>
+    <xacro:control_wheel name="front_right" index="${0}"/>
+    <xacro:control_wheel name="rear_right" index="${1}"/>
+    <xacro:control_wheel name="rear_left" index="${2}"/>
+    <xacro:control_wheel name="front_left" index="${3}"/>
+  </ros2_control>
+</robot>
