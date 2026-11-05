@@ -245,3 +245,72 @@ RTAB-Map 的 `odom_frame_id` 留空，会从同步的 `/Odometry` 消息中读�
 RViz 地图点云 `/rtabmap/cloud_map` 使用 Reliable + Transient Local，以接收静止时
 不再重复发布的缓存地图。Fixed Frame 使用 map，避免对旧地图消息请求已过期的 TF。
 实时点云仍使用 Best Effort；默认视距 15 m，过度放大会看不到周围墙面和地面。
+
+
+## 离线高度投影：3D 数据库转 Nav2 二维地图
+
+使用独立的 `map_projector` 工具读取已保存 `.db` 中的优化位姿和原始激光扫描，
+将点变换到原地图坐标系，筛选 **map 坐标系 Z ∈ [-0.20, 0.80] m** 的点，
+沿 Z 方向投影到 XY 栅格。不依赖正在运行的雷达、FAST-LIO2 或 RTAB-Map，
+不会修改数据库，也不会修改建图、定位或里程计节点。
+请先用保存节点完成快照，输入应为已保存完成、没有其他程序正在写入的数据库。
+
+在 AGX 终端执行：
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/user/hei-rebot-lift/extensions/ros2_ws/install/setup.bash
+ros2 launch hei_robot_mapping project_map.launch.py \
+  map_name:=warehouse_01 \
+  config_file:=/home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/config/map_projection.yaml
+```
+
+输入默认是 `map/warehouse_01.db`，输出默认是同目录下的
+`warehouse_01_2d.pgm` 和 `warehouse_01_2d.yaml`；看到 `Saved ...` 后工具自行退出。
+同名文件（包括符号链接）受到保护，不会覆盖。重新转换可指定新名称：
+
+```bash
+ros2 launch hei_robot_mapping project_map.launch.py \
+  map_name:=warehouse_01 output_name:=warehouse_01_2d_v2 \
+  config_file:=/home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/config/map_projection.yaml
+```
+
+转换参数在 `config/map_projection.yaml`：
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `map_directory` | 本包源码下的绝对 `map` 路径 | 输入数据库目录 |
+| `output_directory` | 空 | 空时输出到 `map_directory`，也可用同名 launch 参数覆盖 |
+| `output_name` | 空 | 空时为 `<map_name>_2d`，不含扩展名，也可用同名 launch 参数覆盖 |
+| `z_min` / `z_max` | `-0.20` / `0.80` | map 坐标系高度上下界，包含边界，浮点容差 1 微米 |
+| `resolution` | `0.05` | 栅格分辨率，米/格 |
+| `padding` | `0.50` | 地图边界外扩距离，米；外扩区域保持未知 |
+| `raytrace_free_space` | `true` | 将实际观测射线与高度区间相交的部分标为空闲 |
+| `max_cells` | `25000000` | 最大栅格数，防止异常坐标或过细分辨率耗尽内存 |
+
+通过上面命令显式指定源码中的 `config_file` 后，修改该 YAML 无需重新编译，
+再次运行转换即可。省略 `config_file` 则使用 `install` 下的配置副本，
+源码配置变更后需重新 `colcon build --packages-select hei_robot_mapping` 才会更新副本。
+
+输出 `.yaml` 包含 Nav2 的 `image`、`mode`、`resolution`、`origin`、`negate`、
+`occupied_thresh`、`free_thresh`，并附带 `conversion` 配置快照，方便追溯本次转换。
+`image` 使用相对文件名，请将输出的 PGM/YAML 放在一起。
+栅格原点对齐原 map 的 XY 网格，偏航为 0，PGM 行方向按 ROS 地图约定翻转。
+黑色（0）是高度区间内的障碍，白色（254）是观测射线推断的空闲，灰色（205）是未知。
+障碍优先，不会被其他射线清除；未观测区域不会填成空闲。
+
+**高度是相对于原 map 原点，不是距地面高度。** 工具不会自动旋转旧地图、
+修改地面高度或删除地面；如果地面落在这个高度区间内，也会按要求投影为障碍。
+若实际需要“地面以上 -20 cm 到 80 cm”，需先确定地面在 map 中的 Z，再相应调整上下界。
+射线推断空闲只表示该条激光路径观测为空，不保证整个垂直体积都已观测；
+二维地图必须先检查墙体、窄道和可通行区域，再用于实际导航。
+此工具不做障碍膨胀或形态学填充，导航的机器人 footprint 和 inflation 应在 Nav2 中配置。
+
+单元测试覆盖优化位姿/激光外参应用、全局高度裁剪及边界、PGM 行方向、
+空闲射线与未知区域、障碍优先、数据库只读、无数据/无优化位姿、栅格上限及同名保护。
+
+2026-11-05：AGX 原生编译通过，新增 7 项转换测试及原有点云/保存测试全部通过。
+使用实际 warehouse_01.db（62 份扫描）完成默认范围投影，输出 220×475 格、0.05 m/格；
+PGM/YAML 解析、三态阈值、YAML 参数覆盖、同名保护、缺失输入和空高度区间退出均已验证，
+原数据库 SHA-256 保持不变。记录在 ros2_ws/log/map_projection_validation_20261105/。
+本次仅做离线转换，没有启动实机驱动或规划器；未进行 Nav2 实车通行验收。
