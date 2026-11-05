@@ -151,10 +151,18 @@ class Preprocess
   float time_unit_scale;
   int lidar_type, point_filter_num, N_SCANS, SCAN_RATE, time_unit;
   double blind;
+  double max_range = 0.0;
   bool feature_enabled, given_offset_time;
   // ros::Publisher pub_full, pub_surf, pub_corn;
 
 private:
+  void add_surface_point(const PointType &point)
+  {
+    if (max_range > 0.0 &&
+        point.x * point.x + point.y * point.y + point.z * point.z > max_range * max_range)
+      return;
+    pl_surf.push_back(point);
+  }
   void avia_handler(const livox_ros_driver2::msg::CustomMsg::UniquePtr &msg);
   void oust64_handler(const sensor_msgs::msg::PointCloud2::UniquePtr &msg);
   void velodyne_handler(const sensor_msgs::msg::PointCloud2::UniquePtr &msg);

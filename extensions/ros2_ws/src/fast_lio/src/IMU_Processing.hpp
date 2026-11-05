@@ -1,4 +1,5 @@
 #include <cmath>
+#include <stdexcept>
 #include <math.h>
 #include <deque>
 #include <mutex>
@@ -23,7 +24,6 @@
 
 /// *************Preconfiguration
 
-#define MAX_INI_COUNT (10)
 
 const bool time_list(PointType &x, PointType &y) {return (x.curvature < y.curvature);};
 
@@ -46,6 +46,7 @@ class ImuProcess
   void set_acc_cov(const V3D &scaler);
   void set_gyr_bias_cov(const V3D &b_g);
   void set_acc_bias_cov(const V3D &b_a);
+  void set_initialization(bool gravity_align, int imu_init_num);
   Eigen::Matrix<double, 12, 12> Q;
   void Process(const MeasureGroup &meas,  esekfom::esekf<state_ikfom, 12, input_ikfom> &kf_state, PointCloudXYZI::Ptr pcl_un_);
 
@@ -77,6 +78,8 @@ class ImuProcess
   double start_timestamp_;
   double last_lidar_end_time_;
   int    init_iter_num = 1;
+  int    imu_init_num_ = 10;
+  bool   gravity_align_ = false;
   bool   b_first_frame_ = true;
   bool   imu_need_init_ = true;
 };
@@ -153,6 +156,14 @@ void ImuProcess::set_acc_bias_cov(const V3D &b_a)
   cov_bias_acc = b_a;
 }
 
+void ImuProcess::set_initialization(bool gravity_align, int imu_init_num)
+{
+  if (imu_init_num < 1)
+    throw std::invalid_argument("imu_init_num must be positive");
+  gravity_align_ = gravity_align;
+  imu_init_num_ = imu_init_num;
+}
+
 void ImuProcess::IMU_init(const MeasureGroup &meas, esekfom::esekf<state_ikfom, 12, input_ikfom> &kf_state, int &N)
 {
   /** 1. initializing the gravity, gyro bias, acc and gyro covariance
@@ -190,19 +201,24 @@ void ImuProcess::IMU_init(const MeasureGroup &meas, esekfom::esekf<state_ikfom, 
     N ++;
   }
   state_ikfom init_state = kf_state.get_x();
-  // A stationary accelerometer measures specific force opposite to gravity.
-  // Define camera_init with +Z up, and rotate body into that level world.
-  // Gravity alone cannot determine absolute yaw; use the shortest tilt rotation.
   if (!mean_acc.allFinite() || !std::isfinite(mean_acc.norm()) || mean_acc.norm() < 1e-6)
   {
     std::cerr << "Invalid mean acceleration, restarting IMU initialization" << std::endl;
     Reset();
     return;
   }
-  const Eigen::Quaterniond world_R_body = Eigen::Quaterniond::FromTwoVectors(
-      mean_acc.normalized(), V3D::UnitZ()).normalized();
-  init_state.rot = SO3(world_R_body);
-  init_state.grav = S2(V3D(0.0, 0.0, -G_m_s2));
+  if (gravity_align_)
+  {
+    const Eigen::Quaterniond world_R_body = Eigen::Quaterniond::FromTwoVectors(
+        mean_acc.normalized(), V3D::UnitZ()).normalized();
+    init_state.rot = SO3(world_R_body);
+    init_state.grav = S2(V3D(0.0, 0.0, -G_m_s2));
+  }
+  else
+  {
+    init_state.rot = SO3(M3D::Identity());
+    init_state.grav = S2(-mean_acc.normalized() * G_m_s2);
+  }
   init_state.bg  = mean_gyr;
   init_state.offset_T_L_I = Lidar_T_wrt_IMU;
   init_state.offset_R_L_I = Lidar_R_wrt_IMU;
@@ -364,15 +380,15 @@ void ImuProcess::Process(const MeasureGroup &meas,  esekfom::esekf<state_ikfom, 
     last_imu_   = meas.imu.back();
 
     state_ikfom imu_state = kf_state.get_x();
-    if (init_iter_num > MAX_INI_COUNT)
+    if (init_iter_num > imu_init_num_)
     {
       cov_acc *= pow(G_m_s2 / mean_acc.norm(), 2);
       imu_need_init_ = false;
 
       cov_acc = cov_acc_scale;
       cov_gyr = cov_gyr_scale;
-      std::cout << "IMU Initial Done: camera_init is gravity-aligned (+Z up), gravity along -Z"
-                << std::endl;
+      std::cout << "IMU Initial Done (gravity_align="
+                << (gravity_align_ ? "true" : "false") << ")" << std::endl;
       // ROS_INFO("IMU Initial Done: Gravity: %.4f %.4f %.4f %.4f; state.bias_g: %.4f %.4f %.4f; acc covarience: %.8f %.8f %.8f; gry covarience: %.8f %.8f %.8f",\
       //          imu_state.grav[0], imu_state.grav[1], imu_state.grav[2], mean_acc.norm(), cov_bias_gyr[0], cov_bias_gyr[1], cov_bias_gyr[2], cov_acc[0], cov_acc[1], cov_acc[2], cov_gyr[0], cov_gyr[1], cov_gyr[2]);
       fout_imu.open(DEBUG_FILE_DIR("imu.txt"),ios::out);

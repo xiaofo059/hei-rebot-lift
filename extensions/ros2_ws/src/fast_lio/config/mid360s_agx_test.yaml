@@ -7,6 +7,11 @@
 # Keep the LiDAR driver in CustomMsg mode (xfer_format:=1).
 /**:
   ros__parameters:
+    # Preserve earlier algorithm settings; use the common AGX odom/body frames.
+    world_frame: odom
+    body_frame: body
+    gravity_align: true
+    imu_init_num: 10
     feature_extract_enable: false
     point_filter_num: 3
     max_iteration: 3

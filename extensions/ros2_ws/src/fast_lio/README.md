@@ -193,3 +193,35 @@ The main structure of this UAV is 3d printed (Aluminum or PLA), the .stl file wi
 ## 6.Acknowledgments
 
 Thanks for LOAM(J. Zhang and S. Singh. LOAM: Lidar Odometry and Mapping in Real-time), [Livox_Mapping](https://github.com/Livox-SDK/livox_mapping), [LINS](https://github.com/ChaoqinRobotics/LINS---LiDAR-inertial-SLAM) and [Loam_Livox](https://github.com/hku-mars/loam_livox).
+
+
+## AGX MID-360S profile
+
+`config/mid360s_agx.yaml` and `config/mid360s_agx_fixed_extrinsic_test.yaml`
+map the sea_slam FASTLIO2_ROS2 profile to this implementation's parameter names:
+point stride 6, scan/map voxels 0.15/0.3 m, range (0.35, 40] m,
+local cube 300 m, map movement detection range 60 m, five filter iterations,
+acceleration/gyro process noise entries 0.01, and fixed manufacturer extrinsics.
+The existing five-point nearest-neighbor search, movement threshold 1.5 and
+LiDAR observation covariance 0.001 already match that profile.
+
+The ROS parameters `world_frame: odom`, `body_frame: body`,
+`gravity_align: true`, `imu_init_num: 100` select the frame names and initialization.
+`gravity_align: false` retains the initial body orientation as the world orientation
+and estimates gravity in that frame. Alignment is applied during initialization,
+not repeatedly while mapping; absolute yaw remains unconstrained by gravity.
+The initializer collects at least `imu_init_num` samples in complete scan batches;
+it does not measure a fixed number of seconds. Keep the sensor stationary at startup.
+`preprocess.max_range: 0.0` disables the additional maximum-distance filter.
+
+Without explicit overrides, frame names remain camera_init/body, the initialization
+threshold remains 10, and gravity alignment is disabled. The earlier AGX test/fine
+profiles explicitly retain gravity alignment and threshold 10, but now use the
+same odom/body frame names as all other AGX profiles. Their algorithm settings
+remain available for comparison.
+
+RTAB-Map obtains the odometry parent frame from `/Odometry`; the new default TF
+chain is `map -> odom -> body`. The topics and IMU BEST_EFFORT subscription are
+unchanged. `body` denotes the IMU origin, not the mobile base's `base_link`.
+No additional performance tracing or per-scan diagnostic publisher is added.
+These settings still require stationary and motion validation on the real sensor.

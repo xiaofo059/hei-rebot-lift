@@ -185,7 +185,7 @@ void Preprocess::avia_handler(const livox_ros_driver2::msg::CustomMsg::UniquePtr
               || (abs(pl_full[i].z - pl_full[i - 1].z) > 1e-7))
               && (pl_full[i].x * pl_full[i].x + pl_full[i].y * pl_full[i].y + pl_full[i].z * pl_full[i].z > (blind * blind)))
           {
-            pl_surf.push_back(pl_full[i]);
+            add_surface_point(pl_full[i]);
           }
         }
       }
@@ -286,7 +286,7 @@ void Preprocess::oust64_handler(const sensor_msgs::msg::PointCloud2::UniquePtr &
       added_pt.normal_z = 0;
       added_pt.curvature = pl_orig.points[i].t * time_unit_scale;  // curvature unit: ms
 
-      pl_surf.points.push_back(added_pt);
+      add_surface_point(added_pt);
     }
   }
   // pub_func(pl_surf, pub_full, msg->header.stamp);
@@ -466,7 +466,7 @@ void Preprocess::velodyne_handler(const sensor_msgs::msg::PointCloud2::UniquePtr
       {
         if (added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z > (blind * blind))
         {
-          pl_surf.points.push_back(added_pt);
+          add_surface_point(added_pt);
         }
       }
     }
@@ -551,7 +551,7 @@ void Preprocess::mid360_handler(const sensor_msgs::msg::PointCloud2::UniquePtr &
 
     if (added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z > (blind * blind))
     {
-      pl_surf.push_back(std::move(added_pt));
+      add_surface_point(std::move(added_pt));
     }
   }
 }
@@ -583,7 +583,7 @@ void Preprocess::default_handler(const sensor_msgs::msg::PointCloud2::UniquePtr 
 
     if (added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z > (blind * blind))
     {
-      pl_surf.push_back(std::move(added_pt));
+      add_surface_point(std::move(added_pt));
     }
   }
 }
@@ -870,7 +870,7 @@ void Preprocess::give_feature(pcl::PointCloud<PointType>& pl, vector<orgtype>& t
         ap.z = pl[j].z;
         ap.intensity = pl[j].intensity;
         ap.curvature = pl[j].curvature;
-        pl_surf.push_back(ap);
+        add_surface_point(ap);
 
         last_surface = -1;
       }
@@ -897,7 +897,7 @@ void Preprocess::give_feature(pcl::PointCloud<PointType>& pl, vector<orgtype>& t
         ap.z /= (j - last_surface);
         ap.intensity /= (j - last_surface);
         ap.curvature /= (j - last_surface);
-        pl_surf.push_back(ap);
+        add_surface_point(ap);
       }
       last_surface = -1;
     }

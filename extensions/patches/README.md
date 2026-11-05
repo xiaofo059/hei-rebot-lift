@@ -1,5 +1,11 @@
 # AGX upstream source patches
 
+This directory records historical patches from before the ROS package sources were
+tracked directly by dev_agx. Do not reapply this patch to the current vendored source.
+Current gravity alignment is controlled by the FAST-LIO2 YAML `gravity_align`
+parameter; the AGX profiles enable it explicitly. Initialization sample count is
+controlled by `imu_init_num`. The validation below describes the earlier revision.
+
 ## FAST-LIO2 gravity-aligned initialization
 
 Base upstream commit: `a4743b095409588842a5b30ddfa27e29d2f99164`.

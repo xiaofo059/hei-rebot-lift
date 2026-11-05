@@ -9,16 +9,16 @@ AGX 上使用 FAST-LIO2 里程计和 MID-360S 点云进行 RTAB-Map 在线三维
 FAST-LIO2 /cloud_registered_body (body, PointXYZINormal)
   -> /hei_robot_mapping/cloud_adapter (保留 XYZ/intensity，移除未计算的 normals)
   -> /hei_robot_mapping/scan_cloud (body, PointXYZI)
-  -> /rtabmap/rtabmap <- FAST-LIO2 /Odometry (camera_init -> body)
+  -> /rtabmap/rtabmap <- FAST-LIO2 /Odometry (odom -> body)
 ```
 
 适配器保持点坐标、frame_id 和时间戳，剔除非有限 XYZ；支持填充行和大小端输入。
-输入必须是 body 坐标系，误接 /cloud_registered（camera_init）会报错而不篡改坐标系。
+输入必须是 body 坐标系，误接 /cloud_registered（odom）会报错而不篡改坐标系。
 FAST-LIO2 已去畸变，不再次去畸变；不重复启动里程计或订阅原始 IMU。
 RTAB-Map 使用现有 PCL ICP 后端与 g2o；以 2 Hz 处理建图帧。
 点云与里程计使用精确时间同步，依赖 FAST-LIO2 当前实现的同一扫描末尾时间戳。
 
-TF 职责：FAST-LIO2 发布 camera_init -> body；RTAB-Map 发布 map -> camera_init。
+TF 职责：FAST-LIO2 发布 odom -> body；RTAB-Map 发布 map -> odom。
 不发布重复静态 TF，不启动雷达或 FAST-LIO2；建图和定位 launch 默认启动 RViz2，不涉及底盘控制和 Nav2。
 
 ## 构建
@@ -45,7 +45,7 @@ export ROS_LOCALHOST_ONLY=0
 ros2 launch hei_robot_mapping mapping.launch.py
 ```
 
-所有终端须使用相同 ROS_DOMAIN_ID。不能同时运行其他发布 map -> camera_init 的节点。
+所有终端须使用相同 ROS_DOMAIN_ID。不能同时运行其他发布 map -> odom 的节点。
 可通过 cloud_topic、odom_topic、config_file、use_sim_time 参数覆盖相应输入。
 建图 launch 默认在 AGX 本机同时打开 RViz2，Fixed Frame=map，灰色为地图点云、
 青色为实时点云，并显示 TF。请在 AGX 图形桌面的终端执行。
@@ -58,7 +58,7 @@ ros2 launch hei_robot_mapping mapping.launch.py
 - /rtabmap/mapData：地图节点和图数据
 - /rtabmap/mapGraph：优化后的位姿图
 - /rtabmap/info：建图及回环状态
-- TF map -> camera_init：地图对里程计的修正
+- TF map -> odom：地图对里程计的修正
 
 RViz Fixed Frame 使用 map，PointCloud2 选择 /rtabmap/cloud_map。
 查看中间点云时可选 /hei_robot_mapping/scan_cloud，需有相应 TF。
@@ -141,7 +141,7 @@ ros2 launch hei_robot_mapping localization.launch.py map_name:=warehouse_01
 默认 RViz2 的 Fixed Frame=map，灰色显示已保存地图，青色显示实时去畸变点云，
 同时显示 TF；2D Pose Estimate 发布 /initialpose。请在 AGX 图形桌面终端运行。
 无图形界面或已有 RViz 时加 rviz:=false；自定义配置使用 rviz_config:=/绝对路径/配置.rviz。
-**不能与 mapping.launch.py 同时运行**，否则会重复启动适配器和发布 map→camera_init。
+**不能与 mapping.launch.py 同时运行**，否则会重复启动适配器和发布 map→odom。
 各终端的 ROS_DOMAIN_ID、ROS_LOCALHOST_ONLY 必须一致。
 
 默认初始位姿为 `0 0 0 0 0 0`：假设 body 在原建图起点、朝向与原建图开始时相同。
@@ -163,7 +163,7 @@ ros2 launch hei_robot_mapping localization.launch.py map_name:=warehouse_01 \
 或自行发布 map 坐标系下的 PoseWithCovarianceStamped 到 /initialpose。
 
 观察实时点云是否与地图重合、body位置是否符合实际，并检查 /rtabmap/info 的匹配结果
-及 map→camera_init 修正是否合理。仅看到地图或TF不代表匹配成功。
+及 map→odom 修正是否合理。仅看到地图或TF不代表匹配成功。
 定位模式下不向地图添加节点，静止时也继续尝试配准。
 本模式是**给定大致初值后的纯激光定位**；ICP对初值、重叠区域和场景几何有要求，
 不保证从任意未知位置或雷达突然搬动后自动全局重定位。
@@ -218,7 +218,8 @@ AGX 原生编译安装通过。同一批 69 对真实输入回放，修正前 22
 ## FAST-LIO2 世界系重力对齐（2026-10-28）
 
 AGX FAST-LIO2 已改为在 IMU 初始化时将平均比力方向旋转到世界 +Z，
-并将初始世界重力设为 -Z。camera_init 因而在初始化时水平，body 保留实际倾角。
+并将初始世界重力设为 -Z。该行为现在由 FAST-LIO2 YAML 的 `gravity_align: true` 控制，
+`imu_init_num: 100` 控制初始化样本数。odom 因而在初始化时水平，body 保留实际倾角。
 重力不能确定绝对航向；算法使用最短倾斜旋转，不提供指北航向。
 初始化后重力仍是滤波器估计状态，不是每帧强制重置的姿态约束。
 
@@ -226,7 +227,7 @@ AGX FAST-LIO2 已改为在 IMU 初始化时将平均比力方向旋转到世界 
 因此生成二维地图前仍要确定地面高度。此改动不会旋转已有 .db/PCD，
 RTAB-Map 当前配置也不强制 map 的滚转/俯仰与重力一致。
 若正在建图，应先保存地图并停止建图/定位，再重启 FAST-LIO2 和上层节点，
-避免运行中改变 camera_init 定义。已有进程继续使用旧程序，重启后才生效。
+避免运行中改变 odom 定义。已有进程继续使用旧程序，重启后才生效。
 完整可重放补丁及测试说明见 extensions/patches/README.md。
 
 重力对齐验证：AGX 原生编译安装通过，实际 IMU 初始化路径的 127 个初始化场景通过。
@@ -235,3 +236,12 @@ RTAB-Map 当前配置也不强制 map 的滚转/俯仰与重力一致。
 因此只确认初始化及初始输出的重力对齐，不宣称持续运行始终严格水平。
 未做实机静止/移动验收。详见 extensions/patches/README.md 和
 ros2_ws/log/gravity_alignment_20261028/ 中的完整记录。
+
+AGX 的默认、test、fine 和固定外参配置均使用 `world_frame: odom`、`body_frame: body`。
+RTAB-Map 的 `odom_frame_id` 留空，会从同步的 `/Odometry` 消息中读取父坐标系。
+修改 YAML 不会改变已启动的 FAST-LIO2；保存需要的地图后重启 FAST-LIO2 和建图/定位
+节点，再重新打开 RViz，新的 TF 链为 `map -> odom -> body`。RViz Fixed Frame 保持 `map`。
+
+RViz 地图点云 `/rtabmap/cloud_map` 使用 Reliable + Transient Local，以接收静止时
+不再重复发布的缓存地图。Fixed Frame 使用 map，避免对旧地图消息请求已过期的 TF。
+实时点云仍使用 Best Effort；默认视距 15 m，过度放大会看不到周围墙面和地面。

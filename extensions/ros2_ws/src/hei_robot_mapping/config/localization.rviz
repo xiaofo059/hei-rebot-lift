@@ -30,7 +30,7 @@ Panels:
 Visualization Manager:
   Class: ''
   Displays:
-  - Alpha: 0.5
+  - Alpha: 0.2
     Cell Size: 1
     Class: rviz_default_plugins/Grid
     Color: 160; 160; 164
@@ -55,7 +55,7 @@ Visualization Manager:
       All Enabled: true
       body:
         Value: true
-      camera_init:
+      odom:
         Value: true
       map:
         Value: true
@@ -69,14 +69,14 @@ Visualization Manager:
   - Alpha: 1
     Autocompute Intensity Bounds: true
     Autocompute Value Bounds:
-      Max Value: 10
-      Min Value: -10
-      Value: true
+      Max Value: 3.0
+      Min Value: -0.5
+      Value: false
     Axis: Z
     Channel Name: intensity
     Class: rviz_default_plugins/PointCloud2
     Color: 0; 255; 255
-    Color Transformer: FlatColor
+    Color Transformer: AxisColor
     Decay Time: 0
     Enabled: true
     Invert Rainbow: false
@@ -100,17 +100,17 @@ Visualization Manager:
     Use Fixed Frame: true
     Use rainbow: true
     Value: true
-  - Alpha: 0.6
+  - Alpha: 1
     Autocompute Intensity Bounds: true
     Autocompute Value Bounds:
-      Max Value: 10
-      Min Value: -10
-      Value: true
+      Max Value: 3.0
+      Min Value: -0.5
+      Value: false
     Axis: Z
     Channel Name: intensity
     Class: rviz_default_plugins/PointCloud2
     Color: 180; 180; 180
-    Color Transformer: FlatColor
+    Color Transformer: AxisColor
     Decay Time: 0
     Enabled: true
     Invert Rainbow: false
@@ -126,17 +126,17 @@ Visualization Manager:
     Style: Points
     Topic:
       Depth: 1
-      Durability Policy: Volatile
+      Durability Policy: Transient Local
       Filter size: 10
       History Policy: Keep Last
-      Reliability Policy: Best Effort
+      Reliability Policy: Reliable
       Value: /rtabmap/cloud_map
     Use Fixed Frame: true
     Use rainbow: true
     Value: true
   Enabled: true
   Global Options:
-    Background Color: 48; 48; 48
+    Background Color: 20; 20; 24
     Fixed Frame: map
     Frame Rate: 20
   Name: root

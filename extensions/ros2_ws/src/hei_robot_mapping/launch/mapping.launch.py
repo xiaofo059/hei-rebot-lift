@@ -17,7 +17,7 @@ def generate_launch_description():
         DeclareLaunchArgument("cloud_topic", default_value="/cloud_registered_body",
                               description="FAST-LIO2 deskewed body-frame PointCloud2"),
         DeclareLaunchArgument("odom_topic", default_value="/Odometry",
-                              description="FAST-LIO2 Odometry, camera_init -> body"),
+                              description="FAST-LIO2 Odometry, world_frame -> body"),
         DeclareLaunchArgument("config_file", default_value=config),
         DeclareLaunchArgument("rviz", default_value="true",
                               description="Start RViz2 on the AGX desktop"),
