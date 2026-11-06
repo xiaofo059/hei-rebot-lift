@@ -31,10 +31,10 @@ source /opt/ros/humble/setup.bash
 cd /home/user/hei-rebot-lift/extensions/ros2_ws
 colcon build --packages-select hei_chassis_controller --symlink-install
 source install/setup.bash
-ros2 launch hei_chassis_controller chassis.launch.py
+ros2 launch hei_chassis_controller chassis.launch.py use_mock_hardware:=true
 ```
 
-**默认 `use_mock_hardware:=true`，不打开串口、不使能真实电机。**
+**默认 `use_mock_hardware:=false`，直接连接真实底盘并使能四轮。上面的模拟检查命令显式指定 `true`，不打开串口、不使能真实电机。**
 
 另开终端 source 相同环境后：
 
@@ -42,7 +42,7 @@ ros2 launch hei_chassis_controller chassis.launch.py
 ros2 control list_controllers
 ros2 control list_hardware_interfaces
 ros2 topic echo /chassis/odom
-# 以下仅用于默认模拟模式；Ctrl+C 停止发布后 0.3 秒内清零轮指令。
+# 以下仅用于已显式指定 use_mock_hardware:=true 的模拟模式；停止发布后 0.3 秒内清零轮指令。
 ros2 topic pub -r 20 /cmd_vel geometry_msgs/msg/Twist '{linear: {x: 0.05, y: 0.0}, angular: {z: 0.0}}'
 ```
 
@@ -55,10 +55,10 @@ ros2 topic pub -r 20 /cmd_vel geometry_msgs/msg/Twist '{linear: {x: 0.05, y: 0.0
 ```bash
 source /opt/ros/humble/setup.bash
 source /home/user/hei-rebot-lift/extensions/ros2_ws/install/setup.bash
-ros2 launch hei_chassis_controller chassis.launch.py use_mock_hardware:=false
+ros2 launch hei_chassis_controller chassis.launch.py
 ```
 
-这条实车启动命令会打开 `/dev/hei_chassis` 并使能四轮；无 `/cmd_vel` 时只发送零速度。`Ctrl+C` 正常退出发送零速并失能四轮。
+无参数启动默认使用真实底盘，会打开 `/dev/hei_chassis` 并使能四轮；无 `/cmd_vel` 时只发送零速度。`Ctrl+C` 正常退出发送零速并失能四轮。
 
 ## 参数
 
@@ -71,7 +71,7 @@ ros2 launch hei_chassis_controller chassis.launch.py use_mock_hardware:=false
 
 ## 建图时键盘控制
 
-先按上文启动底盘控制器（实车为 `use_mock_hardware:=false`），雷达、FAST-LIO2、RTAB-Map 按现有流程分别启动。再另开一个 AGX 交互式终端：
+先按上文启动底盘控制器（默认使用真实底盘），雷达、FAST-LIO2、RTAB-Map 按现有流程分别启动。再另开一个 AGX 交互式终端：
 
 ```bash
 source /opt/ros/humble/setup.bash

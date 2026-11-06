@@ -1,4 +1,4 @@
-"""Chassis-only ros2_control bringup; mock hardware by default."""
+"""Chassis-only ros2_control bringup; real hardware by default."""
 from pathlib import Path
 
 import xacro
@@ -49,8 +49,8 @@ def _launch(context):
 def generate_launch_description():
     share = Path(get_package_share_directory("hei_chassis_controller"))
     return LaunchDescription([
-        DeclareLaunchArgument("use_mock_hardware", default_value="true",
-                              description="false opens /dev/hei_chassis and enables the four wheel motors"),
+        DeclareLaunchArgument("use_mock_hardware", default_value="false",
+                              description="false (default) connects and enables real wheel motors; true uses mock hardware"),
         DeclareLaunchArgument("config_file", default_value=str(share / "config" / "controllers.yaml")),
         DeclareLaunchArgument("hardware_config", default_value=str(share / "config" / "hardware.yaml")),
         DeclareLaunchArgument("port", default_value="", description="Optional serial port override"),

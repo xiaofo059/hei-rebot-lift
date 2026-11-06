@@ -19,6 +19,7 @@ struct ProjectionOptions
 
 struct ProjectionResult
 {
+  std::filesystem::path pcd_path;
   std::filesystem::path pgm_path;
   std::filesystem::path yaml_path;
   int width = 0;
@@ -34,11 +35,11 @@ struct ProjectionResult
 };
 
 // Reads saved optimized poses and 3-D laser scans, without writing the database.
-// Height is expressed in the saved map frame. Existing outputs are never replaced.
+// Exports full map-frame XYZI PCD and a height-filtered 2-D PGM/YAML pair.
+// All outputs use the database stem. Existing outputs are never replaced.
 ProjectionResult project_database(
   const std::filesystem::path & database,
   const std::filesystem::path & output_directory,
-  const std::string & output_name,
   const ProjectionOptions & options);
 }  // namespace hei_robot_mapping
 #endif

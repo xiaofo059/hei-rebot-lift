@@ -247,11 +247,15 @@ RViz 地图点云 `/rtabmap/cloud_map` 使用 Reliable + Transient Local，以�
 实时点云仍使用 Best Effort；默认视距 15 m，过度放大会看不到周围墙面和地面。
 
 
-## 离线高度投影：3D 数据库转 Nav2 二维地图
+## 离线地图导出：DB 转三维 PCD 和 Nav2 二维地图
 
 使用独立的 `map_projector` 工具读取已保存 `.db` 中的优化位姿和原始激光扫描，
-将点变换到原地图坐标系，筛选 **map 坐标系 Z ∈ [-0.20, 0.80] m** 的点，
-沿 Z 方向投影到 XY 栅格。不依赖正在运行的雷达、FAST-LIO2 或 RTAB-Map，
+将点变换到原地图坐标系，一次导出两种地图：
+
+- `.pcd`：完整三维全局点云，可供后续 ICP 定位模块加载。
+- `.pgm` + `.yaml`：筛选 **map 坐标系 Z ∈ [-0.20, 0.80] m** 的点，沿 Z 投影到 XY 栅格。
+
+不依赖正在运行的雷达、FAST-LIO2 或 RTAB-Map，
 不会修改数据库，也不会修改建图、定位或里程计节点。
 请先用保存节点完成快照，输入应为已保存完成、没有其他程序正在写入的数据库。
 
@@ -261,28 +265,41 @@ RViz 地图点云 `/rtabmap/cloud_map` 使用 Reliable + Transient Local，以�
 source /opt/ros/humble/setup.bash
 source /home/user/hei-rebot-lift/extensions/ros2_ws/install/setup.bash
 ros2 launch hei_robot_mapping project_map.launch.py \
-  map_name:=warehouse_01 \
+  db_path:=/home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/map/warehouse_01.db \
+  output_directory:=/home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/map \
   config_file:=/home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/config/map_projection.yaml
 ```
 
-输入默认是 `map/warehouse_01.db`，输出默认是同目录下的
-`warehouse_01_2d.pgm` 和 `warehouse_01_2d.yaml`；看到 `Saved ...` 后工具自行退出。
-同名文件（包括符号链接）受到保护，不会覆盖。重新转换可指定新名称：
+输入数据库路径用 `db_path` 指定，输出目录用 `output_directory` 指定（不存在时创建）。
+三个输出始终采用输入数据库的原文件名，不再附加 `_2d`：
 
-```bash
-ros2 launch hei_robot_mapping project_map.launch.py \
-  map_name:=warehouse_01 output_name:=warehouse_01_2d_v2 \
-  config_file:=/home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/config/map_projection.yaml
+```text
+warehouse_01.db -> warehouse_01.pcd
+                   warehouse_01.pgm
+                   warehouse_01.yaml
 ```
+
+看到 `Saved ...` 后工具自行退出。省略 `output_directory` 且配置中也为空时，输出到输入 DB 所在目录。
+任一同名文件（包括符号链接）存在时，整次导出失败，不覆盖或生成部分结果；重新转换请换一个输出目录。
+仍兼容旧的 `map_name:=warehouse_01` 调用，输入从 `map_directory` 查找；`map_name` 与 `db_path` 不可同时指定。
+原 `output_name` 参数已移除，输出名统一从 DB 文件名推导。
+
+PCD 使用 binary XYZI（float32）格式，坐标单位为米，坐标系为原 `map`，
+包含数据库中所有具有优化位姿的三维扫描点。每帧均应用“优化位姿 × 扫描外参”，
+不会使用未经优化的原始里程计轨迹拼接。PCD 不受高度区间影响，也不额外降采样或去重；
+非有限 XYZ 点被跳过，强度字段原样保留（数据库无强度或强度非有限时填 0）。
+PCD 中的 VIEWPOINT 为单位变换，点已经变换到全局 map 坐标系。
+工具按扫描逐帧读取并写入 PCD，不将整张三维地图积累到内存。
+本工具只导出文件；后续 ICP 定位需要另外配置定位模块的预处理及初始位姿。
 
 转换参数在 `config/map_projection.yaml`：
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
-| `map_directory` | 本包源码下的绝对 `map` 路径 | 输入数据库目录 |
-| `output_directory` | 空 | 空时输出到 `map_directory`，也可用同名 launch 参数覆盖 |
-| `output_name` | 空 | 空时为 `<map_name>_2d`，不含扩展名，也可用同名 launch 参数覆盖 |
-| `z_min` / `z_max` | `-0.20` / `0.80` | map 坐标系高度上下界，包含边界，浮点容差 1 微米 |
+| `db_path` | 空 | 输入 DB 的路径，通常用同名 launch 参数覆盖 |
+| `map_directory` | 本包源码下的绝对 `map` 路径 | 仅兼容旧 `map_name` 调用时使用的输入目录 |
+| `output_directory` | 空 | 空时输出到输入 DB 的目录，也可用同名 launch 参数覆盖 |
+| `z_min` / `z_max` | `-0.20` / `0.80` | 仅二维投影：map 高度上下界，包含边界，浮点容差 1 微米 |
 | `resolution` | `0.05` | 栅格分辨率，米/格 |
 | `padding` | `0.50` | 地图边界外扩距离，米；外扩区域保持未知 |
 | `raytrace_free_space` | `true` | 将实际观测射线与高度区间相交的部分标为空闲 |
@@ -293,7 +310,7 @@ ros2 launch hei_robot_mapping project_map.launch.py \
 源码配置变更后需重新 `colcon build --packages-select hei_robot_mapping` 才会更新副本。
 
 输出 `.yaml` 包含 Nav2 的 `image`、`mode`、`resolution`、`origin`、`negate`、
-`occupied_thresh`、`free_thresh`，并附带 `conversion` 配置快照，方便追溯本次转换。
+`occupied_thresh`、`free_thresh`，并附带 `conversion` 配置快照和 PCD 文件名、点数，方便追溯本次转换。
 `image` 使用相对文件名，请将输出的 PGM/YAML 放在一起。
 栅格原点对齐原 map 的 XY 网格，偏航为 0，PGM 行方向按 ROS 地图约定翻转。
 黑色（0）是高度区间内的障碍，白色（254）是观测射线推断的空闲，灰色（205）是未知。
@@ -308,9 +325,16 @@ ros2 launch hei_robot_mapping project_map.launch.py \
 
 单元测试覆盖优化位姿/激光外参应用、全局高度裁剪及边界、PGM 行方向、
 空闲射线与未知区域、障碍优先、数据库只读、无数据/无优化位姿、栅格上限及同名保护。
+PCD 测试通过 PCL 重新读取，检查多帧优化变换、旋转、强度、完整高度范围、NaN 过滤及同名输出。
 
 2026-11-05：AGX 原生编译通过，新增 7 项转换测试及原有点云/保存测试全部通过。
 使用实际 warehouse_01.db（62 份扫描）完成默认范围投影，输出 220×475 格、0.05 m/格；
 PGM/YAML 解析、三态阈值、YAML 参数覆盖、同名保护、缺失输入和空高度区间退出均已验证，
 原数据库 SHA-256 保持不变。记录在 ros2_ws/log/map_projection_validation_20261105/。
 本次仅做离线转换，没有启动实机驱动或规划器；未进行 Nav2 实车通行验收。
+
+2026-11-06：新增同名三维 PCD 导出及 `db_path` 输入，AGX 编译与全包 17 项测试通过。
+warehouse_01.db 实图导出 290840 个 XYZI 点；PCD 的 Z 范围约为 [-1.165, 8.216] m，
+没有被二维高度区间裁剪。默认 PGM 与上一版导出逐字节相同，DB SHA-256 保持不变。
+已验证同名拒绝、缺失 DB 的非零退出、中文/空格路径及 YAML 覆盖；改变二维投影高度和
+分辨率后，PCD 仍逐字节一致。记录在 ros2_ws/log/map_export_validation_20261106_4mv3xoi3/。

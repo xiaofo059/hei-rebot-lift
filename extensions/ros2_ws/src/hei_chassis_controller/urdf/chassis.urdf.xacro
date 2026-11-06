@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="hei_chassis">
-  <xacro:arg name="use_mock_hardware" default="true"/>
+  <xacro:arg name="use_mock_hardware" default="false"/>
   <xacro:arg name="hardware_config" default=""/>
   <xacro:arg name="port" default="/dev/hei_chassis"/>
   <xacro:arg name="wheel_radius" default="0.076"/>

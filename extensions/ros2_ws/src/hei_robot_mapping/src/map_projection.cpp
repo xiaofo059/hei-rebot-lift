@@ -1,6 +1,7 @@
 #include "hei_robot_mapping/map_projection.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
@@ -60,7 +61,7 @@ void validate(const ProjectionOptions & o, const std::string & name)
       return c < 32 || c == 127 || c == '/' || c == '\\';
     }))
   {
-    throw std::invalid_argument("output_name must be one nonempty filename component");
+    throw std::invalid_argument("Database stem must be one nonempty filename component");
   }
 }
 
@@ -115,21 +116,30 @@ void visit_points(const rtabmap::LaserScan & scan, const Eigen::Matrix4d & trans
 {
   const Point origin = transform.block<3, 1>(0, 3);
   const auto & matrix = scan.data();
+  const int intensity_offset = scan.getIntensityOffset();
   for (int row = 0; row < matrix.rows; ++row) {
     const float * values = matrix.ptr<float>(row);
     for (int col = 0; col < matrix.cols; ++col, values += matrix.channels()) {
       const Point local(values[0], values[1], values[2]);
       if (!local.allFinite()) {continue;}
       const Point point = transform.block<3, 3>(0, 0) * local + origin;
-      if (point.allFinite()) {visitor(origin, point);}
+      if (!point.allFinite()) {continue;}
+      if (point.cwiseAbs().maxCoeff() > std::numeric_limits<float>::max()) {
+        throw std::runtime_error("Map point exceeds PCD float32 coordinate range");
+      }
+      const float intensity = intensity_offset >= 0 && std::isfinite(values[intensity_offset]) ?
+        values[intensity_offset] : 0.0f;
+      visitor(origin, point, intensity);
     }
   }
 }
 }  // namespace
 
 ProjectionResult project_database(const fs::path & database, const fs::path & output_directory,
-  const std::string & output_name, const ProjectionOptions & options)
+  const ProjectionOptions & options)
 {
+  // Use the supplied filename even when it is a symlink to another database.
+  const auto output_name = database.stem().string();
   validate(options, output_name);
   if (!fs::is_regular_file(database)) {
     throw std::invalid_argument("Database does not exist or is not a file: " + database.string());
@@ -137,10 +147,11 @@ ProjectionResult project_database(const fs::path & database, const fs::path & ou
   const auto input = fs::canonical(database);
   const auto directory = fs::absolute(output_directory).lexically_normal();
   ProjectionResult result;
+  result.pcd_path = directory / (output_name + ".pcd");
   result.pgm_path = directory / (output_name + ".pgm");
   result.yaml_path = directory / (output_name + ".yaml");
-  if (path_present(result.pgm_path) || path_present(result.yaml_path)) {
-    throw std::runtime_error("Output already exists (including symlinks); choose a new output_name");
+  if (path_present(result.pcd_path) || path_present(result.pgm_path) || path_present(result.yaml_path)) {
+    throw std::runtime_error("Output already exists (including symlinks); choose another output_directory");
   }
   std::unique_ptr<rtabmap::DBDriver> db(rtabmap::DBDriver::create(
       {{"DbSqlite3/InMemory", "false"}}));
@@ -160,7 +171,7 @@ ProjectionResult project_database(const fs::path & database, const fs::path & ou
   // Two streaming passes keep memory bounded by the grid and a single saved scan.
   visit_scans(*db, poses, [&](const auto & scan, const auto & transform) {
     ++result.scans;
-    visit_points(scan, transform, [&](const Point & origin, const Point & point) {
+    visit_points(scan, transform, [&](const Point & origin, const Point & point, float) {
       ++result.finite_points;
       if (in_height(point.z(), options)) {++result.height_points; bound(point);}
       Point a, b;
@@ -171,6 +182,9 @@ ProjectionResult project_database(const fs::path & database, const fs::path & ou
   });
   if (result.height_points == 0) {
     throw std::runtime_error("No 3-D scan points inside map-frame z_min/z_max; check the height range");
+  }
+  if (result.finite_points > std::numeric_limits<uint32_t>::max()) {
+    throw std::runtime_error("Full map exceeds PCD WIDTH limit (uint32)");
   }
   result.origin_x = std::floor((min_x - options.padding) / options.resolution) * options.resolution;
   result.origin_y = std::floor((min_y - options.padding) / options.resolution) * options.resolution;
@@ -193,8 +207,28 @@ ProjectionResult project_database(const fs::path & database, const fs::path & ou
   const auto index = [&](int x, int y) {
       return static_cast<size_t>(result.height - 1 - y) * result.width + x;
     };
+  fs::create_directories(directory);
+  TemporaryDirectory temporary(directory);
+  const auto pcd_temp = temporary.path / "map.pcd";
+  const auto pgm_temp = temporary.path / "map.pgm", yaml_temp = temporary.path / "map.yaml";
+  std::ofstream pcd(pcd_temp, std::ios::binary);
+  pcd.exceptions(std::ios::failbit | std::ios::badbit);
+  pcd << "# .PCD v0.7 - Point Cloud Data file format\n"
+    << "# frame_id: map; optimized poses and scan local transforms applied\n"
+    << "VERSION 0.7\nFIELDS x y z intensity\nSIZE 4 4 4 4\nTYPE F F F F\nCOUNT 1 1 1 1\n"
+    << "WIDTH " << result.finite_points << "\nHEIGHT 1\nVIEWPOINT 0 0 0 1 0 0 0\nPOINTS "
+    << result.finite_points << "\nDATA binary\n";
+  size_t written_points = 0;
   visit_scans(*db, poses, [&](const auto & scan, const auto & transform) {
-    visit_points(scan, transform, [&](const Point & origin, const Point & point) {
+    visit_points(scan, transform, [&](const Point & origin, const Point & point, float intensity) {
+      // Full 3-D cloud: height clipping applies only to the grid below.
+      static_assert(sizeof(float) == 4 && std::numeric_limits<float>::is_iec559,
+        "PCD requires IEEE 754 float32");
+      const std::array<float, 4> values = {
+        static_cast<float>(point.x()), static_cast<float>(point.y()),
+        static_cast<float>(point.z()), intensity};
+      pcd.write(reinterpret_cast<const char *>(values.data()), sizeof(values));
+      ++written_points;
       if (in_height(point.z(), options)) {
         const auto hit = cell(point);
         pixels[index(hit.first, hit.second)] = kOccupied;
@@ -216,13 +250,14 @@ ProjectionResult project_database(const fs::path & database, const fs::path & ou
       }
     });
   });
+  pcd.close();
+  if (written_points != result.finite_points) {
+    throw std::runtime_error("Scan data changed between passes; use a completed database snapshot");
+  }
   db->closeConnection(false);
   result.occupied_cells = std::count(pixels.begin(), pixels.end(), kOccupied);
   result.free_cells = std::count(pixels.begin(), pixels.end(), kFree);
   result.unknown_cells = pixels.size() - result.occupied_cells - result.free_cells;
-  fs::create_directories(directory);
-  TemporaryDirectory temporary(directory);
-  const auto pgm_temp = temporary.path / "map.pgm", yaml_temp = temporary.path / "map.yaml";
   {
     std::ofstream stream(pgm_temp, std::ios::binary);
     stream.exceptions(std::ios::failbit | std::ios::badbit);
@@ -240,6 +275,9 @@ ProjectionResult project_database(const fs::path & database, const fs::path & ou
       << "\nnegate: 0\noccupied_thresh: 0.65\nfree_thresh: 0.196\n"
       << "# Conversion snapshot; Nav2 uses the standard fields above.\nconversion:\n"
       << "  source_database: " << std::quoted(input.string()) << "\n  frame_id: map\n"
+      << "  pcd_file: " << std::quoted(result.pcd_path.filename().string())
+      << "\n  pcd_format: binary_xyzi\n  pcd_height_filtered: false\n"
+      << "  pcd_points: " << result.finite_points << '\n'
       << "  z_min: " << options.z_min << "\n  z_max: " << options.z_max
       << "\n  resolution: " << options.resolution << "\n  padding: " << options.padding
       << "\n  raytrace_free_space: " << (options.raytrace_free_space ? "true" : "false")
@@ -248,10 +286,17 @@ ProjectionResult project_database(const fs::path & database, const fs::path & ou
     stream.close();
   }
   // Hard links give no-replace publication even when another converter races us.
-  // Publish YAML last so a reader never sees it before its image exists.
-  fs::create_hard_link(pgm_temp, result.pgm_path);
-  try {fs::create_hard_link(yaml_temp, result.yaml_path);} catch (...) {
-    std::error_code ignored; fs::remove(result.pgm_path, ignored); throw;
+  // Publish YAML last, only after both data files exist. Roll back our links on error.
+  bool pcd_published = false, pgm_published = false;
+  try {
+    fs::create_hard_link(pcd_temp, result.pcd_path); pcd_published = true;
+    fs::create_hard_link(pgm_temp, result.pgm_path); pgm_published = true;
+    fs::create_hard_link(yaml_temp, result.yaml_path);
+  } catch (...) {
+    std::error_code ignored;
+    if (pgm_published) {fs::remove(result.pgm_path, ignored);}
+    if (pcd_published) {fs::remove(result.pcd_path, ignored);}
+    throw;
   }
   return result;
 }
