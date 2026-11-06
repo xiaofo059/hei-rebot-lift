@@ -170,6 +170,80 @@ ros2 launch hei_robot_mapping localization.launch.py map_name:=warehouse_01 \
 定位专用配置将 Icp/MaxTranslation 设为1米，以允许修正近似初值，
 保留点云对应关系筛选和图优化一致性检查；这不保证1米内的任意初值都能收敛。
 
+## 导航前启动定位与 relocalize 服务
+
+导航前使用独立入口 `relocalize.launch.py`。它复用上面的只读定位 launch，
+启动点云适配器、RTAB-Map 和一个轻量重定位服务节点，默认不启动 RViz2；
+雷达驱动、FAST-LIO2 需要先启动稳定，本入口不启动 Nav2 或底盘。
+不能与 `mapping.launch.py` 或 `localization.launch.py` 同时运行。
+
+编辑 `config/relocalize.yaml`：
+
+```yaml
+/**:
+  ros__parameters:
+    database_path: /home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/map/warehouse_01.db
+    initial_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    auto_relocalize: true
+    service_timeout_sec: 15.0
+    localization_timeout_sec: 60.0
+    required_matches: 3
+    data_timeout_sec: 3.0
+```
+
+以上是主要参数，完整文件还包含固定服务端、坐标系和话题名称。
+`database_path` 是已存在的 `.db` 绝对路径，不创建缺失地图；
+`initial_pose` 是 body 在已保存 map 中的大致六自由度位姿（米、弧度）。
+零初值假设回到原建图起点和朝向；从其他地方启动应修改初值，不能保证未知位置全局搜索。
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/user/hei-rebot-lift/extensions/ros2_ws/install/setup.bash
+ros2 launch hei_robot_mapping relocalize.launch.py \
+  config_file:=/home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/config/relocalize.yaml
+```
+
+默认不启动 RViz2，需要检查定位时可加 `rviz:=true`。后续导航启动入口负责加载
+二维 PGM/YAML 的 map_server 和导航所需的 RViz2。显式传入源码 YAML 后，
+修改配置无需重新编译，重启此 launch 即生效；运行中不会自动热切换地图或参数。
+省略 `config_file` 时使用 install 副本，修改源码 YAML 后需重新编译本包更新副本。
+原来的 `localization.launch.py map_name:=...` 用法保持可用。
+
+启动后 `auto_relocalize=true` 会自动调用一次封装服务。再次请求：
+
+```bash
+ros2 service call /hei_robot_mapping/relocalize std_srvs/srv/Trigger '{}'
+```
+
+**当前 RTAB-Map 没有原生 `relocalize` 服务。** `/hei_robot_mapping/relocalize`
+是本包提供的封装：先检查目标 RTAB-Map 的数据库路径、坐标系、只读定位参数，
+再调用原生 `/rtabmap/rtabmap/set_mode_localization`，发布配置初值到 `/initialpose`。
+地图在 launch 启动时加载，不调用具有切换/清空地图语义的 `load_database` 或 `reset`。
+修改地图路径后应重启 launch，再次调用服务会重新使用本次启动配置中的初值。
+请求等待匹配期间，也可在 RViz 用 2D Pose Estimate 修正平面初值；
+下一次服务调用仍会使用 YAML 中的初值，需要持久修正时应修改 YAML 后重启。
+
+服务不会在调用成功或 TF 出现后立即报告定位成功：它要求同一新时间戳的
+`/rtabmap/info` 已接受激光回环/邻近匹配和 `/rtabmap/localization_pose` 有限有效位姿，
+同时 `map -> odom -> body` 在该时间戳有可用变换。默认连续 3 帧才返回 `success=true`。
+拒绝的匹配、旧消息、无效位姿/协方差、缺少 TF 均不能满足条件；
+服务不可用或超时返回 `success=false`，并发请求明确返回“正在重定位”。
+服务响应中的 success 表示满足上述软件条件，不是实际定位精度的保证。
+
+`/hei_robot_mapping/localization_ready` 是持久发布的 Bool：成功后 true，
+新请求、后续匹配失败或超过 `data_timeout_sec` 没有新成功匹配时恢复 false。
+订阅时如需立即获取当前值，应使用 transient_local durability。
+
+```bash
+ros2 topic echo /hei_robot_mapping/localization_ready \
+  --qos-durability transient_local --once
+```
+
+确认 ready=true，且 RViz 中实时点云与地图重合、位置朝向符合实际后，再启动 Nav2。
+此节点不自动启动导航或控制电机；导航期间如何处理 ready 变化需由后续导航集成决定。
+RTAB-Map 的 ICP 仍依赖合理初值和场景重叠，不能把该封装当成任意位置的全局重定位算法。
+服务节点仅订阅低频 Info/位姿和 TF，不订阅点云，不修改 FAST-LIO2/RTAB-Map 主节点源码。
+
 ## 验证
 
 ```bash

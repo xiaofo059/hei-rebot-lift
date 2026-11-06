@@ -1,0 +1,22 @@
+# Navigation pre-start localization. Pass this source file as config_file to
+# apply later edits without rebuilding. Changing the DB requires a launch restart.
+/**:
+  ros__parameters:
+    database_path: /home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/map/lab_01.db
+    # Approximate BODY pose in the saved MAP: x y z roll pitch yaw (m, rad).
+    # Z is relative to the original mapping origin, not height above the floor.
+    # Zeros assume the original mapping start position and orientation.
+    initial_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    auto_relocalize: true
+    service_timeout_sec: 15.0
+    localization_timeout_sec: 60.0
+    # Require actual accepted RTAB-Map registrations, not just a map or TF.
+    required_matches: 3
+    data_timeout_sec: 3.0
+    rtabmap_node: /rtabmap/rtabmap
+    map_frame: map
+    odom_frame: odom
+    body_frame: body
+    initialpose_topic: /initialpose
+    info_topic: /rtabmap/info
+    localization_pose_topic: /rtabmap/localization_pose
