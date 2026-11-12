@@ -28,7 +28,7 @@
     preprocess:
       lidar_type: 1
       scan_line: 4
-      blind: 0.35
+      blind: 0.50
       max_range: 40.0
       timestamp_unit: 3
       scan_rate: 10

@@ -22,7 +22,7 @@ public:
   }
   ~MotorEmulator() {running_ = false; worker_.join(); close(master_);}
   std::string port;
-  std::atomic<int> drop_motor{0}, fault_motor{0}, enables{0};
+  std::atomic<int> drop_motor{0}, fault_motor{0}, fault_state{0xa}, enables{0}, fault_clears{0};
   std::atomic<bool> wrong_range{false};
   std::array<std::atomic<double>, 4> commanded{{0, 0, 0, 0}};
 private:
@@ -36,7 +36,7 @@ private:
   void status(int i)
   {
     if (drop_motor == i + 1 || drop_motor == -1) {return;}
-    const int state = fault_motor == i + 1 ? 0xa : (enabled_[i] ? 1 : 0);
+    const int state = fault_motor == i + 1 ? fault_state.load() : (enabled_[i] ? 1 : 0);
     const auto vel = uint16_t(std::clamp((commanded[i].load() + 30) * 4095 / 60, 0.0, 4095.0));
     reply(i, {{uint8_t((state << 4) | (i + 1)), 0x80, 0, uint8_t(vel >> 4), uint8_t((vel & 15) << 4 | 8), 0, 30, 30}});
   }
@@ -60,6 +60,7 @@ private:
       int i = id - 1;
       if (d[7] == 0xfc) {enabled_[i] = true; ++enables;}
       if (d[7] == 0xfd) {enabled_[i] = false; commanded[i] = 0;}
+      if (d[7] == 0xfe) {++fault_clears; if (fault_motor == i + 1) {fault_motor = 0;}}
       status(i);
     }
   }
@@ -148,6 +149,27 @@ TEST_F(HardwareTest, IncorrectFeedbackScalingRefusesEnable)
   ASSERT_EQ(h.on_configure(rclcpp_lifecycle::State{}), hardware_interface::CallbackReturn::SUCCESS);
   EXPECT_EQ(h.on_activate(rclcpp_lifecycle::State{}), hardware_interface::CallbackReturn::ERROR);
   EXPECT_EQ(emulator.enables.load(), 0);
+}
+TEST_F(HardwareTest, StartupCommunicationFaultRequiresExplicitRecovery)
+{
+  MotorEmulator emulator; emulator.fault_motor = 2; emulator.fault_state = 0xd;
+  DamiaoChassisSystem h;
+  ASSERT_EQ(h.on_init(make_info(emulator.port)), hardware_interface::CallbackReturn::SUCCESS);
+  ASSERT_EQ(h.on_configure(rclcpp_lifecycle::State{}), hardware_interface::CallbackReturn::SUCCESS);
+  EXPECT_EQ(h.on_activate(rclcpp_lifecycle::State{}), hardware_interface::CallbackReturn::ERROR);
+  EXPECT_EQ(emulator.enables.load(), 0);
+  EXPECT_EQ(emulator.fault_clears.load(), 0);
+  for (auto & value : emulator.commanded) {EXPECT_DOUBLE_EQ(value.load(), 0);}
+
+  // Clearing the external fault alone must not silently restart the wheels.
+  emulator.fault_motor = 0;
+  EXPECT_EQ(h.on_activate(rclcpp_lifecycle::State{}), hardware_interface::CallbackReturn::ERROR);
+  EXPECT_EQ(emulator.enables.load(), 0);
+  ASSERT_EQ(h.on_cleanup(rclcpp_lifecycle::State{}), hardware_interface::CallbackReturn::SUCCESS);
+  ASSERT_EQ(h.on_configure(rclcpp_lifecycle::State{}), hardware_interface::CallbackReturn::SUCCESS);
+  ASSERT_EQ(h.on_activate(rclcpp_lifecycle::State{}), hardware_interface::CallbackReturn::SUCCESS);
+  EXPECT_EQ(emulator.enables.load(), 4);
+  h.on_cleanup(rclcpp_lifecycle::State{});
 }
 TEST_F(HardwareTest, MotorFaultStopsAllFourWheels)
 {

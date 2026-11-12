@@ -108,6 +108,12 @@ ros2 run hei_chassis_controller chassis_keyboard --ros-args --params-file /home/
 4. 激活前写入并读回 VEL 模式 `CTRL_MODE=3`、CAN `TIMEOUT=6000`；TIMEOUT 单位是 **50µs**，6000 即 **300ms**。仅写 RAM，不保存 flash、不设编码器零位、不改臂/升降参数。读回 PMAX/VMAX/TMAX 与 YAML 不一致时拒绝激活，避免错误反馈换算。
 5. 电机 CAN 看门狗用于主机崩溃/USB 断开后的电机侧保护；真实固件的超时停车效果仍须架空实测。软件不能替代物理急停。进程被 SIGKILL 时不能执行退出清理。
 
+### 启动失败：四轮使能反馈不齐
+
+`Not all four motors returned fresh enabled feedback` 表示四轮未全部返回新鲜的已使能反馈，不等同于串口无法连接。启动过程会报告具体电机 ID、状态码，或区分无状态回复与反馈过期。收到电机故障码时直接拒绝激活，发送零速度并失能四轮，不会自动清除故障或反复使能。
+
+其中 `state=0xd (communication timeout)` 是电机侧通信超时故障；寄存器仍可能正常回复。先退出底盘控制器和其他底盘程序，检查电源、USB/CAN 连接；确认连接恢复后，重新上电底盘清除锁存故障，再启动控制器。不要通过放宽反馈超时或取消四轮使能检查绕过故障。正常使用 `Ctrl+C` 退出，避免强制杀进程导致来不及发送失能指令。反复出现时需进一步检查通信链路和主机调度，重新上电恢复不代表已确定最初的触发原因。
+
 ## 与当前 SLAM / Nav2 的关系
 
 当前 FAST-LIO2 + RTAB-Map 保留 `map → odom → body`。本包默认 **`publish_odom_tf: false`**，只发布独立 `wheel_odom` 数值里程计，避免两个来源同时决定 `odom → body/base_link`。不要把独立轮速积分直接改名成 FAST-LIO2 的 `odom` 而不建立它们之间的关系。

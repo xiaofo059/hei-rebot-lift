@@ -2,7 +2,7 @@
 # apply later edits without rebuilding. Changing the DB requires a launch restart.
 /**:
   ros__parameters:
-    database_path: /home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/map/lab_01.db
+    database_path: /home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/map/lab_03.db
     # Approximate BODY pose in the saved MAP: x y z roll pitch yaw (m, rad).
     # Z is relative to the original mapping origin, not height above the floor.
     # Zeros assume the original mapping start position and orientation.

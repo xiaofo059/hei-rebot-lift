@@ -12,6 +12,21 @@ namespace
 auto logger = rclcpp::get_logger("hei_chassis_hardware");
 using Callback = hardware_interface::CallbackReturn;
 using Result = hardware_interface::return_type;
+const char * motor_state_name(uint8_t state)
+{
+  switch (state) {
+    case 0: return "disabled";
+    case 1: return "enabled";
+    case 8: return "overvoltage";
+    case 9: return "undervoltage";
+    case 10: return "overcurrent";
+    case 11: return "MOS overtemperature";
+    case 12: return "coil overtemperature";
+    case 13: return "communication timeout";
+    case 14: return "overload";
+    default: return "unknown";
+  }
+}
 }
 DamiaoChassisSystem::~DamiaoChassisSystem() {stop(true);}
 
@@ -128,6 +143,20 @@ bool DamiaoChassisSystem::healthy(Clock::time_point now) const
   }
   return true;
 }
+void DamiaoChassisSystem::check_motor_faults() const
+{
+  bool fault = false;
+  for (size_t i = 0; i < 4; ++i) {
+    if (seen_[i] && states_[i] >= 8) {
+      RCLCPP_ERROR(logger, "Motor %u state=0x%x (%s); refusing chassis activation",
+        ids_[i], states_[i], motor_state_name(states_[i]));
+      fault = true;
+    }
+  }
+  if (fault) {
+    throw std::runtime_error("Motor fault reported; inspect the cause and clear the motor fault before restarting the controller");
+  }
+}
 Callback DamiaoChassisSystem::on_activate(const rclcpp_lifecycle::State &)
 {
   if (!opened_ || fault_) {return Callback::ERROR;}
@@ -136,6 +165,7 @@ Callback DamiaoChassisSystem::on_activate(const rclcpp_lifecycle::State &)
     // Configure RAM only; do not save to flash, clear faults or change encoder zeros.
     for (auto id : ids_) {serial_.send(command_frame(id, 0xfd));}
     std::this_thread::sleep_for(std::chrono::milliseconds(20)); receive();
+    check_motor_faults();
     for (size_t i = 0; i < 4; ++i) {
       if (transact(i, 0x55, 10, 3) != 3 || transact(i, 0x33, 10) != 3) {
         throw std::runtime_error("Motor failed to enter VEL mode 3");
@@ -154,14 +184,30 @@ Callback DamiaoChassisSystem::on_activate(const rclcpp_lifecycle::State &)
         }
       }
     }
+    check_motor_faults();
     seen_.fill(false);
     for (auto id : ids_) {serial_.send(velocity_frame(id, 0)); serial_.send(command_frame(id, 0xfc));}
     const auto end = Clock::now() + std::chrono::seconds(1);
     while (!healthy(Clock::now()) && Clock::now() < end) {
       for (auto id : ids_) {serial_.send(velocity_frame(id, 0));}
       std::this_thread::sleep_for(std::chrono::milliseconds(10)); receive();
+      check_motor_faults();
     }
-    if (!healthy(Clock::now())) {throw std::runtime_error("Not all four motors returned fresh enabled feedback");}
+    const auto now = Clock::now();
+    if (!healthy(now)) {
+      for (size_t i = 0; i < 4; ++i) {
+        if (!seen_[i]) {
+          RCLCPP_ERROR(logger, "Motor %u: no motor-status feedback after enable", ids_[i]);
+        } else {
+          const double age = std::chrono::duration<double>(now - feedback_time_[i]).count();
+          if (states_[i] != 1 || age > feedback_timeout_) {
+            RCLCPP_ERROR(logger, "Motor %u state=0x%x (%s), feedback age=%.3fs (limit %.3fs)",
+              ids_[i], states_[i], motor_state_name(states_[i]), age, feedback_timeout_);
+          }
+        }
+      }
+      throw std::runtime_error("Not all four motors returned fresh enabled feedback");
+    }
     position_ = received_position_; velocity_ = received_velocity_; effort_ = received_effort_;
     snapshot_position_ = position_; snapshot_velocity_ = velocity_; snapshot_effort_ = effort_;
     command_time_ = Clock::now(); fault_ = false; running_ = true; active_ = true;

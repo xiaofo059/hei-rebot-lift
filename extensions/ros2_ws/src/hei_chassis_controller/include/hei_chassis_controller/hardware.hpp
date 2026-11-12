@@ -33,6 +33,7 @@ private:
   void stop(bool close_port);
   void halt_motors();
   bool healthy(Clock::time_point now) const;
+  void check_motor_faults() const;
   SerialTransport serial_;
   PacketParser parser_;
   std::array<uint16_t, 4> ids_{}, masters_{};
