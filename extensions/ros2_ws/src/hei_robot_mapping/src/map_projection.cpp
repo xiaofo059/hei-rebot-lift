@@ -61,7 +61,7 @@ void validate(const ProjectionOptions & o, const std::string & name)
       return c < 32 || c == 127 || c == '/' || c == '\\';
     }))
   {
-    throw std::invalid_argument("Database stem must be one nonempty filename component");
+    throw std::invalid_argument("Output name must be one nonempty filename component");
   }
 }
 
@@ -139,7 +139,8 @@ ProjectionResult project_database(const fs::path & database, const fs::path & ou
   const ProjectionOptions & options)
 {
   // Use the supplied filename even when it is a symlink to another database.
-  const auto output_name = database.stem().string();
+  const auto output_name = options.output_name.empty() ?
+    database.stem().string() : options.output_name;
   validate(options, output_name);
   if (!fs::is_regular_file(database)) {
     throw std::invalid_argument("Database does not exist or is not a file: " + database.string());
@@ -151,7 +152,7 @@ ProjectionResult project_database(const fs::path & database, const fs::path & ou
   result.pgm_path = directory / (output_name + ".pgm");
   result.yaml_path = directory / (output_name + ".yaml");
   if (path_present(result.pcd_path) || path_present(result.pgm_path) || path_present(result.yaml_path)) {
-    throw std::runtime_error("Output already exists (including symlinks); choose another output_directory");
+    throw std::runtime_error("Output already exists (including symlinks); choose another output_name or output_directory");
   }
   std::unique_ptr<rtabmap::DBDriver> db(rtabmap::DBDriver::create(
       {{"DbSqlite3/InMemory", "false"}}));

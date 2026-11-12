@@ -15,7 +15,7 @@ def start_projector(context):
     if not os.path.isfile(config):
         raise RuntimeError(f"Projection configuration not found: {config}")
     overrides = {}
-    for key in ("db_path", "map_name", "output_directory"):
+    for key in ("db_path", "map_name", "output_directory", "output_name"):
         value = LaunchConfiguration(key).perform(context)
         if value:
             overrides[key] = ParameterValue(value, value_type=str)
@@ -38,6 +38,7 @@ def generate_launch_description():
         DeclareLaunchArgument("db_path", default_value="", description="Path to the saved RTAB-Map .db file"),
         DeclareLaunchArgument("map_name", default_value="", description="Legacy alternative to db_path, e.g. warehouse_01"),
         DeclareLaunchArgument("config_file", default_value=os.path.join(share, "config", "map_projection.yaml")),
-        DeclareLaunchArgument("output_directory", default_value="", description="Output directory; empty uses the DB directory. All filenames use the DB stem"),
+        DeclareLaunchArgument("output_directory", default_value="", description="Output directory; empty uses the DB directory"),
+        DeclareLaunchArgument("output_name", default_value="", description="Output basename without extension; empty uses the DB stem"),
         OpaqueFunction(function=start_projector),
     ])

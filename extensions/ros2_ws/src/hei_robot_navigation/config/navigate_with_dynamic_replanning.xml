@@ -1,0 +1,20 @@
+<!-- 基于 Nav2 Humble 的持续重规划行为树。
+     2 Hz 重新计算全局路径；FollowPath 在计算下一条路径时继续跟踪已有路径。
+     全局/局部各允许一次清图重试；再次失败则结束目标。
+     不增加原地旋转或后退恢复动作；正常路径跟踪仍可旋转。 -->
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <PipelineSequence name="NavigateWithDynamicReplanning">
+      <RateController hz="2.0">
+        <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+          <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+          <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+        </RecoveryNode>
+      </RateController>
+      <RecoveryNode number_of_retries="1" name="FollowPath">
+        <FollowPath path="{path}" controller_id="FollowPath"/>
+        <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+      </RecoveryNode>
+    </PipelineSequence>
+  </BehaviorTree>
+</root>

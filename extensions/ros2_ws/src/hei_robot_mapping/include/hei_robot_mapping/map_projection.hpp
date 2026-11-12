@@ -15,6 +15,7 @@ struct ProjectionOptions
   double padding = 0.50;
   bool raytrace_free_space = true;
   int64_t max_cells = 25000000;
+  std::string output_name;  // Empty uses the input database stem.
 };
 
 struct ProjectionResult
@@ -36,7 +37,8 @@ struct ProjectionResult
 
 // Reads saved optimized poses and 3-D laser scans, without writing the database.
 // Exports full map-frame XYZI PCD and a height-filtered 2-D PGM/YAML pair.
-// All outputs use the database stem. Existing outputs are never replaced.
+// All outputs use options.output_name, or the database stem when empty.
+// Existing outputs are never replaced.
 ProjectionResult project_database(
   const std::filesystem::path & database,
   const std::filesystem::path & output_directory,

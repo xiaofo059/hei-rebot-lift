@@ -258,3 +258,32 @@ TEST_F(MapProjection, AggregatesScansUsingEachOptimizedPose)
   EXPECT_FLOAT_EQ(cloud[1].x, 1); EXPECT_FLOAT_EQ(cloud[1].y, 21);
   EXPECT_FLOAT_EQ(cloud[1].intensity, 50);
 }
+
+TEST_F(MapProjection, CustomOutputNameUpdatesAllFilesAndReferences)
+{
+  const auto path = fixture({{1, 0, 0}});
+  const auto before = bytes(path);
+  ProjectionOptions o; o.output_name = "custom map";
+  const auto r = project_database(path, directory, o);
+  EXPECT_EQ(r.pcd_path.filename(), "custom map.pcd");
+  EXPECT_EQ(r.pgm_path.filename(), "custom map.pgm");
+  EXPECT_EQ(r.yaml_path.filename(), "custom map.yaml");
+  EXPECT_TRUE(fs::is_regular_file(r.pcd_path));
+  EXPECT_TRUE(fs::is_regular_file(r.pgm_path));
+  const auto yaml = bytes(r.yaml_path);
+  EXPECT_NE(yaml.find("image: \"custom map.pgm\""), std::string::npos);
+  EXPECT_NE(yaml.find("pcd_file: \"custom map.pcd\""), std::string::npos);
+  EXPECT_EQ(bytes(path), before);
+  EXPECT_FALSE(fs::exists(directory / "input.pcd"));
+  EXPECT_THROW(project_database(path, directory, o), std::runtime_error);
+}
+
+TEST_F(MapProjection, RejectsInvalidCustomOutputNames)
+{
+  const auto path = fixture({{1, 0, 0}});
+  for (const auto & name : {".", "..", "../escape", "/absolute", "nested/map", "nested\\map", "bad\nname"}) {
+    ProjectionOptions o; o.output_name = name;
+    EXPECT_THROW(project_database(path, directory / "output", o), std::invalid_argument);
+  }
+  EXPECT_FALSE(fs::exists(directory / "output"));
+}

@@ -5,16 +5,18 @@ map_projector:
     db_path: ""
     # Legacy map_name input is resolved relative to map_directory.
     map_directory: /home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/map
-    # Empty uses the input DB directory. All outputs use the DB basename:
-    # warehouse_01.pcd, warehouse_01.pgm, warehouse_01.yaml. No overwrite.
+    # Empty uses the input DB directory. Existing outputs are never overwritten.
     output_directory: ""
+    # Output basename without extension; empty uses the DB stem (e.g. warehouse_01).
+    # Applies to all three files: .pcd, .pgm, .yaml.
+    output_name: ""
 
     # Inclusive height band in the SAVED MAP frame, not relative to the floor
     # or the current lidar. No automatic ground removal or height offset.
     # These limits affect ONLY PGM/YAML; PCD keeps all finite 3-D scan points
     # in the optimized map frame, with intensity (zero if unavailable).
     z_min: -0.00
-    z_max: 0.50
+    z_max: 0.80
     resolution: 0.05
     padding: 0.50
 

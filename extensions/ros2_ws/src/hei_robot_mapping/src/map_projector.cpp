@@ -32,6 +32,7 @@ int main(int argc, char ** argv)
     auto output_directory = node->declare_parameter<std::string>("output_directory", "");
     if (output_directory.empty()) {output_directory = database.parent_path().string();}
     hei_robot_mapping::ProjectionOptions options;
+    options.output_name = node->declare_parameter<std::string>("output_name", "");
     options.z_min = node->declare_parameter<double>("z_min", options.z_min);
     options.z_max = node->declare_parameter<double>("z_max", options.z_max);
     options.resolution = node->declare_parameter<double>("resolution", options.resolution);

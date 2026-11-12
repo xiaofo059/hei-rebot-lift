@@ -345,7 +345,7 @@ ros2 launch hei_robot_mapping project_map.launch.py \
 ```
 
 输入数据库路径用 `db_path` 指定，输出目录用 `output_directory` 指定（不存在时创建）。
-三个输出始终采用输入数据库的原文件名，不再附加 `_2d`：
+未设置 `output_name`（默认为空）时，三个输出采用输入数据库的原文件名，不附加 `_2d`：
 
 ```text
 warehouse_01.db -> warehouse_01.pcd
@@ -354,9 +354,18 @@ warehouse_01.db -> warehouse_01.pcd
 ```
 
 看到 `Saved ...` 后工具自行退出。省略 `output_directory` 且配置中也为空时，输出到输入 DB 所在目录。
-任一同名文件（包括符号链接）存在时，整次导出失败，不覆盖或生成部分结果；重新转换请换一个输出目录。
+任一同名文件（包括符号链接）存在时，整次导出失败，不覆盖或生成部分结果；重新转换请换一个输出名称或输出目录。
 仍兼容旧的 `map_name:=warehouse_01` 调用，输入从 `map_directory` 查找；`map_name` 与 `db_path` 不可同时指定。
-原 `output_name` 参数已移除，输出名统一从 DB 文件名推导。
+可用 `output_name` 自定义三个输出的共同名称（不带扩展名），例如：
+
+```bash
+ros2 launch hei_robot_mapping project_map.launch.py \
+  db_path:=/home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/map/warehouse_01.db \
+  output_name:=warehouse_nav
+```
+
+将输出 `warehouse_nav.pcd`、`warehouse_nav.pgm`、`warehouse_nav.yaml`；YAML 内的文件引用同步更新。
+名称必须是单个文件名，不能含路径分隔符或控制字符；输出目录仍由 `output_directory` 决定。
 
 PCD 使用 binary XYZI（float32）格式，坐标单位为米，坐标系为原 `map`，
 包含数据库中所有具有优化位姿的三维扫描点。每帧均应用“优化位姿 × 扫描外参”，
@@ -373,6 +382,7 @@ PCD 中的 VIEWPOINT 为单位变换，点已经变换到全局 map 坐标系。
 | `db_path` | 空 | 输入 DB 的路径，通常用同名 launch 参数覆盖 |
 | `map_directory` | 本包源码下的绝对 `map` 路径 | 仅兼容旧 `map_name` 调用时使用的输入目录 |
 | `output_directory` | 空 | 空时输出到输入 DB 的目录，也可用同名 launch 参数覆盖 |
+| `output_name` | 空 | 不带扩展名的输出名称；空时使用 DB 原文件名，可用同名 launch 参数覆盖 |
 | `z_min` / `z_max` | `-0.20` / `0.80` | 仅二维投影：map 高度上下界，包含边界，浮点容差 1 微米 |
 | `resolution` | `0.05` | 栅格分辨率，米/格 |
 | `padding` | `0.50` | 地图边界外扩距离，米；外扩区域保持未知 |
