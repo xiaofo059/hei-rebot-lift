@@ -93,6 +93,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Unsafe legacy mode: permit arming without first synchronizing the real robot state.",
     )
+    parser.add_argument(
+        "--no-viewer",
+        action="store_true",
+        help="Run real VR control without opening the MuJoCo viewer.",
+    )
     parser.set_defaults(plain_scene=True)
     parser.add_argument("--headless-check", action="store_true", help="Run model/FK/IK/protocol checks without publishing.")
     parser.add_argument("--verbose", action="store_true", help="Print additional VR and IK diagnostics.")
@@ -415,24 +420,38 @@ class HEIRobotVRRealController(HEIRobotVRSimulator):
         )
         print("[HEI VR Real] waiting for teleoperate.py/record.py feedback before arming", flush=True)
         print("[HEI VR Real] hold grip to move; release grip to stop chassis/lift immediately", flush=True)
-        self.viewer = mujoco.viewer.launch_passive(
-            self.model,
-            self.data,
-            key_callback=self._keyboard_callback,
-        )
-        self.viewer.cam.lookat[:] = (0.0, 0.0, 0.75)
-        self.viewer.cam.distance = 2.8
-        self.viewer.cam.azimuth = 135
-        self.viewer.cam.elevation = -20
+        if self.args.no_viewer:
+            print(
+                "[HEI VR Real] MuJoCo viewer disabled; Ctrl+C stops the controller",
+                flush=True,
+            )
+        else:
+            self.viewer = mujoco.viewer.launch_passive(
+                self.model,
+                self.data,
+                key_callback=self._keyboard_callback,
+            )
+            self.viewer.cam.lookat[:] = (0.0, 0.0, 0.75)
+            self.viewer.cam.distance = 2.8
+            self.viewer.cam.azimuth = 135
+            self.viewer.cam.elevation = -20
         previous_s = time.monotonic()
         try:
-            while self.viewer.is_running() and not self.stop_event.is_set():
+            while (
+                (self.viewer is None or self.viewer.is_running())
+                and not self.stop_event.is_set()
+            ):
+                loop_start_s = time.monotonic()
                 now_s = time.monotonic()
                 dt = min(max(now_s - previous_s, 0.0), 0.05)
                 previous_s = now_s
                 fresh, packet_count = self._step_real_control(dt)
-                self.viewer.sync()
+                if self.viewer is not None:
+                    self.viewer.sync()
                 self._print_real_status(fresh, packet_count)
+                if self.viewer is None:
+                    elapsed_s = time.monotonic() - loop_start_s
+                    time.sleep(max(1.0 / self.args.publish_hz - elapsed_s, 0.0))
         except KeyboardInterrupt:
             pass
         finally:
