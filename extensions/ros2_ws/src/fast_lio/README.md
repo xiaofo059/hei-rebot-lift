@@ -1,5 +1,18 @@
 > ROS2 Fork repo maintainer: [Ericsiii](https://github.com/Ericsii)
 
+## AGX 机器人本体点云屏蔽
+
+`config/mid360s_agx.yaml` 的 `preprocess.self_filter` 是本包新增的长方体过滤配置。
+`min`、`max` 分别为雷达自身坐标系下的 `[x, y, z]` 下限和上限，单位米，包含边界；
+`enabled: false` 关闭此功能，未配置时默认关闭。当前范围为
+`x: [-0.50, 0.00]`、`y: [-0.25, 0.25]`、`z: [0.00, 0.80]`，不会屏蔽 `z < 0` 的区域。
+这些坐标在 IMU 外参变换、去畸变和扫描匹配之前使用，不随世界坐标或重力对齐改变。
+保留点的时间偏移和反射强度保持不变；过滤后的点云用于里程计及发布给建图、导航。
+
+`preprocess.blind` 仍为独立的球形近距过滤，当前设为 `0.10` 米，避免继续用
+`0.50` 米球形过滤屏蔽机器人前方的近距障碍。修改配置或重新编译后需重启 FAST-LIO2；
+旧地图中已经保存的机器人拖影不会自动消失，需要重新建图或单独清理旧地图。
+
 ## Related Works and Extended Application
 
 **SLAM:**

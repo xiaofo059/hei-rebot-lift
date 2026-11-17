@@ -179,7 +179,7 @@ local_costmap:  # 局部代价地图命名空间
       height: 6  # 局部地图窗口 Y 方向长度，单位 m；不是三维地图高度
       resolution: 0.05  # 代价地图栅格边长，单位 m/格
       footprint: "[[0.25, 0.25], [-0.25, 0.25], [-0.25, -0.25], [0.25, -0.25]]"  # 以 base_link 为原点的机器人多边形顶点 [x,y]，单位 m；当前轮廓 50×50 cm
-      footprint_padding: 0.02  # 机器人多边形轮廓的额外外扩量，单位 m；独立于障碍膨胀半径
+      footprint_padding: 0.00  # 机器人多边形轮廓的额外外扩量，单位 m；独立于障碍膨胀半径
       plugins: [stvl_layer, inflation_layer]  # 按顺序加载：带时间衰减的实时体素障碍层、膨胀层
       stvl_layer:  # STVL 插件实例名，下方参数来自该插件的 Humble 实现
         plugin: spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer  # 插件导出名，Humble 此处使用 / 而非 ::
@@ -209,7 +209,7 @@ local_costmap:  # 局部代价地图命名空间
           filter: passthrough  # 按上述 odom Z 范围过滤；不通过点数阈值丢弃稀疏小障碍
       inflation_layer:  # 局部障碍膨胀层实例
         plugin: nav2_costmap_2d::InflationLayer  # 官方 pluginlib 插件类型，必须与已安装插件导出的类型名称一致
-        inflation_radius: 0.5  # 从障碍起算的总代价影响半径 50 cm；超出约 27 cm 内切半径的部分形成软梯度，并非全部禁行
+        inflation_radius: 0.10  # 从障碍起算的总代价影响半径 50 cm；超出约 27 cm 内切半径的部分形成软梯度，并非全部禁行
         cost_scaling_factor: 4.0  # 局部代价衰减系数；越大衰减越快，结合轮廓评分兼顾绕障与通行
       always_send_full_costmap: true  # 每次发布完整代价地图；false 时可发布局部增量更新
 
@@ -260,7 +260,7 @@ global_costmap:  # 全局代价地图命名空间
           filter: passthrough  # 按上述 map Z 范围过滤；不通过点数阈值丢弃稀疏小障碍
       inflation_layer:  # 全局障碍膨胀层实例
         plugin: nav2_costmap_2d::InflationLayer  # 官方 pluginlib 插件类型，必须与已安装插件导出的类型名称一致
-        inflation_radius: 0.65  # 从障碍起算的总代价影响半径 65 cm；软梯度引导路径远离墙边，不等于额外 65 cm 禁行间隙
+        inflation_radius: 0.50  # 从障碍起算的总代价影响半径 65 cm；软梯度引导路径远离墙边，不等于额外 65 cm 禁行间隙
         cost_scaling_factor: 3.0  # 全局代价衰减系数；与较宽影响范围配合形成通道梯度，越大衰减越快
       always_send_full_costmap: true  # 每次发布完整代价地图；false 时可发布局部增量更新
 

@@ -1,4 +1,5 @@
 // #include <ros/ros.h>
+#include <array>
 #include <rclcpp/rclcpp.hpp>
 #include <pcl_conversions/pcl_conversions.h>
 #include <sensor_msgs/msg/point_cloud2.hpp>
@@ -143,6 +144,8 @@ class Preprocess
   void process(const livox_ros_driver2::msg::CustomMsg::UniquePtr &msg, PointCloudXYZI::Ptr &pcl_out);
   void process(const sensor_msgs::msg::PointCloud2::UniquePtr &msg, PointCloudXYZI::Ptr &pcl_out);
   void set(bool feat_en, int lid_type, double bld, int pfilt_num);
+  void set_self_filter(bool enabled, const std::vector<double> &minimum,
+                       const std::vector<double> &maximum);
 
   // sensor_msgs::PointCloud2::ConstPtr pointcloud;
   PointCloudXYZI pl_full, pl_corn, pl_surf;
@@ -156,10 +159,20 @@ class Preprocess
   // ros::Publisher pub_full, pub_surf, pub_corn;
 
 private:
+  bool self_filter_enabled_ = false;
+  std::array<float, 3> self_filter_min_{{0.0f, 0.0f, 0.0f}};
+  std::array<float, 3> self_filter_max_{{0.0f, 0.0f, 0.0f}};
+
   void add_surface_point(const PointType &point)
   {
     if (max_range > 0.0 &&
         point.x * point.x + point.y * point.y + point.z * point.z > max_range * max_range)
+      return;
+    // Inclusive box in raw LiDAR coordinates, before IMU/world transforms.
+    if (self_filter_enabled_ &&
+        point.x >= self_filter_min_[0] && point.x <= self_filter_max_[0] &&
+        point.y >= self_filter_min_[1] && point.y <= self_filter_max_[1] &&
+        point.z >= self_filter_min_[2] && point.z <= self_filter_max_[2])
       return;
     pl_surf.push_back(point);
   }

@@ -1,5 +1,7 @@
 # AGX 低速导航测试配置（2026-11-12）：保留 NavFn + DWB、全向运动与当前安装关系。
-# 调整方向：通道代价梯度、全向轨迹评分开销、终点阶段一致性和低速进展判定。
+# 本轮：静态地图 + 实时 STVL 障碍共同参与全局规划；全局更新 5 Hz，行为树持续重规划 2 Hz。
+# 全局障碍在最后观测后约 1.5 s 衰减；保留上一版 DWB、轮廓、限速和到达容差。
+# 只改变当前感知范围内的代价；不能推断遮挡后的障碍，不会清除 PGM 中已有的静态障碍。
 # 位置容差 0.08 m，偏航容差 0.05 rad（约 2.9 度）；它们是判定阈值，不是实测精度保证。
 # 修改后通过 launch 的 params_file 指向本文件即可，无需重新编译；最终效果需同路线实机比较。
 # Nav2 ROS 2 Humble 导航配置，基于官方 nav2_bringup 示例（Apache-2.0）。
@@ -44,7 +46,7 @@ bt_navigator:  # 官方行为树导航器，组织规划、跟踪与恢复行为
     bt_loop_duration: 10  # 行为树每次 tick 的间隔，单位 ms；10 ms 约为 100 Hz
     default_server_timeout: 200  # 行为树动作客户端等待服务端响应的默认超时，单位 ms；不是整段导航超时
     wait_for_service_timeout: 1000  # 行为树初始化时等待动作/服务端可用的超时，单位 ms
-    default_nav_to_pose_bt_xml: navigate_with_replanning.xml  # 单目标导航行为树；本项目 launch 将相对此 YAML 的路径转成绝对路径
+    default_nav_to_pose_bt_xml: navigate_with_dynamic_replanning.xml  # 单目标导航行为树；本项目 launch 将相对此 YAML 的路径转成绝对路径
     plugin_lib_names:  # 行为树节点动态库列表；仅注册节点，实际执行由 XML 决定
       - nav2_compute_path_to_pose_action_bt_node  # 规划到单个目标位姿的全局路径
       - nav2_compute_path_through_poses_action_bt_node  # 规划经过多个位姿的全局路径
@@ -217,19 +219,45 @@ global_costmap:  # 全局代价地图命名空间
       use_sim_time: false  # 是否使用 /clock 仿真时间；false 使用系统时间，launch 同名参数可覆盖
       global_frame: map  # 全局代价地图参考系，与保存的二维地图一致
       robot_base_frame: base_link  # 机器人底盘参考坐标系，用于从 TF 获取机器人位置
-      update_frequency: 1.0  # 代价地图内部更新频率，单位 Hz
-      publish_frequency: 1.0  # 代价地图向外发布频率，单位 Hz
+      update_frequency: 5.0  # 内部更新 5 Hz，及时融合实时障碍；不是点云发布频率
+      publish_frequency: 2.0  # RViz 等外部订阅者收到代价地图的频率，单位 Hz
       transform_tolerance: 0.3  # TF 变换查询/数据时效容差，单位 s
       footprint: "[[0.25, 0.25], [-0.25, 0.25], [-0.25, -0.25], [0.25, -0.25]]"  # 以 base_link 为原点的机器人多边形顶点 [x,y]，单位 m；当前轮廓 50×50 cm
       footprint_padding: 0.02  # 机器人多边形轮廓的额外外扩量，单位 m；独立于障碍膨胀半径
       resolution: 0.05  # 代价地图栅格边长，单位 m/格
       track_unknown_space: true  # 保留未观测区域的 unknown 状态，不直接当作空闲区
-      plugins: [static_layer, inflation_layer]  # 按顺序加载的图层实例名：二维静态地图层、膨胀层
+      plugins: [static_layer, stvl_layer, inflation_layer]  # 按顺序：静态地图、实时动态障碍、统一膨胀
       static_layer:  # 读取二维静态地图的图层实例
         plugin: nav2_costmap_2d::StaticLayer  # 官方 pluginlib 插件类型，必须与已安装插件导出的类型名称一致
         map_topic: /map  # 二维 OccupancyGrid 地图输入话题，由 map_server 发布
         map_subscribe_transient_local: true  # 使用 transient_local 持久性 QoS，晚加入也可收到已有地图
         subscribe_to_updates: false  # 是否订阅地图增量更新；当前使用保存的静态地图，关闭此项
+      stvl_layer:  # STVL 插件实例名，下方参数来自该插件的 Humble 实现
+        plugin: spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer  # 插件导出名，Humble 此处使用 / 而非 ::
+        enabled: true  # 是否启用实时三维障碍层
+        voxel_decay: 1.5  # 体素最后一次被实际观测后保留的时间，单位 s；连续观测会刷新时间
+        decay_model: 0  # 线性时间衰减；未再次观测到的体素约 1.5 s 后过期，实际还受更新周期影响
+        voxel_size: 0.05  # 三维体素边长，单位 m；与全局二维地图分辨率一致
+        track_unknown_space: true  # 未观测处不提供空闲覆盖，保留静态地图的未知区域
+        mark_threshold: 0  # 有占用体素的二维列即可标为障碍，不额外滤掉细小障碍
+        update_footprint_enabled: true  # 清除当前机器人轮廓内部的二维障碍代价
+        combination_method: 1  # 与其他层合并时取最大代价，不能覆盖其他层已有的障碍
+        publish_voxel_map: false  # 正常导航不额外发布三维体素调试点云
+        transform_tolerance: 0.3  # 点云 TF 等待/变换容差，单位 s
+        mapping_mode: false  # 使用导航模式，启用时间清除；不运行 STVL 建图/自动存图
+        observation_sources: cloud  # 观测源实例名，与下方 cloud 一致
+        cloud:  # 使用 FAST-LIO2 当前帧点云；不使用累积地图作为动态障碍输入
+          topic: /cloud_registered_body  # 实时机体系点云，插件按消息时刻的 TF 转到 map，再参与全局规划
+          data_type: PointCloud2  # 观测消息类型：sensor_msgs/msg/PointCloud2
+          marking: true  # 当前观测到的点标为障碍，并刷新对应体素的时间
+          clearing: false  # 此项控制 STVL 视锥加速清除；false 仍执行 voxel_decay 时间清除
+          min_obstacle_height: -0.2  # 障碍点最低 map Z，单位 m；不是距地面高度
+          max_obstacle_height: 0.8  # 障碍点最高 map Z，单位 m；沿用当前障碍高度范围
+          obstacle_range: 5.0  # STVL 官方观测源参数：标记障碍的最大传感器距离，单位 m
+          observation_persistence: 0.0  # 观测缓冲只取最新一帧；不是障碍体素的存活时间
+          expected_update_rate: 0.5  # 允许的观测更新最大间隔，单位 s；超时将层标为数据不新鲜
+          clear_after_reading: true  # 消费后移除观测缓冲，避免重复旧帧不断续期已离开的障碍
+          filter: passthrough  # 按上述 map Z 范围过滤；不通过点数阈值丢弃稀疏小障碍
       inflation_layer:  # 全局障碍膨胀层实例
         plugin: nav2_costmap_2d::InflationLayer  # 官方 pluginlib 插件类型，必须与已安装插件导出的类型名称一致
         inflation_radius: 0.65  # 从障碍起算的总代价影响半径 65 cm；软梯度引导路径远离墙边，不等于额外 65 cm 禁行间隙
@@ -239,7 +267,7 @@ global_costmap:  # 全局代价地图命名空间
 planner_server:  # 官方全局路径规划服务
   ros__parameters:  # ROS 2 固定参数配置块
     use_sim_time: false  # 是否使用 /clock 仿真时间；false 使用系统时间，launch 同名参数可覆盖
-    expected_planner_frequency: 1.0  # 期望规划频率，单位 Hz；用于规划耗时告警，实际重规划节奏由行为树控制
+    expected_planner_frequency: 2.0  # 期望规划频率，单位 Hz；用于规划耗时告警，实际重规划节奏由行为树控制
     planner_plugins: [GridBased]  # 全局规划器实例名列表，与下方配置块及行为树 planner_id 对应
     GridBased:  # 全局规划器实例名，须与行为树 planner_id 一致
       plugin: nav2_navfn_planner/NavfnPlanner  # 官方 pluginlib 插件类型，必须与已安装插件导出的类型名称一致

@@ -28,8 +28,12 @@
     preprocess:
       lidar_type: 1
       scan_line: 4
-      blind: 0.50
+      blind: 0.30 # 雷达点云屏蔽半径
       max_range: 40.0
+      self_filter: # 本包新增参数：雷达自身 XYZ 坐标（米），不是 body/odom/map 坐标
+        enabled: true # 屏蔽长方体内及边界上的点，避免机器人本体参与里程计和建图
+        min: [-0.50, -0.25, 0.00] # 后方 50 cm、右方 25 cm、雷达原点高度
+        max: [0.00, 0.25, 0.80] # 到雷达前后平面、左方 25 cm、上方 80 cm
       timestamp_unit: 3
       scan_rate: 10
     mapping:

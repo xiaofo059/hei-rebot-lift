@@ -1,6 +1,9 @@
 #include "preprocess.h"
 
 #include <pcl/common/common.h>
+#include <cmath>
+#include <limits>
+#include <stdexcept>
 
 #define RETURN0 0x00
 #define RETURN0AND1 0x10
@@ -42,6 +45,35 @@ void Preprocess::set(bool feat_en, int lid_type, double bld, int pfilt_num)
   lidar_type = lid_type;
   blind = bld;
   point_filter_num = pfilt_num;
+}
+
+void Preprocess::set_self_filter(bool enabled, const std::vector<double> &minimum,
+                                 const std::vector<double> &maximum)
+{
+  if (!enabled)
+  {
+    self_filter_enabled_ = false;
+    return;
+  }
+  if (minimum.size() != 3 || maximum.size() != 3)
+    throw std::invalid_argument("preprocess.self_filter.min/max must each contain three coordinates [x, y, z]");
+
+  std::array<float, 3> lower, upper;
+  for (size_t axis = 0; axis < 3; ++axis)
+  {
+    if (!std::isfinite(minimum[axis]) || !std::isfinite(maximum[axis]) ||
+        std::abs(minimum[axis]) > std::numeric_limits<float>::max() ||
+        std::abs(maximum[axis]) > std::numeric_limits<float>::max())
+      throw std::invalid_argument("preprocess.self_filter bounds must be finite FLOAT32 coordinates");
+    lower[axis] = static_cast<float>(minimum[axis]);
+    upper[axis] = static_cast<float>(maximum[axis]);
+    if (!std::isfinite(lower[axis]) || !std::isfinite(upper[axis]) ||
+        lower[axis] >= upper[axis])
+      throw std::invalid_argument("preprocess.self_filter bounds must be finite with min < max on every axis");
+  }
+  self_filter_min_ = lower;
+  self_filter_max_ = upper;
+  self_filter_enabled_ = true;
 }
 
 void Preprocess::process(const livox_ros_driver2::msg::CustomMsg::UniquePtr &msg, PointCloudXYZI::Ptr& pcl_out)

@@ -7,7 +7,7 @@ from pathlib import Path
 import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, LogInfo, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, LogInfo, OpaqueFunction, TimerAction
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -80,6 +80,15 @@ def _launch_setup(context):
         convert_types=True), allow_substs=False)
     raw_command = '/hei_robot_navigation/cmd_vel_raw'
     output_command = LaunchConfiguration('cmd_vel_topic')
+    # rmw_fastrtps 6.2.x waits for the service client's response reader using
+    # the service writer's max_blocking_time (100 ms by default). Allow discovery
+    # to finish during concurrent startup without changing sensor/topic QoS.
+    service_profile = share / 'config' / 'fastdds_services.xml'
+    navigation_env = {
+        'FASTRTPS_DEFAULT_PROFILES_FILE': str(service_profile),
+        # Scope the AGX transport workaround to this launch's navigation nodes.
+        'FASTDDS_BUILTIN_TRANSPORTS': LaunchConfiguration('nav_dds_transport'),
+    }
     tf_remaps = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
     navigation_nodes = [
         ('nav2_controller', 'controller_server'),
@@ -92,12 +101,8 @@ def _launch_setup(context):
     ]
     nodes = [Node(
         package='nav2_map_server', executable='map_server', name='map_server',
-        output='screen', parameters=[params], remappings=tf_remaps),
-        Node(
-            package='nav2_lifecycle_manager', executable='lifecycle_manager',
-            name='lifecycle_manager_map', output='screen',
-            parameters=[{'use_sim_time': use_sim_time, 'autostart': True,
-                         'node_names': ['map_server']}]),
+        output='screen', parameters=[params], remappings=tf_remaps,
+        additional_env=navigation_env),
     ]
     if publish_base_tf:
         transform_arguments = []
@@ -108,7 +113,8 @@ def _launch_setup(context):
             name='navigation_body_to_base_link', output='screen',
             arguments=[*transform_arguments, '--frame-id', 'body',
                        '--child-frame-id', 'base_link'],
-            parameters=[{'use_sim_time': use_sim_time}], remappings=tf_remaps))
+            parameters=[{'use_sim_time': use_sim_time}], remappings=tf_remaps,
+            additional_env=navigation_env))
     for package, name in navigation_nodes:
         remaps = list(tf_remaps)
         if name in ('controller_server', 'behavior_server'):
@@ -117,19 +123,29 @@ def _launch_setup(context):
             remaps.extend([('cmd_vel', raw_command), ('cmd_vel_smoothed', output_command)])
         nodes.append(Node(
             package=package, executable=name, name=name, output='screen',
-            parameters=[params], remappings=remaps))
+            parameters=[params], remappings=remaps, additional_env=navigation_env))
+    rviz_delay = float(LaunchConfiguration('rviz_start_delay').perform(context))
+    if not math.isfinite(rviz_delay) or rviz_delay < 0:
+        raise RuntimeError('rviz_start_delay must be a finite non-negative number')
     nodes.extend([
         Node(
             package='nav2_lifecycle_manager', executable='lifecycle_manager',
             name='lifecycle_manager_navigation', output='screen',
             parameters=[{'use_sim_time': use_sim_time,
                          'autostart': LaunchConfiguration('autostart'),
-                         'node_names': [name for _, name in navigation_nodes]}]),
-        Node(
+                         # Configure/activate map_server first. A map startup
+                         # failure must prevent a partially active Nav2 stack.
+                         'node_names': ['map_server', *[name for _, name in navigation_nodes]]}],
+            additional_env=navigation_env),
+        # Separate graphics initialization from the concurrent Nav2 startup burst.
+        TimerAction(period=rviz_delay, actions=[Node(
             package='rviz2', executable='rviz2', name='navigation_rviz',
             arguments=['-d', str(share / 'config' / 'navigation.rviz')],
             parameters=[{'use_sim_time': use_sim_time}],
-            condition=IfCondition(LaunchConfiguration('rviz')), output='screen'),
+            # RViz retains a separate transport override for graphics diagnostics.
+            additional_env={
+                'FASTDDS_BUILTIN_TRANSPORTS': LaunchConfiguration('rviz_dds_transport')},
+            condition=IfCondition(LaunchConfiguration('rviz')), output='screen')]),
     ])
     return [LogInfo(msg=['Nav2 framework: map=', str(map_path),
                          ', autostart=', LaunchConfiguration('autostart'),
@@ -145,9 +161,17 @@ def generate_launch_description():
                               description='Optional 2D map YAML override; never a DB or PCD file'),
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('autostart', default_value='true',
-                              description='Activate navigation servers; the map server always activates'),
+                              description='Configure and activate map_server, then navigation servers'),
         DeclareLaunchArgument('cmd_vel_topic', default_value='/cmd_vel',
                               description='Smoothed Twist output topic for chassis commands'),
         DeclareLaunchArgument('rviz', default_value='true'),
+        DeclareLaunchArgument('nav_dds_transport', default_value='UDPv4',
+                              choices=['UDPv4', 'DEFAULT'],
+                              description='Nav2 Fast DDS transport; DEFAULT restores UDP + shared memory'),
+        DeclareLaunchArgument('rviz_start_delay', default_value='5.0',
+                              description='Seconds before starting RViz to reduce startup contention'),
+        DeclareLaunchArgument('rviz_dds_transport', default_value='UDPv4',
+                              choices=['UDPv4', 'DEFAULT'],
+                              description='RViz-only Fast DDS transport; DEFAULT restores UDP + shared memory'),
         OpaqueFunction(function=_launch_setup),
     ])

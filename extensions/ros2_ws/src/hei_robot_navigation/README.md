@@ -80,10 +80,12 @@ ros2 launch hei_robot_navigation navigation.launch.py
 
 默认行为：
 
-- `map_server` 自动激活，发布 `/map`，默认地图为
-  `/home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/map/lab_01_nav.yaml`。
+- `map_server` 自动激活，发布 `/map`；默认地图由所选参数文件的
+  `map_server.ros__parameters.yaml_filename` 指定。
 - 打开导航 RViz，显示二维地图、TF、路径、代价地图和轮廓；实时点云可手动勾选。
-- `autostart=true`：自动配置并激活七个导航服务，所需 TF 和数据就绪后可接受导航目标。
+- `autostart=true`：同一个生命周期管理器先配置地图，再配置七个导航服务；
+  激活时先激活地图并发布 `/map`，然后激活导航服务。地图启动失败会阻止后续激活。
+  `autostart:=false` 时，地图和导航服务均等待手动配置、激活。
 - 速度默认经平滑器输出至底盘的 `/cmd_vel`；恢复行为也经过同一个速度平滑器。
 - 启动不会自动创建导航目标；在 RViz 中发送 Nav2 Goal 后开始执行导航任务。
 
@@ -92,6 +94,57 @@ ros2 launch hei_robot_navigation navigation.launch.py
 ```bash
 ros2 launch hei_robot_navigation navigation.launch.py rviz:=false
 ```
+
+### RViz 启动与 DDS 传输
+
+RViz 默认延后 5 秒启动，避开 Nav2 多进程集中初始化。AGX 对照中，同步启动时曾出现
+已收到地图但视窗全黑；导航就绪后单独启动连续三次显示正常。可通过
+`rviz_start_delay:=0.0` 恢复同步启动，或按机器负载调整间隔。该间隔不是导航就绪判断。
+
+本 launch 的地图服务、Nav2 服务、生命周期管理器、安装偏移 TF 和 RViz 默认设置
+`FASTDDS_BUILTIN_TRANSPORTS=UDPv4`。原默认传输复测中曾出现某个导航节点收不到
+`odom` TF，而独立观察节点能收到的情况；UDPv4 对照连续五次全部服务激活、地图正确接收，
+RViz 均正常显示。此前也捕获过 RViz 进程存在但窗口不出现的 DDS 初始化挂起。
+这是基于本机对照的传输绕过措施，不代表已证明 Fast DDS 底层故障的具体位置，
+也不能保证修复所有 OpenGL 黑屏问题。
+设置仅传给本 launch 创建的进程，不切换 RMW，不改变雷达、FAST-LIO2、定位或底盘
+节点的环境，也不改变 IMU 的 BEST_EFFORT 配置。
+
+如需对照 Fast DDS 默认的 UDP + 共享内存传输：
+
+```bash
+ros2 launch hei_robot_navigation navigation.launch.py \
+  nav_dds_transport:=DEFAULT rviz_dds_transport:=DEFAULT
+```
+
+如果已有导航服务正常运行，仅需重开显示窗口，可关闭原 RViz 后在 AGX 本机终端执行：
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/user/hei-rebot-lift/extensions/ros2_ws/install/setup.bash
+FASTDDS_BUILTIN_TRANSPORTS=UDPv4 ros2 run rviz2 rviz2 -d \
+  /home/user/hei-rebot-lift/extensions/ros2_ws/install/hei_robot_navigation/share/hei_robot_navigation/config/navigation.rviz
+```
+
+若终端没有沿用现有节点的 `ROS_DOMAIN_ID`，需先设置为相同的值。
+不要为重开 RViz 重复启动一套 Nav2。窗口出现但黑屏时，还需核对 RViz 图形日志、
+地图订阅和 TF；`Managed nodes are active` 只代表 Nav2 生命周期服务已激活。
+
+### 地图服务器生命周期启动
+
+AGX 上曾捕获 `map_server` 已成功读入 PGM，但配置服务报
+`failed to send response ... client will not receive response`，地图服务器停在
+`inactive`、没有发布 `/map`。原来独立的导航生命周期管理器仍会激活导航，
+导致全局代价地图持续报告 `no map received` 和 `Robot is out of bounds`。
+
+本 launch 给地图服务器、七个导航服务和生命周期管理器单独加载
+`config/fastdds_services.xml`。它将 Fast DDS 的 `service` 应答 writer 的
+`reliability.max_blocking_time` 从默认 100 ms 延长至 3 s，为启动期间客户端发现留出时间；
+不设置默认话题 writer，不切换 DDS，不改变传感器或底盘节点、IMU BEST_EFFORT。
+这不是固定等待 3 秒，发现完成后会立即返回。
+地图与导航同时交给 `lifecycle_manager_navigation` 顺序管理，地图先激活，
+避免地图启动失败时导航仍显示激活成功。旧的 `lifecycle_manager_map` 不再启动。
+`autostart:=false` 现在同时控制地图与导航，软件联调时需留意此区别。
 
 临时换二维地图：
 
@@ -113,8 +166,9 @@ ros2 launch hei_robot_navigation navigation.launch.py \
 
 ## 文件与基础参数
 
-- `launch/navigation.launch.py`：地图服务、七个导航服务、两个生命周期管理器、
+- `launch/navigation.launch.py`：地图服务、七个导航服务、一个有序生命周期管理器、
   可选安装偏移静态 TF 和可选 RViz。
+- `config/fastdds_services.xml`：仅 Nav2 服务应答的 Fast DDS writer 配置。
 - `config/nav2_params.yaml`：地图路径、坐标、话题、规划/控制插件、局部/全局代价地图。
 - `config/navigation.rviz`：导航显示配置，Fixed Frame 为 `map`，默认使用 Orbit 视角；
   左键拖动旋转，中键或 Shift+左键拖动平移，滚轮缩放。右侧 Views 的 Type 可切回

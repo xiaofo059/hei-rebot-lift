@@ -27,7 +27,7 @@ body_to_base_link:  # 本项目 launch 自定义安装配置：body → base_lin
 map_server:  # 官方二维静态地图服务，加载 PGM 对应的地图 YAML
   ros__parameters:  # ROS 2 固定参数配置块
     use_sim_time: false  # 是否使用 /clock 仿真时间；false 使用系统时间，launch 同名参数可覆盖
-    yaml_filename: /home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/map/lab_01.yaml  # 二维地图 YAML 路径，其 image 字段指向 PGM；可用 launch 的 map 参数覆盖
+    yaml_filename: /home/user/hei-rebot-lift/extensions/ros2_ws/src/hei_robot_mapping/map/lab_03_test.yaml  # 二维地图 YAML 路径，其 image 字段指向 PGM；可用 launch 的 map 参数覆盖
     topic_name: map  # 发布二维 OccupancyGrid 地图的话题名
     frame_id: map  # 发布地图消息的坐标系名称
 

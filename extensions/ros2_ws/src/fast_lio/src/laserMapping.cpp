@@ -826,6 +826,9 @@ public:
         this->declare_parameter<double>("mapping.b_acc_cov", 0.0001);
         this->declare_parameter<double>("preprocess.blind", 0.01);
         this->declare_parameter<double>("preprocess.max_range", 0.0);
+        const bool self_filter_enabled = this->declare_parameter<bool>("preprocess.self_filter.enabled", false);
+        const auto self_filter_min = this->declare_parameter<vector<double>>("preprocess.self_filter.min", vector<double>());
+        const auto self_filter_max = this->declare_parameter<vector<double>>("preprocess.self_filter.max", vector<double>());
         this->declare_parameter<int>("preprocess.lidar_type", AVIA);
         this->declare_parameter<int>("preprocess.scan_line", 16);
         this->declare_parameter<int>("preprocess.timestamp_unit", US);
@@ -870,6 +873,7 @@ public:
         if (!std::isfinite(p_pre->max_range) || p_pre->max_range < 0.0 ||
             (p_pre->max_range > 0.0 && p_pre->max_range <= p_pre->blind))
             throw std::invalid_argument("preprocess.max_range must be 0 (disabled) or greater than preprocess.blind");
+        p_pre->set_self_filter(self_filter_enabled, self_filter_min, self_filter_max);
         this->get_parameter_or<int>("preprocess.lidar_type", p_pre->lidar_type, AVIA);
         this->get_parameter_or<int>("preprocess.scan_line", p_pre->N_SCANS, 16);
         this->get_parameter_or<int>("preprocess.timestamp_unit", p_pre->time_unit, US);

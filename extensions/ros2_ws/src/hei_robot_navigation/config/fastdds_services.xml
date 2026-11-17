@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+  <!-- 仅 ROS 服务应答 writer：将客户端发现等待从 100 ms 延长至 3 s。
+       不设默认 writer，不更改点云、IMU 或其他话题的 QoS。 -->
+  <data_writer profile_name="service">
+    <qos>
+      <reliability>
+        <kind>RELIABLE</kind>
+        <max_blocking_time><sec>3</sec><nanosec>0</nanosec></max_blocking_time>
+      </reliability>
+    </qos>
+  </data_writer>
+</profiles>
