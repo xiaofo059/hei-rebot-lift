@@ -228,7 +228,7 @@ conda activate lerobot5
 python -m pip install -e ".[core_scripts,training,hei_rebot_lift]"
 python -m pip show pyzmq rerun-sdk pynput datasets accelerate
 ```
-
+python -m pip install 'lerobot[viz]'
 该安装包含数据集录制/编辑、Rerun 可视化、键盘输入、ZMQ 和通用策略训练依赖。
 SmolVLA 专用依赖在后面的训练章节另行安装。已有 `lerobot5` 时跳过创建步骤。
 
