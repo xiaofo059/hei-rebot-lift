@@ -18,6 +18,7 @@ class Motor:
         self.state_dq = float(0)
         self.state_tau = float(0)
         self.state_err = int(0)
+        self.feedback_sequence = 0  # Increment only on a decoded motor status packet.
         self.SlaveID = SlaveID
         self.MasterID = MasterID
         self.MotorType = MotorType
@@ -25,11 +26,12 @@ class Motor:
         self.NowControlMode = Control_Type.MIT
         self.temp_param_dict = {}
 
-    def recv_data(self, q: float, dq: float, tau: float, err: int):
+    def recv_data(self, q: float, dq: float, tau: float, err: int) -> None:
         self.state_q = q
         self.state_dq = dq
         self.state_tau = tau
         self.state_err = err
+        self.feedback_sequence += 1
 
     def getPosition(self):
         """

@@ -728,13 +728,14 @@ class HeiRebotLift(Robot):
         self.chassis.stop()
         self.lift.stop()
 
-    @check_if_not_connected
     def disconnect(self) -> None:
+        # Also clean up partially connected Host startup failures.
         self.stop_motion()
         self.right_arm.disconnect(self.config.disable_torque_on_disconnect)
         self.left_arm.disconnect(self.config.disable_torque_on_disconnect)
         self.chassis.disconnect(self.config.disable_torque_on_disconnect)
         self.lift.disconnect(self.config.disable_torque_on_disconnect)
         for cam in self.cameras.values():
-            cam.disconnect()
+            if cam.is_connected:
+                cam.disconnect()
         logger.info("%s disconnected.", self)
