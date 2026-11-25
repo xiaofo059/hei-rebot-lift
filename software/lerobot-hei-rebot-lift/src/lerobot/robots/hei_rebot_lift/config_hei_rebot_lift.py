@@ -98,6 +98,10 @@ class HeiRebotLiftHostConfig:
     connection_time_s: int = 30000
     watchdog_timeout_ms: int = 1000
     max_loop_freq_hz: int = 30
+    shutdown_velocity_rad_s: float = 0.20  # 退出回零的关节速度上限，rad/s，最大允许 0.30
+    shutdown_timeout_s: float = 60.0  # 回零总超时；超时保留服务，不自动失能
+    shutdown_tolerance_rad: float = 0.03  # 六关节回零到位误差，rad
+    shutdown_settle_s: float = 1.0  # 到位且低速保持的确认时间，秒
 
 
 @RobotConfig.register_subclass("hei_rebot_lift_client")

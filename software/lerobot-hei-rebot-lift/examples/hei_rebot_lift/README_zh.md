@@ -491,6 +491,29 @@ PYTHONPATH=src conda run --no-capture-output -n lerobot5 python -u examples/hei_
 
 ## 常见问题
 
+### Host 退出时双臂缓慢回机械零点
+
+`hei-rebot-lift-host` 收到 Ctrl+C 或 SIGTERM 后，先停止底盘和升降、停止接收遥操动作，再让双臂六个关节同时缓慢回到已标定的**电机原始 0 rad**。这不是遥操模型零点，也不会重新标定电机。回程保持夹爪起始位置；确认关节到位且静止后，才执行正常断开与失能。
+
+启动指令不变。以下参数可按需覆盖：
+
+```bash
+PYTHONPATH=src conda run --no-capture-output -n lerobot5 hei-rebot-lift-host \
+  --host.shutdown_velocity_rad_s=0.20 \
+  --host.shutdown_timeout_s=60.0 \
+  --host.shutdown_tolerance_rad=0.03 \
+  --host.shutdown_settle_s=1.0
+```
+
+- `shutdown_velocity_rad_s`：回零速度上限，单位 rad/s，最大允许 0.30，同时受各关节原有限速约束。
+- `shutdown_timeout_s`：回零等待时间上限，单位秒。
+- `shutdown_tolerance_rad`：各关节到位允许误差，单位 rad；默认约 1.7 度。
+- `shutdown_settle_s`：位置到位且六个关节反馈速度均不超过 0.03 rad/s 后，连续确认静止的时间。
+
+如果反馈超时、电机故障或回零失败，程序**不会自动失能退出**，而是保持运行，并在通信正常的关节上尝试位置保持。先人工可靠承托双臂，再在该终端输入 `DISABLE` 并回车，才允许失能退出。回零及故障等待期间，重复 Ctrl+C 不会跳过保护流程；没有标准输入时也不会自动失能。
+
+首次实机验证需确认从当前姿态到零点的关节插值路径没有碰撞，且零点姿态失能后有可靠支撑。机械零点标定本身不能保证这些条件。最终断开仍遵循 `disable_torque_on_disconnect`，默认也会失能夹爪，测试时不要夹持悬空物体。断电、强制杀进程或通信故障无法由该软件流程保证防坠；此功能仅用于正常 Host 退出，不代替硬件制动或急停。
+
 ### Speech Dispatcher 报错
 
 如果看到：

@@ -11,6 +11,7 @@ import zmq
 
 from .config_hei_rebot_lift import HeiRebotLiftConfig, HeiRebotLiftHostConfig
 from .hei_rebot_lift import HeiRebotLift
+from .safe_shutdown import shutdown_robot, shutdown_signals, validate_shutdown_config
 
 
 @dataclass
@@ -20,7 +21,7 @@ class HeiRebotLiftServerConfig:
 
 
 class HeiRebotLiftHost:
-    def __init__(self, config: HeiRebotLiftHostConfig):
+    def __init__(self, config: HeiRebotLiftHostConfig) -> None:
         self.zmq_context = zmq.Context()
         self.zmq_cmd_socket = self.zmq_context.socket(zmq.PULL)
         self.zmq_cmd_socket.setsockopt(zmq.CONFLATE, 1)
@@ -36,27 +37,33 @@ class HeiRebotLiftHost:
         self.watchdog_timeout_ms = config.watchdog_timeout_ms
         self.max_loop_freq_hz = config.max_loop_freq_hz
 
-    def disconnect(self):
-        self.zmq_observation_socket.close()
-        self.zmq_cmd_socket.close()
+    def disconnect(self) -> None:
+        self.zmq_observation_socket.close(linger=0)
+        self.zmq_cmd_socket.close(linger=0)
         self.zmq_context.term()
 
 
 @draccus.wrap()
-def main(cfg: HeiRebotLiftServerConfig):
+def main(cfg: HeiRebotLiftServerConfig) -> None:
+    validate_shutdown_config(cfg.host)
+    with shutdown_signals() as signal_state:
+        _run_host(cfg, signal_state)
+
+
+def _run_host(cfg: HeiRebotLiftServerConfig, signal_state: dict[str, bool]) -> None:
     logging.info("Configuring HEI ReBot Lift")
     robot = HeiRebotLift(cfg.robot)
 
-    logging.info("Connecting HEI ReBot Lift")
-    robot.connect()
-
-    logging.info("Starting HEI ReBot Lift host")
-    host = HeiRebotLiftHost(cfg.host)
+    host = None
 
     last_cmd_time = time.time()
     last_no_cmd_log_time = 0.0
     watchdog_active = False
     try:
+        logging.info("Connecting HEI ReBot Lift")
+        robot.connect()
+        logging.info("Starting HEI ReBot Lift host")
+        host = HeiRebotLiftHost(cfg.host)
         start = time.perf_counter()
         duration = 0.0
         while duration < host.connection_time_s:
@@ -112,8 +119,12 @@ def main(cfg: HeiRebotLiftServerConfig):
         print("Keyboard interrupt received. Exiting...")
     finally:
         print("Shutting down HEI ReBot Lift host.")
-        robot.disconnect()
-        host.disconnect()
+        signal_state["parking"] = True
+        try:
+            shutdown_robot(robot, cfg.host)
+        finally:
+            if host is not None:
+                host.disconnect()
 
 
 if __name__ == "__main__":
